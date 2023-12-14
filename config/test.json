@@ -1,0 +1,35 @@
+{
+  "Code": 0,
+  "ErrMsg": "success",
+  "Data": {
+    "UserInfo": {
+      "id": "",
+      "created_at": 0,
+      "last_login_date": 0,
+      "username": "test",
+      "e_mail": "867838901@qq.com",
+      "mail_status": 0,
+      "notice_status": 0,
+      "follow_count": 0,
+      "answer_count": 0,
+      "question_count": 0,
+      "rank": 0,
+      "authority_group": 0,
+      "display_name": "",
+      "avatar": "",
+      "mobile": "",
+      "bio": "",
+      "bio_html": "",
+      "website": "",
+      "location": "",
+      "ip_info": "",
+      "language": "",
+      "access_token": "",
+      "role_id": 0,
+      "status": "",
+      "have_password": false,
+      "PassWord": "$2a$10$wN9T1zrhFqHSHGV8cmbuceBJ5HYSETmBkkuVkCuPgMuEjNM98U4kS"
+    },
+    "Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJsYXd5ZXItdGVzdCIsImF1ZCI6WyJsYXd5ZXIiXSwiZXhwIjoxNjk4NDI3OTgyLCJuYmYiOjE2OTcxMzE5ODIsIlVzZXJOYW1lIjoidGVzdCIsIlJvbGUiOjAsIlVpZCI6IjEyMzQ1In0.C5padTv7F3UOrPK5XE9n782kbFdM2gz8O4peUqXBEGw"
+  }
+}

@@ -1,1 +1,5 @@
-# lawyer
+文件夹定义：
+config存放配置文件
+initServer服务初始化
+routes路由文件
+utils工具包
