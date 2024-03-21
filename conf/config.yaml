@@ -1,0 +1,23 @@
+server:
+  http:
+    addr: 0.0.0.0:80 # Project access port number
+data:
+    driver: "mysql" # Default database driver is mysql
+    connection: "root:123456@tcp(127.0.0.1:3306)/answer?charset=utf8mb4&parseTime=True" # MySQL database connection address
+redis:
+  addr: 127.0.0.1:6379
+  poolSize: 20
+  maxIdle:  20
+  timeout:  10
+i18n:
+  bundle_dir: "/data/i18n" # Internationalized file storage directory
+service_config:
+  secret_key: "answer" # encryption key
+  upload_path: "/data/uploads" # upload directory
+
+
+#swaggerui:
+#  show: true # Whether to display the swaggerapi documentation, address /swagger/index.html
+#  protocol: http # swagger protocol header
+#  host: 127.0.0.1 # An accessible IP address or domain name
+#  address: ':80'  # accessible port number
