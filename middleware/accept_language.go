@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"github.com/apache/incubator-answer/commons/constant"
-	"github.com/apache/incubator-answer/internal/base/handler"
 	"github.com/gin-gonic/gin"
+	"github.com/lawyer/commons/base/handler"
+	"github.com/lawyer/commons/constant"
 	"github.com/segmentfault/pacman/i18n"
 )
 

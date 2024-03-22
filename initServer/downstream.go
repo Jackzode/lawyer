@@ -1,17 +1,18 @@
 package initServer
 
 import (
-	"github.com/apache/incubator-answer/internal/base/cron"
-	"github.com/apache/incubator-answer/internal/base/server"
-	"github.com/apache/incubator-answer/internal/base/translator"
-	"github.com/apache/incubator-answer/internal/controller"
-	templaterender "github.com/apache/incubator-answer/internal/controller/template_render"
-	"github.com/apache/incubator-answer/internal/controller_admin"
-	"github.com/apache/incubator-answer/internal/router"
-	"github.com/apache/incubator-answer/internal/service/service_config"
-	userexternallogin2 "github.com/apache/incubator-answer/internal/service/user_external_login"
-	middleware2 "github.com/apache/incubator-answer/middleware"
-	"github.com/segmentfault/pacman"
+	"github.com/gin-gonic/gin"
+	"github.com/lawyer/commons/base/cron"
+	"github.com/lawyer/commons/base/translator"
+	"github.com/lawyer/commons/config"
+	"github.com/lawyer/controller"
+	templaterender "github.com/lawyer/controller/template_render"
+	"github.com/lawyer/controller_admin"
+	repo "github.com/lawyer/initServer/initRepo"
+	services "github.com/lawyer/initServer/initServices"
+	middleware2 "github.com/lawyer/middleware"
+	"github.com/lawyer/router"
+	userexternallogin2 "github.com/lawyer/service/user_external_login"
 	"github.com/segmentfault/pacman/i18n"
 )
 
@@ -19,55 +20,64 @@ var (
 	I18nTranslator i18n.Translator
 )
 
-func initTranslator(i18nConf *translator.I18n) (err error) {
+// todo
+func initTranslator(i18nConf *config.I18n) (err error) {
 	I18nTranslator, err = translator.NewTranslator(i18nConf)
 	return err
 }
 
-func initApplication(debug bool, serverConf *Server, serviceConf *service_config.ServiceConfig) (*pacman.Application, error) {
+// todo
+func newApplication(serverConf *config.Server, server *gin.Engine, manager *cron.ScheduledTaskManager) *gin.Engine {
 
-	langController := controller.NewLangController(I18nTranslator, siteInfoCommonService)
-	staticRouter := router.NewStaticRouter(serviceConf)
-	userController := controller.NewUserController(authService, userService, captchaService, emailService, siteInfoCommonService, userNotificationConfigService)
-	rateLimitMiddleware := middleware2.NewRateLimitMiddleware(limitRepo)
-	commentController := controller.NewCommentController(commentService, rankService, captchaService, rateLimitMiddleware)
-	reportController := controller.NewReportController(reportService, rankService, captchaService)
-	voteController := controller.NewVoteController(voteService, rankService, captchaService)
-	tagController := controller.NewTagController(tagService, tagCommonService, rankService)
-	followController := controller.NewFollowController(followService)
-	collectionController := controller.NewCollectionController(collectionService)
-	questionController := controller.NewQuestionController(questionService, answerService, rankService, siteInfoCommonService, captchaService, rateLimitMiddleware)
-	answerController := controller.NewAnswerController(answerService, rankService, captchaService, siteInfoCommonService, rateLimitMiddleware)
-	searchController := controller.NewSearchController(searchService, captchaService)
-	revisionController := controller.NewRevisionController(serviceRevisionService, rankService)
-	rankController := controller.NewRankController(rankService)
-	controllerAdminReportController := controller_admin.NewReportController(reportAdminService)
-	userAdminController := controller_admin.NewUserAdminController(userAdminService)
-	reasonController := controller.NewReasonController(reasonService)
+	return server
+
+}
+
+func initApplication(debug bool, serverConf *config.Server) (*gin.Engine, error) {
+
+	langController := controller.NewLangController(I18nTranslator, services.SiteInfoCommonService)
+	userController := controller.NewUserController(services.AuthService, services.UserService, services.CaptchaService, services.EmailService, services.SiteInfoCommonService, services.UserNotificationConfigService)
+	rateLimitMiddleware := middleware2.NewRateLimitMiddleware(repo.LimitRepo)
+	commentController := controller.NewCommentController(services.CommentService, services.RankService, services.CaptchaService, rateLimitMiddleware)
+	reportController := controller.NewReportController(services.ReportService, services.RankService, services.CaptchaService)
+	voteController := controller.NewVoteController(services.VoteService, services.RankService, services.CaptchaService)
+	tagController := controller.NewTagController(services.TagService, services.TagCommonService, services.RankService)
+	followController := controller.NewFollowController(services.FollowService)
+	collectionController := controller.NewCollectionController(services.CollectionService)
+	questionController := controller.NewQuestionController(services.QuestionService, services.AnswerService, services.RankService, services.SiteInfoCommonService, services.CaptchaService, rateLimitMiddleware)
+	answerController := controller.NewAnswerController(services.AnswerService, services.RankService, services.CaptchaService, services.SiteInfoCommonService, rateLimitMiddleware)
+	searchController := controller.NewSearchController(services.SearchService, services.CaptchaService)
+	revisionController := controller.NewRevisionController(services.ServiceRevisionService, services.RankService)
+	rankController := controller.NewRankController(services.RankService)
+	controllerAdminReportController := controller_admin.NewReportController(services.ReportAdminService)
+	userAdminController := controller_admin.NewUserAdminController(services.UserAdminService)
+	reasonController := controller.NewReasonController(services.ReasonService)
 	themeController := controller_admin.NewThemeController()
-	siteInfoController := controller_admin.NewSiteInfoController(siteInfoService)
-	controllerSiteInfoController := controller.NewSiteInfoController(siteInfoCommonService)
-	notificationController := controller.NewNotificationController(notificationService, rankService)
-	dashboardController := controller.NewDashboardController(dashboardService)
-	uploadController := controller.NewUploadController(uploaderService)
-	activityController := controller.NewActivityController(activityService)
-	roleController := controller_admin.NewRoleController(roleService)
-	pluginController := controller_admin.NewPluginController(pluginCommonService)
-	permissionController := controller.NewPermissionController(rankService)
+	siteInfoController := controller_admin.NewSiteInfoController(services.SiteInfoService)
+	controllerSiteInfoController := controller.NewSiteInfoController(services.SiteInfoCommonService)
+	notificationController := controller.NewNotificationController(services.NotificationService, services.RankService)
+	dashboardController := controller.NewDashboardController(services.DashboardService)
+	uploadController := controller.NewUploadController(services.UploaderService)
+	activityController := controller.NewActivityController(services.ActivityService)
+	roleController := controller_admin.NewRoleController(services.RoleService)
+	pluginController := controller_admin.NewPluginController(services.PluginCommonService)
+	permissionController := controller.NewPermissionController(services.RankService)
 	answerAPIRouter := router.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, controllerAdminReportController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController)
-	uiRouter := router.NewUIRouter(controllerSiteInfoController, siteInfoCommonService)
-	authUserMiddleware := middleware2.NewAuthUserMiddleware(authService, siteInfoCommonService)
-	avatarMiddleware := middleware2.NewAvatarMiddleware(serviceConf, uploaderService)
-	shortIDMiddleware := middleware2.NewShortIDMiddleware(siteInfoCommonService)
-	templateRenderController := templaterender.NewTemplateRenderController(questionService, userService, tagService, answerService, commentService, siteInfoCommonService, questionRepo)
-	templateController := controller.NewTemplateController(templateRenderController, siteInfoCommonService)
+	//uiRouter := router.NewUIRouter(controllerSiteInfoController, siteInfoCommonService)
+	authUserMiddleware := middleware2.NewAuthUserMiddleware(services.AuthService, services.SiteInfoCommonService)
+	avatarMiddleware := middleware2.NewAvatarMiddleware(services.UploaderService)
+	shortIDMiddleware := middleware2.NewShortIDMiddleware(services.SiteInfoCommonService)
+	templateRenderController := templaterender.NewTemplateRenderController(services.QuestionService, services.UserService, services.TagService, services.AnswerService, services.CommentService, services.SiteInfoCommonService, repo.QuestionRepo)
+	templateController := controller.NewTemplateController(templateRenderController, services.SiteInfoCommonService)
 	templateRouter := router.NewTemplateRouter(templateController, templateRenderController, siteInfoController, authUserMiddleware)
-	connectorController := controller.NewConnectorController(siteInfoCommonService, emailService, userExternalLoginService)
-	userCenterLoginService := userexternallogin2.NewUserCenterLoginService(userRepo, userCommon, userExternalLoginRepo, userActiveActivityRepo, siteInfoCommonService)
-	userCenterController := controller.NewUserCenterController(userCenterLoginService, siteInfoCommonService)
+	connectorController := controller.NewConnectorController(services.SiteInfoCommonService, services.EmailService, services.UserExternalLoginService)
+	userCenterLoginService := userexternallogin2.NewUserCenterLoginService(repo.UserRepo, services.UserCommon, repo.UserExternalLoginRepo, repo.UserActiveActivityRepo, services.SiteInfoCommonService)
+	userCenterController := controller.NewUserCenterController(userCenterLoginService, services.SiteInfoCommonService)
 	pluginAPIRouter := router.NewPluginAPIRouter(connectorController, userCenterController)
-	ginEngine := server.NewHTTPServer(debug, staticRouter, answerAPIRouter, uiRouter, authUserMiddleware, avatarMiddleware, shortIDMiddleware, templateRouter, pluginAPIRouter)
-	scheduledTaskManager := cron.NewScheduledTaskManager(siteInfoCommonService, questionService)
+	//
+	ginEngine := router.NewHTTPServer(debug, answerAPIRouter, authUserMiddleware, avatarMiddleware, shortIDMiddleware, templateRouter, pluginAPIRouter)
+	scheduledTaskManager := cron.NewScheduledTaskManager(services.SiteInfoCommonService, services.QuestionService)
+	//todo
 	application := newApplication(serverConf, ginEngine, scheduledTaskManager)
 	return application, nil
 }

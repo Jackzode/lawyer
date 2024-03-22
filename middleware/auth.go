@@ -1,22 +1,18 @@
 package middleware
 
 import (
-	"github.com/apache/incubator-answer/commons/constant/reason"
-	"github.com/apache/incubator-answer/commons/entity"
-	"net/http"
+	"github.com/lawyer/commons/base/handler"
+	"github.com/lawyer/commons/constant/reason"
+	"github.com/lawyer/commons/entity"
 	"strings"
 
-	"github.com/apache/incubator-answer/commons/schema"
-	"github.com/apache/incubator-answer/internal/service/role"
-	"github.com/apache/incubator-answer/internal/service/siteinfo_common"
-	"github.com/apache/incubator-answer/ui"
 	"github.com/gin-gonic/gin"
-
-	"github.com/apache/incubator-answer/internal/base/handler"
-	"github.com/apache/incubator-answer/internal/service/auth"
-	"github.com/apache/incubator-answer/pkg/converter"
+	"github.com/lawyer/commons/schema"
+	"github.com/lawyer/pkg/converter"
+	"github.com/lawyer/service/auth"
+	"github.com/lawyer/service/role"
+	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 var ctxUUIDKey = "ctxUuidKey"
@@ -147,29 +143,30 @@ func (am *AuthUserMiddleware) CheckPrivateMode() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		resp, err := am.siteInfoCommonService.GetSiteLogin(ctx)
 		if err != nil {
-			ShowIndexPage(ctx)
+			//ShowIndexPage(ctx)
 			ctx.Abort()
 			return
 		}
 		if resp.LoginRequired {
-			ShowIndexPage(ctx)
+			//ShowIndexPage(ctx)
 			ctx.Abort()
 			return
 		}
 		ctx.Next()
 	}
 }
-func ShowIndexPage(ctx *gin.Context) {
-	ctx.Header("content-type", "text/html;charset=utf-8")
-	ctx.Header("X-Frame-Options", "DENY")
-	file, err := ui.Build.ReadFile("build/index.html")
-	if err != nil {
-		log.Error(err)
-		ctx.Status(http.StatusNotFound)
-		return
-	}
-	ctx.String(http.StatusOK, string(file))
-}
+
+//func ShowIndexPage(ctx *gin.Context) {
+//	ctx.Header("content-type", "text/html;charset=utf-8")
+//	ctx.Header("X-Frame-Options", "DENY")
+//	file, err := ui.Build.ReadFile("build/index.html")
+//	if err != nil {
+//		log.Error(err)
+//		ctx.Status(http.StatusNotFound)
+//		return
+//	}
+//	ctx.String(http.StatusOK, string(file))
+//}
 
 // GetLoginUserIDFromContext get user id from context
 func GetLoginUserIDFromContext(ctx *gin.Context) (userID string) {

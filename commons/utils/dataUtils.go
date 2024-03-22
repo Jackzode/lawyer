@@ -4,27 +4,29 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/apache/incubator-answer/commons/constant"
-	"github.com/apache/incubator-answer/commons/constant/reason"
-	"github.com/apache/incubator-answer/commons/entity"
-	"github.com/apache/incubator-answer/initServer/data"
+	"github.com/gin-gonic/gin"
+	"github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/constant/reason"
+	"github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/handler"
 	"github.com/segmentfault/pacman/errors"
+	"github.com/segmentfault/pacman/i18n"
 	"github.com/segmentfault/pacman/log"
 )
 
 func GetConfigByID(ctx context.Context, id int) (c *entity.Config, err error) {
 	cacheKey := fmt.Sprintf("%s%d", constant.ConfigID2KEYCacheKeyPrefix, id)
-	cacheData := data.RedisClient.Get(ctx, cacheKey).String()
-	if len(cacheData) > 0 {
+	cachehandler := handler.RedisClient.Get(ctx, cacheKey).String()
+	if len(cachehandler) > 0 {
 		c = &entity.Config{}
-		c.BuildByJSON([]byte(cacheData))
+		c.BuildByJSON([]byte(cachehandler))
 		if c.ID > 0 {
 			return c, nil
 		}
 	}
 
 	c = &entity.Config{}
-	exist, err := data.Engine.Context(ctx).ID(id).Get(c)
+	exist, err := handler.Engine.Context(ctx).ID(id).Get(c)
 	if err != nil {
 		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
@@ -33,7 +35,7 @@ func GetConfigByID(ctx context.Context, id int) (c *entity.Config, err error) {
 	}
 
 	// update cache
-	if err := data.RedisClient.Set(ctx, cacheKey, c.JsonString(), constant.ConfigCacheTime).Err(); err != nil {
+	if err := handler.RedisClient.Set(ctx, cacheKey, c.JsonString(), constant.ConfigCacheTime).Err(); err != nil {
 		log.Error(err)
 	}
 	return c, nil
@@ -41,17 +43,17 @@ func GetConfigByID(ctx context.Context, id int) (c *entity.Config, err error) {
 
 func GetConfigByKey(ctx context.Context, key string) (c *entity.Config, err error) {
 	cacheKey := constant.ConfigKEY2ContentCacheKeyPrefix + key
-	cacheData := data.RedisClient.Get(ctx, cacheKey).String()
-	if len(cacheData) > 0 {
+	cachehandler := handler.RedisClient.Get(ctx, cacheKey).String()
+	if len(cachehandler) > 0 {
 		c = &entity.Config{}
-		c.BuildByJSON([]byte(cacheData))
+		c.BuildByJSON([]byte(cachehandler))
 		if c.ID > 0 {
 			return c, nil
 		}
 	}
 
 	c = &entity.Config{Key: key}
-	exist, err := data.Engine.Context(ctx).Get(c)
+	exist, err := handler.Engine.Context(ctx).Get(c)
 	if err != nil {
 		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
@@ -60,7 +62,7 @@ func GetConfigByKey(ctx context.Context, key string) (c *entity.Config, err erro
 	}
 
 	// update cache
-	if err := data.RedisClient.Set(ctx, cacheKey, c.JsonString(), constant.ConfigCacheTime).Err(); err != nil {
+	if err := handler.RedisClient.Set(ctx, cacheKey, c.JsonString(), constant.ConfigCacheTime).Err(); err != nil {
 		log.Error(err)
 	}
 	return c, nil
@@ -69,7 +71,7 @@ func GetConfigByKey(ctx context.Context, key string) (c *entity.Config, err erro
 func UpdateConfig(ctx context.Context, key string, value string) (err error) {
 	// check if key exists
 	oldConfig := &entity.Config{Key: key}
-	exist, err := data.Engine.Context(ctx).Get(oldConfig)
+	exist, err := handler.Engine.Context(ctx).Get(oldConfig)
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
@@ -77,8 +79,8 @@ func UpdateConfig(ctx context.Context, key string, value string) (err error) {
 		return errors.BadRequest(reason.ObjectNotFound)
 	}
 
-	// update database
-	_, err = data.Engine.Context(ctx).ID(oldConfig.ID).Update(&entity.Config{Value: value})
+	// update handlerbase
+	_, err = handler.Engine.Context(ctx).ID(oldConfig.ID).Update(&entity.Config{Value: value})
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
@@ -86,11 +88,11 @@ func UpdateConfig(ctx context.Context, key string, value string) (err error) {
 	oldConfig.Value = value
 	cacheVal := oldConfig.JsonString()
 	// update cache
-	if err := data.RedisClient.Set(ctx,
+	if err := handler.RedisClient.Set(ctx,
 		constant.ConfigKEY2ContentCacheKeyPrefix+key, cacheVal, constant.ConfigCacheTime).Err(); err != nil {
 		log.Error(err)
 	}
-	if err := data.RedisClient.Set(ctx,
+	if err := handler.RedisClient.Set(ctx,
 		fmt.Sprintf("%s%d", constant.ConfigID2KEYCacheKeyPrefix, oldConfig.ID), cacheVal, constant.ConfigCacheTime).Err(); err != nil {
 		log.Error(err)
 	}
@@ -143,4 +145,31 @@ func GetIDByKey(ctx context.Context, key string) (id int, err error) {
 		return 0, err
 	}
 	return cf.ID, nil
+}
+
+// GetEnableShortID get language from header
+func GetEnableShortID(ctx context.Context) bool {
+	flag, ok := ctx.Value(constant.ShortIDFlag).(bool)
+	if ok {
+		return flag
+	}
+	return false
+}
+
+// GetLang get language from header
+func GetLang(ctx *gin.Context) i18n.Language {
+	acceptLanguage := ctx.GetHeader(constant.AcceptLanguageFlag)
+	if len(acceptLanguage) == 0 {
+		return i18n.DefaultLanguage
+	}
+	return i18n.Language(acceptLanguage)
+}
+
+// GetLangByCtx get language from header
+func GetLangByCtx(ctx context.Context) i18n.Language {
+	acceptLanguage, ok := ctx.Value(constant.AcceptLanguageFlag).(i18n.Language)
+	if ok {
+		return acceptLanguage
+	}
+	return i18n.DefaultLanguage
 }

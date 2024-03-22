@@ -2,12 +2,12 @@ package checker
 
 import (
 	"encoding/json"
-	"github.com/apache/incubator-answer/commons/constant"
+	"github.com/lawyer/commons/constant"
 	"os"
 	"path/filepath"
 	"sync"
 
-	"github.com/apache/incubator-answer/pkg/dir"
+	"github.com/lawyer/pkg/dir"
 )
 
 var (

@@ -1,23 +1,21 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"github.com/apache/incubator-answer/commons/logger"
-	"github.com/apache/incubator-answer/initServer"
+	"github.com/lawyer/commons/logger"
+	"github.com/lawyer/initServer"
 )
 
 func main() {
-
+	// todo init log
 	glog.InitLog("stdout")
 	defer func() {
 		err := glog.Logger.Sync()
 		fmt.Println(err)
 	}()
-	//启动服务
-	filename := `C:\jackzhi\go_project\incubator-answer\conf\config.yaml`
-	application := initServer.Start(filename)
-	err := application.Run(context.TODO())
+	filename := `.\conf\config.yaml`
+	application := initServer.Init(filename)
+	err := application.Run()
 	if err != nil {
 		panic(err)
 	}

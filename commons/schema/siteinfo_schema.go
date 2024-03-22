@@ -3,14 +3,14 @@ package schema
 import (
 	"context"
 	"fmt"
-	"github.com/apache/incubator-answer/commons/constant"
-	reason2 "github.com/apache/incubator-answer/commons/constant/reason"
+	"github.com/lawyer/commons/base/handler"
+	"github.com/lawyer/commons/base/translator"
+	"github.com/lawyer/commons/base/validator"
+	"github.com/lawyer/commons/constant"
+	reason2 "github.com/lawyer/commons/constant/reason"
 	"net/mail"
 	"net/url"
 
-	"github.com/apache/incubator-answer/internal/base/handler"
-	"github.com/apache/incubator-answer/internal/base/translator"
-	"github.com/apache/incubator-answer/internal/base/validator"
 	"github.com/segmentfault/pacman/errors"
 )
 

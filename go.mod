@@ -1,4 +1,4 @@
-module github.com/apache/incubator-answer
+module github.com/lawyer
 
 go 1.18
 
