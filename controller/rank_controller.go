@@ -4,19 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service/rank"
 )
 
 // RankController rank controller
 type RankController struct {
-	rankService *rank.RankService
 }
 
 // NewRankController new controller
-func NewRankController(
-	rankService *rank.RankService) *RankController {
-	return &RankController{rankService: rankService}
+func NewRankController() *RankController {
+	return &RankController{}
 }
 
 // GetRankPersonalWithPage user personal rank list
@@ -37,6 +35,6 @@ func (cc *RankController) GetRankPersonalWithPage(ctx *gin.Context) {
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	resp, err := cc.rankService.GetRankPersonalPage(ctx, req)
+	resp, err := services.RankService.GetRankPersonalPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }

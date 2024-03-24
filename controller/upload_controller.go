@@ -5,8 +5,8 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/schema"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/converter"
-	"github.com/lawyer/service/uploader"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -21,14 +21,12 @@ const (
 
 // UploadController upload controller
 type UploadController struct {
-	uploaderService uploader.UploaderService
+	//uploaderService uploader.UploaderService
 }
 
 // NewUploadController new controller
-func NewUploadController(uploaderService uploader.UploaderService) *UploadController {
-	return &UploadController{
-		uploaderService: uploaderService,
-	}
+func NewUploadController() *UploadController {
+	return &UploadController{}
 }
 
 // UploadFile upload file
@@ -50,11 +48,11 @@ func (uc *UploadController) UploadFile(ctx *gin.Context) {
 	source := ctx.PostForm("source")
 	switch source {
 	case fileFromAvatar:
-		url, err = uc.uploaderService.UploadAvatarFile(ctx)
+		url, err = services.UploaderService.UploadAvatarFile(ctx)
 	case fileFromPost:
-		url, err = uc.uploaderService.UploadPostFile(ctx)
+		url, err = services.UploaderService.UploadPostFile(ctx)
 	case fileFromBranding:
-		url, err = uc.uploaderService.UploadBrandingFile(ctx)
+		url, err = services.UploaderService.UploadBrandingFile(ctx)
 	default:
 		handler.HandleResponse(ctx, errors.BadRequest(reason.UploadFileSourceUnsupported), nil)
 		return

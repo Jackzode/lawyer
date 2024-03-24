@@ -2,8 +2,8 @@ package plugin
 
 import (
 	"encoding/json"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
+	"github.com/lawyer/commons/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -131,7 +131,7 @@ func (m *statusManager) UnmarshalJSON(data []byte) error {
 
 // Translate translates the key to the current language of the context
 func Translate(ctx *GinContext, key string) string {
-	return translator.Tr(handler.GetLang(ctx), key)
+	return translator.Tr(utils.GetLang(ctx), key)
 }
 
 // TranslateFn presents a generator of translated string.

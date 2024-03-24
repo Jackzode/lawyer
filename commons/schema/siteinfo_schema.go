@@ -3,11 +3,11 @@ package schema
 import (
 	"context"
 	"fmt"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/base/validator"
 	"github.com/lawyer/commons/constant"
 	reason2 "github.com/lawyer/commons/constant/reason"
+	"github.com/lawyer/commons/utils"
 	"net/mail"
 	"net/url"
 
@@ -155,7 +155,7 @@ type SiteThemeResp struct {
 }
 
 func (s *SiteThemeResp) TrTheme(ctx context.Context) {
-	la := handler.GetLangByCtx(ctx)
+	la := utils.GetLangByCtx(ctx)
 	for _, option := range s.ThemeOptions {
 		tr := translator.Tr(la, option.Value)
 		// if tr is equal the option value means not found translation, so use the original label

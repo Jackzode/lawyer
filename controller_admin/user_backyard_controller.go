@@ -5,20 +5,19 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/schema"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/plugin"
-	"github.com/lawyer/service/user_admin"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // UserAdminController user controller
 type UserAdminController struct {
-	userService *user_admin.UserAdminService
 }
 
 // NewUserAdminController new controller
-func NewUserAdminController(userService *user_admin.UserAdminService) *UserAdminController {
-	return &UserAdminController{userService: userService}
+func NewUserAdminController() *UserAdminController {
+	return &UserAdminController{}
 }
 
 // UpdateUserStatus update user
@@ -43,7 +42,7 @@ func (uc *UserAdminController) UpdateUserStatus(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := uc.userService.UpdateUserStatus(ctx, req)
+	err := services.UserAdminService.UpdateUserStatus(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -65,7 +64,7 @@ func (uc *UserAdminController) UpdateUserRole(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := uc.userService.UpdateUserRole(ctx, req)
+	err := services.UserAdminService.UpdateUserRole(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -87,7 +86,7 @@ func (uc *UserAdminController) AddUser(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := uc.userService.AddUser(ctx, req)
+	err := services.UserAdminService.AddUser(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -107,7 +106,7 @@ func (uc *UserAdminController) AddUsers(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := uc.userService.AddUsers(ctx, req)
+	resp, err := services.UserAdminService.AddUsers(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -129,7 +128,7 @@ func (uc *UserAdminController) UpdateUserPassword(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := uc.userService.UpdateUserPassword(ctx, req)
+	err := services.UserAdminService.UpdateUserPassword(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -152,7 +151,7 @@ func (uc *UserAdminController) GetUserPage(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := uc.userService.GetUserPage(ctx, req)
+	resp, err := services.UserAdminService.GetUserPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -171,7 +170,7 @@ func (uc *UserAdminController) GetUserActivation(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := uc.userService.GetUserActivation(ctx, req)
+	resp, err := services.UserAdminService.GetUserActivation(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -190,6 +189,6 @@ func (uc *UserAdminController) SendUserActivation(ctx *gin.Context) {
 		return
 	}
 
-	err := uc.userService.SendUserActivation(ctx, req)
+	err := services.UserAdminService.SendUserActivation(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

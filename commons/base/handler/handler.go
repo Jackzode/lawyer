@@ -6,6 +6,7 @@ import (
 	"github.com/lawyer/commons/base/validator"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
+	"github.com/lawyer/commons/utils"
 	myErrors "github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 
 // HandleResponse Handle response body
 func HandleResponse(ctx *gin.Context, err error, data interface{}) {
-	lang := GetLang(ctx)
+	lang := utils.GetLang(ctx)
 	// no error
 	if err == nil {
 		ctx.JSON(http.StatusOK, NewRespBodyData(http.StatusOK, reason.Success, data).TrMsg(lang))
@@ -43,7 +44,7 @@ func HandleResponse(ctx *gin.Context, err error, data interface{}) {
 
 // BindAndCheck bind request and check
 func BindAndCheck(ctx *gin.Context, data interface{}) bool {
-	lang := GetLang(ctx)
+	lang := utils.GetLang(ctx)
 	ctx.Set(constant.AcceptLanguageFlag, lang)
 	if err := ctx.ShouldBind(data); err != nil {
 		log.Errorf("http_handle BindAndCheck fail, %s", err.Error())
@@ -61,7 +62,7 @@ func BindAndCheck(ctx *gin.Context, data interface{}) bool {
 
 // BindAndCheckReturnErr bind request and check
 func BindAndCheckReturnErr(ctx *gin.Context, data interface{}) (errFields []*validator.FormErrorField) {
-	lang := GetLang(ctx)
+	lang := utils.GetLang(ctx)
 	if err := ctx.ShouldBind(data); err != nil {
 		log.Errorf("http_handle BindAndCheck fail, %s", err.Error())
 		HandleResponse(ctx, myErrors.New(http.StatusBadRequest, reason.RequestFormatError), nil)

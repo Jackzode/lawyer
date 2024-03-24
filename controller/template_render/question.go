@@ -2,6 +2,8 @@ package templaterender
 
 import (
 	constant2 "github.com/lawyer/commons/constant"
+	repo "github.com/lawyer/initServer/initRepo"
+	services "github.com/lawyer/initServer/initServices"
 	"html/template"
 	"math"
 	"net/http"
@@ -12,26 +14,26 @@ import (
 )
 
 func (t *TemplateRenderController) Index(ctx *gin.Context, req *schema.QuestionPageReq) ([]*schema.QuestionPageResp, int64, error) {
-	return t.questionService.GetQuestionPage(ctx, req)
+	return services.QuestionService.GetQuestionPage(ctx, req)
 }
 
 func (t *TemplateRenderController) QuestionDetail(ctx *gin.Context, id string) (resp *schema.QuestionInfo, err error) {
-	return t.questionService.GetQuestion(ctx, id, "", schema.QuestionPermission{})
+	return services.QuestionService.GetQuestion(ctx, id, "", schema.QuestionPermission{})
 }
 
 func (t *TemplateRenderController) Sitemap(ctx *gin.Context) {
-	general, err := t.siteInfoService.GetSiteGeneral(ctx)
+	general, err := services.SiteInfoService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Error("get site general failed:", err)
 		return
 	}
-	siteInfo, err := t.siteInfoService.GetSiteSeo(ctx)
+	siteInfo, err := services.SiteInfoCommonService.GetSiteSeo(ctx)
 	if err != nil {
 		log.Error("get site GetSiteSeo failed:", err)
 		return
 	}
 
-	questions, err := t.questionRepo.SitemapQuestions(ctx, 1, constant2.SitemapMaxSize)
+	questions, err := repo.QuestionRepo.SitemapQuestions(ctx, 1, constant2.SitemapMaxSize)
 	if err != nil {
 		log.Errorf("get sitemap questions failed: %s", err)
 		return
@@ -51,7 +53,7 @@ func (t *TemplateRenderController) Sitemap(ctx *gin.Context) {
 		return
 	}
 
-	questionNum, err := t.questionRepo.GetQuestionCount(ctx)
+	questionNum, err := repo.QuestionRepo.GetQuestionCount(ctx)
 	if err != nil {
 		log.Error("GetQuestionCount error", err)
 		return
@@ -71,18 +73,18 @@ func (t *TemplateRenderController) Sitemap(ctx *gin.Context) {
 }
 
 func (t *TemplateRenderController) SitemapPage(ctx *gin.Context, page int) error {
-	general, err := t.siteInfoService.GetSiteGeneral(ctx)
+	general, err := services.SiteInfoService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Error("get site general failed:", err)
 		return err
 	}
-	siteInfo, err := t.siteInfoService.GetSiteSeo(ctx)
+	siteInfo, err := services.SiteInfoCommonService.GetSiteSeo(ctx)
 	if err != nil {
 		log.Error("get site GetSiteSeo failed:", err)
 		return err
 	}
 
-	questions, err := t.questionRepo.SitemapQuestions(ctx, page, constant2.SitemapMaxSize)
+	questions, err := repo.QuestionRepo.SitemapQuestions(ctx, page, constant2.SitemapMaxSize)
 	if err != nil {
 		log.Errorf("get sitemap questions failed: %s", err)
 		return err

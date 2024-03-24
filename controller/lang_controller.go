@@ -4,20 +4,18 @@ import (
 	"encoding/json"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
+	"github.com/lawyer/commons/utils"
+	services "github.com/lawyer/initServer/initServices"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lawyer/service/siteinfo_common"
-	"github.com/segmentfault/pacman/i18n"
 )
 
 type LangController struct {
-	translator      i18n.Translator
-	siteInfoService siteinfo_common.SiteInfoCommonService
 }
 
 // NewLangController new language controller.
-func NewLangController(tr i18n.Translator, siteInfoService siteinfo_common.SiteInfoCommonService) *LangController {
-	return &LangController{translator: tr, siteInfoService: siteInfoService}
+func NewLangController() *LangController {
+	return &LangController{}
 }
 
 // GetLangMapping get language config mapping
@@ -29,7 +27,7 @@ func NewLangController(tr i18n.Translator, siteInfoService siteinfo_common.SiteI
 // @Success 200 {object} handler.RespBody{}
 // @Router /answer/api/v1/language/config [get]
 func (u *LangController) GetLangMapping(ctx *gin.Context) {
-	data, _ := u.translator.Dump(handler.GetLang(ctx))
+	data, _ := services.I18nTranslator.Dump(utils.GetLang(ctx))
 	var resp map[string]any
 	_ = json.Unmarshal(data, &resp)
 	handler.HandleResponse(ctx, nil, resp)
@@ -54,7 +52,7 @@ func (u *LangController) GetAdminLangOptions(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{}
 // @Router /answer/api/v1/language/options [get]
 func (u *LangController) GetUserLangOptions(ctx *gin.Context) {
-	siteInterfaceResp, err := u.siteInfoService.GetSiteInterface(ctx)
+	siteInterfaceResp, err := services.SiteInfoCommonService.GetSiteInterface(ctx)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return

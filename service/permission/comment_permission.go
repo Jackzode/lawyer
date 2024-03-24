@@ -2,9 +2,9 @@ package permission
 
 import (
 	"context"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/utils"
 	"time"
 
 	"github.com/lawyer/commons/schema"
@@ -13,7 +13,7 @@ import (
 // GetCommentPermission get comment permission
 func GetCommentPermission(ctx context.Context, userID string, creatorUserID string,
 	createdAt time.Time, canEdit, canDelete bool) (actions []*schema.PermissionMemberAction) {
-	lang := handler.GetLangByCtx(ctx)
+	lang := utils.GetLangByCtx(ctx)
 	actions = make([]*schema.PermissionMemberAction, 0)
 	if len(userID) > 0 {
 		actions = append(actions, &schema.PermissionMemberAction{

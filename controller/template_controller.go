@@ -1,11 +1,14 @@
 package controller
 
+/*
+
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/lawyer/commons/base/handler"
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/utils/checker"
+	services "github.com/lawyer/initServer/initServices"
 	"html/template"
 	"net/http"
 	"regexp"
@@ -19,30 +22,24 @@ import (
 	"github.com/lawyer/pkg/htmltext"
 	"github.com/lawyer/pkg/obj"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/log"
 )
 
 var SiteUrl = ""
 
 type TemplateController struct {
-	scriptPath               string
-	cssPath                  string
-	templateRenderController *templaterender.TemplateRenderController
-	siteInfoService          siteinfo_common.SiteInfoCommonService
+	scriptPath string
+	cssPath    string
+	//templateRenderController *templaterender.TemplateRenderController
+	//siteInfoService          siteinfo_common.SiteInfoCommonService
 }
 
 // NewTemplateController new controller
-func NewTemplateController(
-	templateRenderController *templaterender.TemplateRenderController,
-	siteInfoService siteinfo_common.SiteInfoCommonService,
-) *TemplateController {
+func NewTemplateController() *TemplateController {
 	script, css := GetStyle()
 	return &TemplateController{
-		scriptPath:               script,
-		cssPath:                  css,
-		templateRenderController: templateRenderController,
-		siteInfoService:          siteInfoService,
+		scriptPath: script,
+		cssPath:    css,
 	}
 }
 func GetStyle() (script, css string) {
@@ -65,27 +62,27 @@ func GetStyle() (script, css string) {
 func (tc *TemplateController) SiteInfo(ctx *gin.Context) *schema.TemplateSiteInfoResp {
 	var err error
 	resp := &schema.TemplateSiteInfoResp{}
-	resp.General, err = tc.siteInfoService.GetSiteGeneral(ctx)
+	resp.General, err = services.SiteInfoService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 	SiteUrl = resp.General.SiteUrl
-	resp.Interface, err = tc.siteInfoService.GetSiteInterface(ctx)
+	resp.Interface, err = services.SiteInfoService.GetSiteInterface(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 
-	resp.Branding, err = tc.siteInfoService.GetSiteBranding(ctx)
+	resp.Branding, err = services.SiteInfoService.GetSiteBranding(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 
-	resp.SiteSeo, err = tc.siteInfoService.GetSiteSeo(ctx)
+	resp.SiteSeo, err = services.SiteInfoCommonService.GetSiteSeo(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 
-	resp.CustomCssHtml, err = tc.siteInfoService.GetSiteCustomCssHTML(ctx)
+	resp.CustomCssHtml, err = services.SiteInfoService.GetSiteCustomCssHTML(ctx)
 	if err != nil {
 		log.Error(err)
 	}
@@ -171,7 +168,7 @@ func (tc *TemplateController) QuestionInfoeRdirect(ctx *gin.Context, siteInfo *s
 		titleIsAnswerID = true
 	}
 
-	siteSeo, err := tc.siteInfoService.GetSiteSeo(ctx)
+	siteSeo, err := services.SiteInfoService.GetSiteSeo(ctx)
 	if err != nil {
 		return false, ""
 	}
@@ -481,7 +478,7 @@ func (tc *TemplateController) html(ctx *gin.Context, code int, tpl string, siteI
 		data["title"] = siteInfo.General.Name
 	}
 	data["description"] = siteInfo.Description
-	data["language"] = handler.GetLang(ctx)
+	data["language"] = utils.GetLang(ctx)
 	data["timezone"] = siteInfo.Interface.TimeZone
 	language := strings.Replace(siteInfo.Interface.Language, "_", "-", -1)
 	data["lang"] = language
@@ -532,7 +529,7 @@ func (tc *TemplateController) SitemapPage(ctx *gin.Context) {
 }
 
 func (tc *TemplateController) checkPrivateMode(ctx *gin.Context) bool {
-	resp, err := tc.siteInfoService.GetSiteLogin(ctx)
+	resp, err := services.SiteInfoService.GetSiteLogin(ctx)
 	if err != nil {
 		log.Error(err)
 		return false
@@ -542,3 +539,4 @@ func (tc *TemplateController) checkPrivateMode(ctx *gin.Context) bool {
 	}
 	return false
 }
+*/

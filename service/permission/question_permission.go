@@ -2,17 +2,17 @@ package permission
 
 import (
 	"context"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
+	"github.com/lawyer/commons/utils"
 )
 
 // GetQuestionPermission get question permission
 func GetQuestionPermission(ctx context.Context, userID string, creatorUserID string, status int,
 	canEdit, canDelete, canClose, canReopen, canPin, canHide, canUnPin, canShow, canRecover bool) (
 	actions []*schema.PermissionMemberAction) {
-	lang := handler.GetLangByCtx(ctx)
+	lang := utils.GetLangByCtx(ctx)
 	actions = make([]*schema.PermissionMemberAction, 0)
 	if len(userID) > 0 {
 		actions = append(actions, &schema.PermissionMemberAction{
@@ -93,7 +93,7 @@ func GetQuestionPermission(ctx context.Context, userID string, creatorUserID str
 // GetQuestionExtendsPermission get question extends permission
 func GetQuestionExtendsPermission(ctx context.Context, canInviteOtherToAnswer bool) (
 	actions []*schema.PermissionMemberAction) {
-	lang := handler.GetLangByCtx(ctx)
+	lang := utils.GetLangByCtx(ctx)
 	actions = make([]*schema.PermissionMemberAction, 0)
 	if canInviteOtherToAnswer {
 		actions = append(actions, &schema.PermissionMemberAction{

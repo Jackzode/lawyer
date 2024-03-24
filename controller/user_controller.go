@@ -9,14 +9,10 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
+	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service"
-	"github.com/lawyer/service/action"
-	"github.com/lawyer/service/auth"
-	"github.com/lawyer/service/export"
-	"github.com/lawyer/service/siteinfo_common"
-	"github.com/lawyer/service/user_notification_config"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"net/url"
@@ -24,58 +20,38 @@ import (
 
 // UserController user controller
 type UserController struct {
-	userService                   *service.UserService
-	authService                   *auth.AuthService
-	actionService                 *action.CaptchaService
-	emailService                  *export.EmailService
-	siteInfoCommonService         siteinfo_common.SiteInfoCommonService
-	userNotificationConfigService *user_notification_config.UserNotificationConfigService
 }
 
-// NewUserController new controller
-func NewUserController(
-	authService *auth.AuthService,
-	userService *service.UserService,
-	actionService *action.CaptchaService,
-	emailService *export.EmailService,
-	siteInfoCommonService siteinfo_common.SiteInfoCommonService,
-	userNotificationConfigService *user_notification_config.UserNotificationConfigService,
-) *UserController {
-	return &UserController{
-		authService:                   authService,
-		userService:                   userService,
-		actionService:                 actionService,
-		emailService:                  emailService,
-		siteInfoCommonService:         siteInfoCommonService,
-		userNotificationConfigService: userNotificationConfigService,
-	}
+func NewUserController() *UserController {
+	return &UserController{}
 }
 
 // GetUserInfoByUserID get user info, if user no login response http code is 200, but user info is null
-// @Summary GetUserInfoByUserID
-// @Description get user info, if user no login response http code is 200, but user info is null
-// @Tags User
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} handler.RespBody{data=schema.GetCurrentLoginUserInfoResp}
-// @Router /answer/api/v1/user/info [get]
 func (uc *UserController) GetUserInfoByUserID(ctx *gin.Context) {
 	token := middleware.ExtractToken(ctx)
 	if len(token) == 0 {
 		handler.HandleResponse(ctx, nil, nil)
 		return
 	}
-
-	// if user is no login return null in data
-	userInfo, _ := uc.authService.GetUserCacheInfo(ctx, token)
-	if userInfo == nil {
+	//从cache中获取userinfo， key是token， 再根据user id获取user status，最后写入缓存
+	userCacheInfo, _ := services.AuthService.GetUserCacheInfo(ctx, token)
+	if userCacheInfo == nil {
 		handler.HandleResponse(ctx, nil, nil)
 		return
 	}
-
-	resp, err := uc.userService.GetUserInfoByUserID(ctx, token, userInfo.UserID)
-	uc.setVisitCookies(ctx, userInfo.VisitToken, false)
+	//get user info from db
+	userInfo, err := services.UserService.GetUserInfoByUserID(ctx, token, userCacheInfo.UserID)
+	resp := &schema.GetCurrentLoginUserInfoResp{}
+	resp.ConvertFromUserEntity(userInfo)
+	resp.RoleID, err = services.UserRoleRelService.GetUserRole(ctx, userInfo.ID)
+	if err != nil {
+		log.Error(err)
+	}
+	resp.Avatar = services.SiteInfoCommonService.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status)
+	resp.AccessToken = token
+	resp.HavePassword = len(userInfo.Pass) > 0
+	//set cookie
+	uc.setVisitCookies(ctx, userCacheInfo.VisitToken, false)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -95,7 +71,7 @@ func (uc *UserController) GetOtherUserInfoByUsername(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := uc.userService.GetOtherUserInfoByUsername(ctx, req.Username)
+	resp, err := services.UserService.GetOtherUserInfoByUsername(ctx, req.Username)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -115,29 +91,29 @@ func (uc *UserController) UserEmailLogin(ctx *gin.Context) {
 	}
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := uc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
+		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
-				ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.CaptchaVerificationFailed),
+				ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
 			})
 			handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
 			return
 		}
 	}
 
-	resp, err := uc.userService.EmailLogin(ctx, req)
+	resp, err := services.UserService.EmailLogin(ctx, req)
 	if err != nil {
-		_, _ = uc.actionService.ActionRecordAdd(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
+		_, _ = services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
 		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 			ErrorField: "e_mail",
-			ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.EmailOrPasswordWrong),
+			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.EmailOrPasswordWrong),
 		})
 		handler.HandleResponse(ctx, errors.BadRequest(reason.EmailOrPasswordWrong), errFields)
 		return
 	}
 	if !isAdmin {
-		uc.actionService.ActionRecordDel(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
+		services.CaptchaService.ActionRecordDel(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
 	}
 	uc.setVisitCookies(ctx, resp.VisitToken, true)
 	handler.HandleResponse(ctx, nil, resp)
@@ -159,17 +135,17 @@ func (uc *UserController) RetrievePassWord(ctx *gin.Context) {
 	}
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := uc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
+		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
-				ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.CaptchaVerificationFailed),
+				ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
 			})
 			handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
 			return
 		}
 	}
-	err := uc.userService.RetrievePassWord(ctx, req)
+	err := services.UserService.RetrievePassWord(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -188,15 +164,15 @@ func (uc *UserController) UseRePassWord(ctx *gin.Context) {
 		return
 	}
 
-	req.Content = uc.emailService.VerifyUrlExpired(ctx, req.Code)
+	req.Content = services.EmailService.VerifyUrlExpired(ctx, req.Code)
 	if len(req.Content) == 0 {
 		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired),
 			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
 		return
 	}
 
-	err := uc.userService.UpdatePasswordWhenForgot(ctx, req)
-	uc.actionService.ActionRecordDel(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
+	err := services.UserService.UpdatePasswordWhenForgot(ctx, req)
+	services.CaptchaService.ActionRecordDel(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -214,10 +190,10 @@ func (uc *UserController) UserLogout(ctx *gin.Context) {
 		handler.HandleResponse(ctx, nil, nil)
 		return
 	}
-	_ = uc.authService.RemoveUserCacheInfo(ctx, accessToken)
-	_ = uc.authService.RemoveAdminUserCacheInfo(ctx, accessToken)
+	_ = services.AuthService.RemoveUserCacheInfo(ctx, accessToken)
+	_ = services.AuthService.RemoveAdminUserCacheInfo(ctx, accessToken)
 	visitToken, _ := ctx.Cookie(constant.UserVisitCookiesCacheKey)
-	_ = uc.authService.RemoveUserVisitCacheInfo(ctx, visitToken)
+	_ = services.AuthService.RemoveUserVisitCacheInfo(ctx, visitToken)
 	handler.HandleResponse(ctx, nil, nil)
 }
 
@@ -232,7 +208,7 @@ func (uc *UserController) UserLogout(ctx *gin.Context) {
 // @Router /answer/api/v1/user/register/email [post]
 func (uc *UserController) UserRegisterByEmail(ctx *gin.Context) {
 	// check whether site allow register or not
-	siteInfo, err := uc.siteInfoCommonService.GetSiteLogin(ctx)
+	/*siteInfo, err := services.SiteInfoCommonService.GetSiteLogin(ctx)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -240,71 +216,61 @@ func (uc *UserController) UserRegisterByEmail(ctx *gin.Context) {
 	if !siteInfo.AllowNewRegistrations || !siteInfo.AllowEmailRegistrations {
 		handler.HandleResponse(ctx, errors.BadRequest(reason.NotAllowedRegistration), nil)
 		return
-	}
+	}*/
 
 	req := &schema.UserRegisterReq{}
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	if !checker.EmailInAllowEmailDomain(req.Email, siteInfo.AllowEmailDomains) {
+	//同上
+	/*if !checker.EmailInAllowEmailDomain(req.Email, siteInfo.AllowEmailDomains) {
 		handler.HandleResponse(ctx, errors.BadRequest(reason.EmailIllegalDomainError), nil)
 		return
-	}
+	}*/
 	req.IP = ctx.ClientIP()
-	//就只是根据uuid获取用户身份，判断是否是管理员
-	isAdmin := middleware.GetUserIsAdminModerator(ctx)
+	//就只是根据uuid获取用户身份，判断是否是管理员，
+	//我尼玛新用户注册和管理员有鸡巴毛关系，这里的逻辑也可以删掉了
+	/*isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := uc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, req.IP, req.CaptchaID, req.CaptchaCode)
+		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, req.IP, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
-				ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.CaptchaVerificationFailed),
+				ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
 			})
 			handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
 			return
 		}
-	}
+	}*/
 
-	resp, errFields, err := uc.userService.UserRegisterByEmail(ctx, req)
-	if len(errFields) > 0 {
-		for _, field := range errFields {
-			field.ErrorMsg = translator.Tr(handler.GetLang(ctx), field.ErrorMsg)
-		}
-		handler.HandleResponse(ctx, err, errFields)
+	resp, err := services.UserService.UserRegisterByEmail(ctx, req)
+	if err != nil {
+		handler.HandleResponse(ctx, err, nil)
 	} else {
 		handler.HandleResponse(ctx, err, resp)
 	}
 }
 
-// UserVerifyEmail godoc
-// @Summary UserVerifyEmail
-// @Description UserVerifyEmail
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param code query string true "code" default()
-// @Success 200 {object} handler.RespBody{data=schema.UserLoginResp}
-// @Router /answer/api/v1/user/email/verification [post]
 func (uc *UserController) UserVerifyEmail(ctx *gin.Context) {
 	req := &schema.UserVerifyEmailReq{}
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-
-	req.Content = uc.emailService.VerifyUrlExpired(ctx, req.Code)
+	//VerifyUrlExpired 根据code从缓存中获取content
+	req.Content = services.EmailService.VerifyUrlExpired(ctx, req.Code)
 	if len(req.Content) == 0 {
 		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired),
 			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
 		return
 	}
-
-	resp, err := uc.userService.UserVerifyEmail(ctx, req)
+	//
+	resp, err := services.UserService.UserVerifyEmail(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
 	}
 
-	uc.actionService.ActionRecordDel(ctx, entity.CaptchaActionEmail, ctx.ClientIP())
+	services.CaptchaService.ActionRecordDel(ctx, entity.CaptchaActionEmail, ctx.ClientIP())
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -331,18 +297,18 @@ func (uc *UserController) UserVerifyEmailSend(ctx *gin.Context) {
 	}
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := uc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
+		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
-				ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.CaptchaVerificationFailed),
+				ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
 			})
 			handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
 			return
 		}
 	}
 
-	err := uc.userService.UserVerifyEmailSend(ctx, userInfo.UserID)
+	err := services.UserService.UserVerifyEmailSend(ctx, userInfo.UserID)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -365,23 +331,23 @@ func (uc *UserController) UserModifyPassWord(ctx *gin.Context) {
 	req.AccessToken = middleware.ExtractToken(ctx)
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := uc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, req.UserID,
+		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, req.UserID,
 			req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
-				ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.CaptchaVerificationFailed),
+				ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
 			})
 			handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
 			return
 		}
-		_, err := uc.actionService.ActionRecordAdd(ctx, entity.CaptchaActionPassword, req.UserID)
+		_, err := services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionPassword, req.UserID)
 		if err != nil {
 			log.Error(err)
 		}
 	}
 
-	oldPassVerification, err := uc.userService.UserModifyPassWordVerification(ctx, req)
+	oldPassVerification, err := services.UserService.UserModifyPassWordVerification(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -389,7 +355,7 @@ func (uc *UserController) UserModifyPassWord(ctx *gin.Context) {
 	if !oldPassVerification {
 		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 			ErrorField: "old_pass",
-			ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.OldPasswordVerificationFailed),
+			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.OldPasswordVerificationFailed),
 		})
 		handler.HandleResponse(ctx, errors.BadRequest(reason.OldPasswordVerificationFailed), errFields)
 		return
@@ -398,14 +364,14 @@ func (uc *UserController) UserModifyPassWord(ctx *gin.Context) {
 	if req.OldPass == req.Pass {
 		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 			ErrorField: "pass",
-			ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.NewPasswordSameAsPreviousSetting),
+			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.NewPasswordSameAsPreviousSetting),
 		})
 		handler.HandleResponse(ctx, errors.BadRequest(reason.NewPasswordSameAsPreviousSetting), errFields)
 		return
 	}
-	err = uc.userService.UserModifyPassword(ctx, req)
+	err = services.UserService.UserModifyPassword(ctx, req)
 	if err == nil {
-		uc.actionService.ActionRecordDel(ctx, entity.CaptchaActionPassword, req.UserID)
+		services.CaptchaService.ActionRecordDel(ctx, entity.CaptchaActionPassword, req.UserID)
 	}
 	handler.HandleResponse(ctx, err, nil)
 }
@@ -428,9 +394,9 @@ func (uc *UserController) UserUpdateInfo(ctx *gin.Context) {
 	}
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	req.IsAdmin = middleware.GetUserIsAdminModerator(ctx)
-	errFields, err := uc.userService.UpdateInfo(ctx, req)
+	errFields, err := services.UserService.UpdateInfo(ctx, req)
 	for _, field := range errFields {
-		field.ErrorMsg = translator.Tr(handler.GetLang(ctx), field.ErrorMsg)
+		field.ErrorMsg = translator.Tr(utils.GetLang(ctx), field.ErrorMsg)
 	}
 	handler.HandleResponse(ctx, err, errFields)
 }
@@ -452,50 +418,46 @@ func (uc *UserController) UserUpdateInterface(ctx *gin.Context) {
 		return
 	}
 	req.UserId = middleware.GetLoginUserIDFromContext(ctx)
-	err := uc.userService.UserUpdateInterface(ctx, req)
+	err := services.UserService.UserUpdateInterface(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
-// ActionRecord godoc
-// @Summary ActionRecord
-// @Description ActionRecord
-// @Tags User
-// @Param action query string true "action" Enums(login, e_mail, find_pass)
-// @Security ApiKeyAuth
-// @Success 200 {object} handler.RespBody{data=schema.ActionRecordResp}
-// @Router /answer/api/v1/user/action/record [get]
 func (uc *UserController) ActionRecord(ctx *gin.Context) {
 	req := &schema.ActionRecordReq{}
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
+	//这里是从ctx里获取的user info
 	userinfo := middleware.GetUserInfoFromContext(ctx)
 	if userinfo != nil {
 		req.UserID = userinfo.UserID
 	}
 	req.IP = ctx.ClientIP()
 	resp := &schema.ActionRecordResp{}
+	//role id 是2和3，就是管理员， 管理员不需要验证
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if isAdmin {
 		resp.Verify = false
 		handler.HandleResponse(ctx, nil, resp)
 	} else {
-		resp, err := uc.actionService.ActionRecord(ctx, req)
+		var err error
+		unit := services.CaptchaService.GetActionRecordUnit(ctx, req)
+		verificationResult := services.CaptchaService.ValidationStrategy(ctx, unit, req.Action)
+		if !verificationResult {
+			resp.CaptchaID, resp.CaptchaImg, err = services.CaptchaService.GenerateCaptcha(ctx)
+			resp.Verify = true
+		}
 		handler.HandleResponse(ctx, err, resp)
 	}
 
 }
 
-// UserRegisterCaptcha godoc
-// @Summary UserRegisterCaptcha
-// @Description UserRegisterCaptcha
-// @Tags User
-// @Accept json
-// @Produce json
-// @Success 200 {object} handler.RespBody{data=schema.UserLoginResp}
-// @Router /answer/api/v1/user/register/captcha [get]
 func (uc *UserController) UserRegisterCaptcha(ctx *gin.Context) {
-	resp, err := uc.actionService.UserRegisterCaptcha(ctx)
+	resp := &schema.ActionRecordResp{}
+	CaptchaID, CaptchaImg, err := utils.GenerateCaptcha(ctx)
+	resp.Verify = true
+	resp.CaptchaID = CaptchaID
+	resp.CaptchaImg = CaptchaImg
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -510,7 +472,7 @@ func (uc *UserController) UserRegisterCaptcha(ctx *gin.Context) {
 // @Router /answer/api/v1/user/notification/config [post]
 func (uc *UserController) GetUserNotificationConfig(ctx *gin.Context) {
 	userID := middleware.GetLoginUserIDFromContext(ctx)
-	resp, err := uc.userNotificationConfigService.GetUserNotificationConfig(ctx, userID)
+	resp, err := services.UserNotificationConfigService.GetUserNotificationConfig(ctx, userID)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -531,7 +493,7 @@ func (uc *UserController) UpdateUserNotificationConfig(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	err := uc.userNotificationConfigService.UpdateUserNotificationConfig(ctx, req)
+	err := services.UserNotificationConfigService.UpdateUserNotificationConfig(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -557,7 +519,7 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 		return
 	}
 	// check whether email allow register or not
-	siteInfo, err := uc.siteInfoCommonService.GetSiteLogin(ctx)
+	siteInfo, err := services.SiteInfoCommonService.GetSiteLogin(ctx)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -569,25 +531,25 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 
 	if !isAdmin {
-		captchaPass := uc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEditUserinfo, req.UserID, req.CaptchaID, req.CaptchaCode)
-		uc.actionService.ActionRecordAdd(ctx, entity.CaptchaActionEditUserinfo, req.UserID)
+		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEditUserinfo, req.UserID, req.CaptchaID, req.CaptchaCode)
+		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionEditUserinfo, req.UserID)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
-				ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.CaptchaVerificationFailed),
+				ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
 			})
 			handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
 			return
 		}
 	}
 
-	resp, err := uc.userService.UserChangeEmailSendCode(ctx, req)
+	resp, err := services.UserService.UserChangeEmailSendCode(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, resp)
 		return
 	}
 	if !isAdmin {
-		uc.actionService.ActionRecordDel(ctx, entity.CaptchaActionEditUserinfo, ctx.ClientIP())
+		services.CaptchaService.ActionRecordDel(ctx, entity.CaptchaActionEditUserinfo, ctx.ClientIP())
 	}
 
 	handler.HandleResponse(ctx, err, nil)
@@ -608,15 +570,15 @@ func (uc *UserController) UserChangeEmailVerify(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	req.Content = uc.emailService.VerifyUrlExpired(ctx, req.Code)
+	req.Content = services.EmailService.VerifyUrlExpired(ctx, req.Code)
 	if len(req.Content) == 0 {
 		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired),
 			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
 		return
 	}
 
-	resp, err := uc.userService.UserChangeEmailVerify(ctx, req.Content)
-	uc.actionService.ActionRecordDel(ctx, entity.CaptchaActionEmail, ctx.ClientIP())
+	resp, err := services.UserService.UserChangeEmailVerify(ctx, req.Content)
+	services.CaptchaService.ActionRecordDel(ctx, entity.CaptchaActionEmail, ctx.ClientIP())
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -630,7 +592,7 @@ func (uc *UserController) UserChangeEmailVerify(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.UserRankingResp}
 // @Router /answer/api/v1/user/ranking [get]
 func (uc *UserController) UserRanking(ctx *gin.Context) {
-	resp, err := uc.userService.UserRanking(ctx)
+	resp, err := services.UserService.UserRanking(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -649,14 +611,14 @@ func (uc *UserController) UserUnsubscribeNotification(ctx *gin.Context) {
 		return
 	}
 
-	req.Content = uc.emailService.VerifyUrlExpired(ctx, req.Code)
+	req.Content = services.EmailService.VerifyUrlExpired(ctx, req.Code)
 	if len(req.Content) == 0 {
 		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired),
 			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
 		return
 	}
 
-	err := uc.userService.UserUnsubscribeNotification(ctx, req)
+	err := services.UserService.UserUnsubscribeNotification(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -676,16 +638,17 @@ func (uc *UserController) SearchUserListByName(ctx *gin.Context) {
 		return
 	}
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	resp, err := uc.userService.SearchUserListByName(ctx, req)
+	resp, err := services.UserService.SearchUserListByName(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
 func (uc *UserController) setVisitCookies(ctx *gin.Context, visitToken string, force bool) {
+
 	cookie, err := ctx.Cookie(constant.UserVisitCookiesCacheKey)
 	if err == nil && len(cookie) > 0 && !force {
 		return
 	}
-	general, err := uc.siteInfoCommonService.GetSiteGeneral(ctx)
+	general, err := services.SiteInfoCommonService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Errorf("get site general error: %v", err)
 		return

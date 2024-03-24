@@ -3,21 +3,21 @@ package controller_admin
 import (
 	"encoding/json"
 	"github.com/lawyer/commons/base/handler"
+	services "github.com/lawyer/initServer/initServices"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/plugin"
-	"github.com/lawyer/service/plugin_common"
 )
 
 // PluginController role controller
 type PluginController struct {
-	PluginCommonService *plugin_common.PluginCommonService
+	//PluginCommonService *plugin_common.PluginCommonService
 }
 
 // NewPluginController new controller
-func NewPluginController(PluginCommonService *plugin_common.PluginCommonService) *PluginController {
-	return &PluginController{PluginCommonService: PluginCommonService}
+func NewPluginController() *PluginController {
+	return &PluginController{}
 }
 
 // GetAllPluginStatus get all plugins status
@@ -131,7 +131,7 @@ func (pc *PluginController) UpdatePluginStatus(ctx *gin.Context) {
 	}
 
 	plugin.StatusManager.Enable(req.PluginSlugName, req.Enabled)
-	err := pc.PluginCommonService.UpdatePluginStatus(ctx)
+	err := services.PluginCommonService.UpdatePluginStatus(ctx)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -201,6 +201,6 @@ func (pc *PluginController) UpdatePluginConfig(ctx *gin.Context) {
 		return
 	}
 
-	err = pc.PluginCommonService.UpdatePluginConfig(ctx, req)
+	err = services.PluginCommonService.UpdatePluginConfig(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

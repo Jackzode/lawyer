@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/service/reason_common"
@@ -19,7 +18,7 @@ func NewReasonRepo() reason_common.ReasonRepo {
 }
 
 func (rr *reasonRepo) ListReasons(ctx context.Context, objectType, action string) (resp []*schema.ReasonItem, err error) {
-	lang := handler.GetLangByCtx(ctx)
+	lang := utils.GetLangByCtx(ctx)
 	reasonAction := fmt.Sprintf("%s.%s.reasons", objectType, action)
 	resp = make([]*schema.ReasonItem, 0)
 

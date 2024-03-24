@@ -8,28 +8,20 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
+	"github.com/lawyer/commons/utils"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/plugin"
-	"github.com/lawyer/service"
-	"github.com/lawyer/service/action"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // SearchController tag controller
 type SearchController struct {
-	searchService *service.SearchService
-	actionService *action.CaptchaService
 }
 
 // NewSearchController new controller
-func NewSearchController(
-	searchService *service.SearchService,
-	actionService *action.CaptchaService,
-) *SearchController {
-	return &SearchController{
-		searchService: searchService,
-		actionService: actionService,
-	}
+func NewSearchController() *SearchController {
+	return &SearchController{}
 }
 
 // Search godoc
@@ -55,11 +47,11 @@ func (sc *SearchController) Search(ctx *gin.Context) {
 	}
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := sc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionSearch, unit, dto.CaptchaID, dto.CaptchaCode)
+		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionSearch, unit, dto.CaptchaID, dto.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
-				ErrorMsg:   translator.Tr(handler.GetLang(ctx), reason.CaptchaVerificationFailed),
+				ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
 			})
 			handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
 			return
@@ -67,9 +59,9 @@ func (sc *SearchController) Search(ctx *gin.Context) {
 	}
 
 	if !isAdmin {
-		sc.actionService.ActionRecordAdd(ctx, entity.CaptchaActionSearch, unit)
+		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionSearch, unit)
 	}
-	resp, err := sc.searchService.Search(ctx, &dto)
+	resp, err := services.SearchService.Search(ctx, &dto)
 	handler.HandleResponse(ctx, err, resp)
 }
 

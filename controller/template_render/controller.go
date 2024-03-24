@@ -1,51 +1,23 @@
 package templaterender
 
 import (
-	questioncommon "github.com/lawyer/service/question_common"
 	"math"
 
-	"github.com/google/wire"
-	"github.com/lawyer/service/comment"
-	"github.com/lawyer/service/siteinfo_common"
-
 	"github.com/lawyer/commons/schema"
-	"github.com/lawyer/service"
-	"github.com/lawyer/service/tag"
-)
-
-// ProviderSetTemplateRenderController is template render controller providers.
-var ProviderSetTemplateRenderController = wire.NewSet(
-	NewTemplateRenderController,
 )
 
 type TemplateRenderController struct {
-	questionService *service.QuestionService
-	userService     *service.UserService
-	tagService      *tag.TagService
-	answerService   *service.AnswerService
-	commentService  *comment.CommentService
-	siteInfoService siteinfo_common.SiteInfoCommonService
-	questionRepo    questioncommon.QuestionRepo
+	//questionService *service.QuestionService
+	//userService     *service.UserService
+	//tagService      *tag.TagService
+	//answerService   *service.AnswerService
+	//commentService  *comment.CommentService
+	//siteInfoService siteinfo_common.SiteInfoCommonService
+	//questionRepo    questioncommon.QuestionRepo
 }
 
-func NewTemplateRenderController(
-	questionService *service.QuestionService,
-	userService *service.UserService,
-	tagService *tag.TagService,
-	answerService *service.AnswerService,
-	commentService *comment.CommentService,
-	siteInfoService siteinfo_common.SiteInfoCommonService,
-	questionRepo questioncommon.QuestionRepo,
-) *TemplateRenderController {
-	return &TemplateRenderController{
-		questionService: questionService,
-		userService:     userService,
-		tagService:      tagService,
-		answerService:   answerService,
-		commentService:  commentService,
-		questionRepo:    questionRepo,
-		siteInfoService: siteInfoService,
-	}
+func NewTemplateRenderController() *TemplateRenderController {
+	return &TemplateRenderController{}
 }
 
 // Paginator page

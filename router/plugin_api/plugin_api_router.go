@@ -1,8 +1,9 @@
-package router
+package plugin_api
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/controller"
+	"github.com/lawyer/controller_admin"
 )
 
 type PluginAPIRouter struct {
@@ -48,4 +49,14 @@ func (pr *PluginAPIRouter) RegisterAuthUserConnectorRouter(r *gin.RouterGroup) {
 
 func (pr *PluginAPIRouter) RegisterAuthAdminConnectorRouter(r *gin.RouterGroup) {
 	r.GET("/user-center/agent", pr.userCenterController.UserCenterAdminFunctionAgent)
+}
+
+func RegisterPluginApi(r *gin.RouterGroup) {
+	// plugin
+	c := controller_admin.NewPluginController()
+	r.GET("/plugin/status", c.GetAllPluginStatus)
+	r.GET("/plugins", c.GetPluginList)
+	r.PUT("/plugin/status", c.UpdatePluginStatus)
+	r.GET("/plugin/config", c.GetPluginConfig)
+	r.PUT("/plugin/config", c.UpdatePluginConfig)
 }

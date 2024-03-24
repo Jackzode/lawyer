@@ -24,11 +24,11 @@ func Init(filename string) *gin.Engine {
 	err = handler.InitDBandCacheHandler(c.Debug, c.Data, c.Cache)
 	checkErr(err)
 	// init i18n
-	err = initTranslator(c.I18n)
+	err = services.InitTranslator(c.I18n)
 	checkErr(err)
 	repo.InitRepo()
 	services.InitServices()
-	application, err := initApplication(c.Debug, c.Server, c.ServiceConfig)
+	application, err := initApplication(c.Debug)
 	checkErr(err)
 	return application
 }

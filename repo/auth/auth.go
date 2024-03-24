@@ -30,7 +30,7 @@ func NewAuthRepo() auth.AuthRepo {
 }
 
 // GetUserCacheInfo get user cache info
-func (ar *authRepo) GetUserCacheInfo(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error) {
+func (ar *authRepo) GetUserInfoFromCache(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error) {
 	userInfoCache := ar.Cache.Get(ctx, constant.UserTokenCacheKey+accessToken).String()
 	if userInfoCache == "" {
 		return nil, nil
@@ -99,7 +99,7 @@ func (ar *authRepo) SetUserStatus(ctx context.Context, userID string, userInfo *
 	if err != nil {
 		return err
 	}
-	err = ar.Cache.Set(ctx, constant.UserStatusChangedCacheKey+userID,
+	err = ar.Cache.Set(ctx, constant.UserStatusCacheKey+userID,
 		string(userInfoCache), constant.UserStatusChangedCacheTime).Err()
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -108,8 +108,8 @@ func (ar *authRepo) SetUserStatus(ctx context.Context, userID string, userInfo *
 }
 
 // GetUserStatus get user status
-func (ar *authRepo) GetUserStatus(ctx context.Context, userID string) (userInfo *entity.UserCacheInfo, err error) {
-	userInfoCache := ar.Cache.Get(ctx, constant.UserStatusChangedCacheKey+userID).String()
+func (ar *authRepo) GetUserStatusFromCache(ctx context.Context, userID string) (userInfo *entity.UserCacheInfo, err error) {
+	userInfoCache := ar.Cache.Get(ctx, constant.UserStatusCacheKey+userID).String()
 	if userInfoCache == "" {
 		return nil, nil
 	}
@@ -120,7 +120,7 @@ func (ar *authRepo) GetUserStatus(ctx context.Context, userID string) (userInfo 
 
 // RemoveUserStatus remove user status
 func (ar *authRepo) RemoveUserStatus(ctx context.Context, userID string) (err error) {
-	err = ar.Cache.Del(ctx, constant.UserStatusChangedCacheKey+userID).Err()
+	err = ar.Cache.Del(ctx, constant.UserStatusCacheKey+userID).Err()
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}

@@ -3,11 +3,11 @@ package user_external_login
 import (
 	"context"
 	"encoding/json"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity2 "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/service/activity"
 	"github.com/lawyer/service/siteinfo_common"
@@ -52,8 +52,8 @@ func (us *UserCenterLoginService) ExternalLogin(
 	resp *schema.UserExternalLoginResp, err error) {
 	if len(basicUserInfo.ExternalID) == 0 {
 		return &schema.UserExternalLoginResp{
-			ErrTitle: translator.Tr(handler.GetLangByCtx(ctx), reason.UserAccessDenied),
-			ErrMsg:   translator.Tr(handler.GetLangByCtx(ctx), reason.UserExternalLoginMissingUserID),
+			ErrTitle: translator.Tr(utils.GetLangByCtx(ctx), reason.UserAccessDenied),
+			ErrMsg:   translator.Tr(utils.GetLangByCtx(ctx), reason.UserExternalLoginMissingUserID),
 		}, nil
 	}
 
@@ -66,8 +66,8 @@ func (us *UserCenterLoginService) ExternalLogin(
 		if !checker.EmailInAllowEmailDomain(basicUserInfo.Email, siteInfo.AllowEmailDomains) {
 			log.Debugf("email domain not allowed: %s", basicUserInfo.Email)
 			return &schema.UserExternalLoginResp{
-				ErrTitle: translator.Tr(handler.GetLangByCtx(ctx), reason.UserAccessDenied),
-				ErrMsg:   translator.Tr(handler.GetLangByCtx(ctx), reason.EmailIllegalDomainError),
+				ErrTitle: translator.Tr(utils.GetLangByCtx(ctx), reason.UserAccessDenied),
+				ErrMsg:   translator.Tr(utils.GetLangByCtx(ctx), reason.EmailIllegalDomainError),
 			}, nil
 		}
 	}
@@ -87,8 +87,8 @@ func (us *UserCenterLoginService) ExternalLogin(
 			// if user is deleted, do not allow login
 			if oldUserInfo.Status == entity2.UserStatusDeleted {
 				return &schema.UserExternalLoginResp{
-					ErrTitle: translator.Tr(handler.GetLangByCtx(ctx), reason.UserAccessDenied),
-					ErrMsg:   translator.Tr(handler.GetLangByCtx(ctx), reason.UserPageAccessDenied),
+					ErrTitle: translator.Tr(utils.GetLangByCtx(ctx), reason.UserAccessDenied),
+					ErrMsg:   translator.Tr(utils.GetLangByCtx(ctx), reason.UserPageAccessDenied),
 				}, nil
 			}
 			if err := us.userRepo.UpdateLastLoginDate(ctx, oldUserInfo.ID); err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils/pager"
+	services "github.com/lawyer/initServer/initServices"
 )
 
 func (t *TemplateRenderController) CommentList(
@@ -27,7 +28,7 @@ func (t *TemplateRenderController) CommentList(
 			}
 			pageModel *pager.PageModel
 		)
-		pageModel, err = t.commentService.GetCommentWithPage(ctx, req)
+		pageModel, err = services.CommentService.GetCommentWithPage(ctx, req)
 		if err != nil {
 			return
 		}

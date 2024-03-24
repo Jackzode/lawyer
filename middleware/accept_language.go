@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/utils"
 	"github.com/segmentfault/pacman/i18n"
 )
 
@@ -27,7 +27,7 @@ var (
 // ExtractAndSetAcceptLanguage extract accept language from header and set to context
 func ExtractAndSetAcceptLanguage(ctx *gin.Context) {
 	// The language of our front-end configuration, like en_US
-	lang := handler.GetLang(ctx)
+	lang := utils.GetLang(ctx)
 	if langMapping[lang] {
 		ctx.Set(constant.AcceptLanguageFlag, lang)
 		return
@@ -35,4 +35,5 @@ func ExtractAndSetAcceptLanguage(ctx *gin.Context) {
 
 	// default language
 	ctx.Set(constant.AcceptLanguageFlag, i18n.LanguageEnglish)
+	ctx.Next()
 }

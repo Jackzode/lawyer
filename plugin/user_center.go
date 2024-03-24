@@ -78,8 +78,7 @@ type PersonalBranding struct {
 
 var (
 	// CallUserCenter is a function that calls all registered parsers
-	CallUserCenter,
-	registerUserCenter = MakePlugin[UserCenter](false)
+	CallUserCenter, registerUserCenter = MakePlugin[UserCenter](false)
 )
 
 func UserCenterEnabled() (enabled bool) {

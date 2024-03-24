@@ -4,17 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
-	service "github.com/lawyer/service/role"
+	services "github.com/lawyer/initServer/initServices"
 )
 
 // RoleController role controller
 type RoleController struct {
-	roleService *service.RoleService
 }
 
 // NewRoleController new controller
-func NewRoleController(roleService *service.RoleService) *RoleController {
-	return &RoleController{roleService: roleService}
+func NewRoleController() *RoleController {
+	return &RoleController{}
 }
 
 // GetRoleList get role list
@@ -29,6 +28,6 @@ func (rc *RoleController) GetRoleList(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	resp, err := rc.roleService.GetRoleList(ctx)
+	resp, err := services.RoleService.GetRoleList(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }

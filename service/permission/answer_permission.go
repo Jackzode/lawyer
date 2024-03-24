@@ -2,17 +2,17 @@ package permission
 
 import (
 	"context"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
+	"github.com/lawyer/commons/utils"
 )
 
 // GetAnswerPermission get answer permission
 func GetAnswerPermission(ctx context.Context, userID, creatorUserID string,
 	status int, canEdit, canDelete, canRecover bool) (
 	actions []*schema.PermissionMemberAction) {
-	lang := handler.GetLangByCtx(ctx)
+	lang := utils.GetLangByCtx(ctx)
 	actions = make([]*schema.PermissionMemberAction, 0)
 	if len(userID) > 0 {
 		actions = append(actions, &schema.PermissionMemberAction{

@@ -4,18 +4,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/converter"
-	"github.com/lawyer/service/report_admin"
 )
 
 // ReportController report controller
 type ReportController struct {
-	reportService *report_admin.ReportAdminService
+	//reportService *report_admin.ReportAdminService
 }
 
 // NewReportController new controller
-func NewReportController(reportService *report_admin.ReportAdminService) *ReportController {
-	return &ReportController{reportService: reportService}
+func NewReportController() *ReportController {
+	return &ReportController{}
 }
 
 // ListReportPage godoc
@@ -47,7 +47,7 @@ func (rc *ReportController) ListReportPage(ctx *gin.Context) {
 		PageSize:   pageSize,
 	}
 
-	resp, err := rc.reportService.ListReportPage(ctx, dto)
+	resp, err := services.ReportAdminService.ListReportPage(ctx, dto)
 	if err != nil {
 		handler.HandleResponse(ctx, err, schema.ErrTypeModal)
 	} else {
@@ -72,6 +72,6 @@ func (rc *ReportController) Handle(ctx *gin.Context) {
 		return
 	}
 
-	err := rc.reportService.HandleReported(ctx, req)
+	err := services.ReportAdminService.HandleReported(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

@@ -3,23 +3,21 @@ package controller
 import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant"
+	services "github.com/lawyer/initServer/initServices"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/schema"
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/log"
 )
 
 type SiteInfoController struct {
-	siteInfoService siteinfo_common.SiteInfoCommonService
+	//siteInfoService siteinfo_common.SiteInfoCommonService
 }
 
 // NewSiteInfoController new site info controller.
-func NewSiteInfoController(siteInfoService siteinfo_common.SiteInfoCommonService) *SiteInfoController {
-	return &SiteInfoController{
-		siteInfoService: siteInfoService,
-	}
+func NewSiteInfoController() *SiteInfoController {
+	return &SiteInfoController{}
 }
 
 // GetSiteInfo get site info
@@ -32,43 +30,43 @@ func NewSiteInfoController(siteInfoService siteinfo_common.SiteInfoCommonService
 func (sc *SiteInfoController) GetSiteInfo(ctx *gin.Context) {
 	var err error
 	resp := &schema.SiteInfoResp{Version: constant.Version, Revision: constant.Revision}
-	resp.General, err = sc.siteInfoService.GetSiteGeneral(ctx)
+	resp.General, err = services.SiteInfoCommonService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Error(err)
 	}
-	resp.Interface, err = sc.siteInfoService.GetSiteInterface(ctx)
-	if err != nil {
-		log.Error(err)
-	}
-
-	resp.Branding, err = sc.siteInfoService.GetSiteBranding(ctx)
+	resp.Interface, err = services.SiteInfoCommonService.GetSiteInterface(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 
-	resp.Login, err = sc.siteInfoService.GetSiteLogin(ctx)
+	resp.Branding, err = services.SiteInfoCommonService.GetSiteBranding(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 
-	resp.Theme, err = sc.siteInfoService.GetSiteTheme(ctx)
+	resp.Login, err = services.SiteInfoCommonService.GetSiteLogin(ctx)
 	if err != nil {
 		log.Error(err)
 	}
 
-	resp.CustomCssHtml, err = sc.siteInfoService.GetSiteCustomCssHTML(ctx)
+	resp.Theme, err = services.SiteInfoCommonService.GetSiteTheme(ctx)
 	if err != nil {
 		log.Error(err)
 	}
-	resp.SiteSeo, err = sc.siteInfoService.GetSiteSeo(ctx)
+
+	resp.CustomCssHtml, err = services.SiteInfoCommonService.GetSiteCustomCssHTML(ctx)
 	if err != nil {
 		log.Error(err)
 	}
-	resp.SiteUsers, err = sc.siteInfoService.GetSiteUsers(ctx)
+	resp.SiteSeo, err = services.SiteInfoCommonService.GetSiteSeo(ctx)
 	if err != nil {
 		log.Error(err)
 	}
-	resp.Write, err = sc.siteInfoService.GetSiteWrite(ctx)
+	resp.SiteUsers, err = services.SiteInfoCommonService.GetSiteUsers(ctx)
+	if err != nil {
+		log.Error(err)
+	}
+	resp.Write, err = services.SiteInfoCommonService.GetSiteWrite(ctx)
 	if err != nil {
 		log.Error(err)
 	}
@@ -89,7 +87,7 @@ func (sc *SiteInfoController) GetSiteLegalInfo(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	siteLegal, err := sc.siteInfoService.GetSiteLegal(ctx)
+	siteLegal, err := services.SiteInfoCommonService.GetSiteLegal(ctx)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -125,7 +123,7 @@ func (sc *SiteInfoController) GetManifestJson(ctx *gin.Context) {
 		ThemeColor:      "#000000",
 		BackgroundColor: "#ffffff",
 	}
-	branding, err := sc.siteInfoService.GetSiteBranding(ctx)
+	branding, err := services.SiteInfoCommonService.GetSiteBranding(ctx)
 	if err != nil {
 		log.Error(err)
 	} else if len(branding.Favicon) > 0 {
@@ -134,7 +132,7 @@ func (sc *SiteInfoController) GetManifestJson(ctx *gin.Context) {
 		resp.Icons["48"] = branding.Favicon
 		resp.Icons["128"] = branding.Favicon
 	}
-	siteGeneral, err := sc.siteInfoService.GetSiteGeneral(ctx)
+	siteGeneral, err := services.SiteInfoCommonService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Error(err)
 	} else {

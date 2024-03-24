@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/lawyer/commons/entity"
 	glog "github.com/lawyer/commons/logger"
+	repo "github.com/lawyer/initServer/initRepo"
 	"time"
 )
 
@@ -11,12 +12,14 @@ import (
 // true pass
 // false need captcha
 func (cs *CaptchaService) ValidationStrategy(ctx context.Context, IP, actionType string) bool {
-	info, err := cs.captchaRepo.GetActionType(ctx, IP, actionType)
+	//在缓存中查询最近6min的操作
+	info, err := repo.CaptchaRepo.GetActionType(ctx, IP, actionType)
 	if err != nil {
 		glog.Logger.Error(err.Error())
 		return false
 	}
 	// If no operation previously, it is considered to be the first operation
+	//第一次操作不需要验证码之类的
 	if info == nil {
 		return true
 	}
@@ -64,7 +67,7 @@ func (cs *CaptchaService) CaptchaActionPassword(ctx context.Context, unit string
 		return false
 	}
 	if now-actioninfo.LastTime != 0 && now-actioninfo.LastTime > setTime {
-		cs.captchaRepo.SetActionType(ctx, unit, entity.CaptchaActionPassword, "", 0)
+		repo.CaptchaRepo.SetActionType(ctx, unit, entity.CaptchaActionPassword, "", 0)
 	}
 	return true
 }
@@ -77,7 +80,7 @@ func (cs *CaptchaService) CaptchaActionEditUserinfo(ctx context.Context, unit st
 		return false
 	}
 	if now-actioninfo.LastTime != 0 && now-actioninfo.LastTime > setTime {
-		cs.captchaRepo.SetActionType(ctx, unit, entity.CaptchaActionEditUserinfo, "", 0)
+		repo.CaptchaRepo.SetActionType(ctx, unit, entity.CaptchaActionEditUserinfo, "", 0)
 	}
 	return true
 }
@@ -136,7 +139,7 @@ func (cs *CaptchaService) CaptchaActionSearch(ctx context.Context, unit string, 
 		return false
 	}
 	if now-actioninfo.LastTime > setTime {
-		cs.captchaRepo.SetActionType(ctx, unit, entity.CaptchaActionSearch, "", 0)
+		repo.CaptchaRepo.SetActionType(ctx, unit, entity.CaptchaActionSearch, "", 0)
 	}
 	return true
 }

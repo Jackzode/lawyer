@@ -11,13 +11,13 @@ import (
 
 // AuthRepo auth repository
 type AuthRepo interface {
-	GetUserCacheInfo(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error)
+	GetUserInfoFromCache(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error)
 	SetUserCacheInfo(ctx context.Context, accessToken, visitToken string, userInfo *entity.UserCacheInfo) error
 	GetUserVisitCacheInfo(ctx context.Context, visitToken string) (accessToken string, err error)
 	RemoveUserCacheInfo(ctx context.Context, accessToken string) (err error)
 	RemoveUserVisitCacheInfo(ctx context.Context, visitToken string) (err error)
 	SetUserStatus(ctx context.Context, userID string, userInfo *entity.UserCacheInfo) (err error)
-	GetUserStatus(ctx context.Context, userID string) (userInfo *entity.UserCacheInfo, err error)
+	GetUserStatusFromCache(ctx context.Context, userID string) (userInfo *entity.UserCacheInfo, err error)
 	RemoveUserStatus(ctx context.Context, userID string) (err error)
 	GetAdminUserCacheInfo(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error)
 	SetAdminUserCacheInfo(ctx context.Context, accessToken string, userInfo *entity.UserCacheInfo) error
@@ -36,18 +36,18 @@ func NewAuthService() *AuthService {
 }
 
 func (as *AuthService) GetUserCacheInfo(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error) {
-	userCacheInfo, err := repo.AuthRepo.GetUserCacheInfo(ctx, accessToken)
+	userCacheInfo, err := repo.AuthRepo.GetUserInfoFromCache(ctx, accessToken)
 	if err != nil {
 		return nil, err
 	}
 	if userCacheInfo == nil {
 		return nil, nil
 	}
-	cacheInfo, _ := repo.AuthRepo.GetUserStatus(ctx, userCacheInfo.UserID)
-	if cacheInfo != nil {
-		userCacheInfo.UserStatus = cacheInfo.UserStatus
-		userCacheInfo.EmailStatus = cacheInfo.EmailStatus
-		userCacheInfo.RoleID = cacheInfo.RoleID
+	userStatusInfo, _ := repo.AuthRepo.GetUserStatusFromCache(ctx, userCacheInfo.UserID)
+	if userStatusInfo != nil {
+		userCacheInfo.UserStatus = userStatusInfo.UserStatus
+		userCacheInfo.EmailStatus = userStatusInfo.EmailStatus
+		userCacheInfo.RoleID = userStatusInfo.RoleID
 		// update current user cache info
 		err = repo.AuthRepo.SetUserCacheInfo(ctx, accessToken, userCacheInfo.VisitToken, userCacheInfo)
 		if err != nil {
@@ -55,7 +55,7 @@ func (as *AuthService) GetUserCacheInfo(ctx context.Context, accessToken string)
 		}
 	}
 
-	// try to get user status from user center
+	//todo  try to get user status from user center
 	uc, ok := plugin.GetUserCenter()
 	if ok && len(userCacheInfo.ExternalID) > 0 {
 		if userStatus := uc.UserStatus(userCacheInfo.ExternalID); userStatus != plugin.UserStatusAvailable {

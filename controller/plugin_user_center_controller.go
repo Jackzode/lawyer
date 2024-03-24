@@ -3,13 +3,13 @@ package controller
 import (
 	"fmt"
 	"github.com/lawyer/commons/base/handler"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/plugin"
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/lawyer/service/user_external_login"
 	"github.com/segmentfault/pacman/log"
 )
@@ -22,17 +22,13 @@ const (
 // UserCenterController comment controller
 type UserCenterController struct {
 	userCenterLoginService *user_external_login.UserCenterLoginService
-	siteInfoService        siteinfo_common.SiteInfoCommonService
+	//siteInfoService        siteinfo_common.SiteInfoCommonService
 }
 
 // NewUserCenterController new controller
-func NewUserCenterController(
-	userCenterLoginService *user_external_login.UserCenterLoginService,
-	siteInfoService siteinfo_common.SiteInfoCommonService,
-) *UserCenterController {
+func NewUserCenterController(userCenterLoginService *user_external_login.UserCenterLoginService) *UserCenterController {
 	return &UserCenterController{
 		userCenterLoginService: userCenterLoginService,
-		siteInfoService:        siteInfoService,
 	}
 }
 
@@ -44,7 +40,7 @@ func (uc *UserCenterController) UserCenterAgent(ctx *gin.Context) {
 		handler.HandleResponse(ctx, nil, resp)
 		return
 	}
-	siteGeneral, err := uc.siteInfoService.GetSiteGeneral(ctx)
+	siteGeneral, err := services.SiteInfoCommonService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Errorf("get site info failed: %v", err)
 		ctx.Redirect(http.StatusFound, "/50x")
@@ -85,7 +81,7 @@ func (uc *UserCenterController) UserCenterPersonalBranding(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-
+	//todo
 	resp, err := uc.userCenterLoginService.UserCenterPersonalBranding(ctx, req.Username)
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -111,7 +107,7 @@ func (uc *UserCenterController) UserCenterSignUpRedirect(ctx *gin.Context) {
 }
 
 func (uc *UserCenterController) UserCenterLoginCallback(ctx *gin.Context) {
-	siteGeneral, err := uc.siteInfoService.GetSiteGeneral(ctx)
+	siteGeneral, err := services.SiteInfoCommonService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Errorf("get site info failed: %v", err)
 		ctx.Redirect(http.StatusFound, "/50x")
@@ -148,7 +144,7 @@ func (uc *UserCenterController) UserCenterLoginCallback(ctx *gin.Context) {
 }
 
 func (uc *UserCenterController) UserCenterSignUpCallback(ctx *gin.Context) {
-	siteGeneral, err := uc.siteInfoService.GetSiteGeneral(ctx)
+	siteGeneral, err := services.SiteInfoCommonService.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Errorf("get site info failed: %v", err)
 		ctx.Redirect(http.StatusFound, "/50x")

@@ -21,7 +21,7 @@ func Test_authRepo_SetUserCacheInfo(t *testing.T) {
 	err := authRepo.SetUserCacheInfo(context.TODO(), accessToken, visitToken, &entity.UserCacheInfo{UserID: userID})
 	assert.NoError(t, err)
 
-	cacheInfo, err := authRepo.GetUserCacheInfo(context.TODO(), accessToken)
+	cacheInfo, err := authRepo.GetUserInfoFromCache(context.TODO(), accessToken)
 	assert.NoError(t, err)
 	assert.Equal(t, userID, cacheInfo.UserID)
 }
@@ -35,7 +35,7 @@ func Test_authRepo_RemoveUserCacheInfo(t *testing.T) {
 	err = authRepo.RemoveUserCacheInfo(context.TODO(), accessToken)
 	assert.NoError(t, err)
 
-	userInfo, err := authRepo.GetUserCacheInfo(context.TODO(), accessToken)
+	userInfo, err := authRepo.GetUserInfoFromCache(context.TODO(), accessToken)
 	assert.NoError(t, err)
 	assert.Nil(t, userInfo)
 }
@@ -46,7 +46,7 @@ func Test_authRepo_SetUserStatus(t *testing.T) {
 	err := authRepo.SetUserStatus(context.TODO(), userID, &entity.UserCacheInfo{UserID: userID})
 	assert.NoError(t, err)
 
-	cacheInfo, err := authRepo.GetUserStatus(context.TODO(), userID)
+	cacheInfo, err := authRepo.GetUserStatusFromCache(context.TODO(), userID)
 	assert.NoError(t, err)
 	assert.Equal(t, userID, cacheInfo.UserID)
 }
@@ -59,7 +59,7 @@ func Test_authRepo_RemoveUserStatus(t *testing.T) {
 	err = authRepo.RemoveUserStatus(context.TODO(), userID)
 	assert.NoError(t, err)
 
-	userInfo, err := authRepo.GetUserStatus(context.TODO(), userID)
+	userInfo, err := authRepo.GetUserStatusFromCache(context.TODO(), userID)
 	assert.NoError(t, err)
 	assert.Nil(t, userInfo)
 }

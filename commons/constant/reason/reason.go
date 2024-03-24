@@ -18,6 +18,14 @@ const (
 )
 
 const (
+	SuccessCode     = 0
+	ParamErrCode    = 1000
+	InternalErrCode = 1001
+)
+
+const (
+	InternalErrMsg                   = "error.internal"
+	ParamErr                         = "error.param"
 	EmailOrPasswordWrong             = "error.object.email_or_password_incorrect"
 	CommentNotFound                  = "error.comment.not_found"
 	CommentCannotEditAfterDeadline   = "error.comment.cannot_edit_after_deadline"

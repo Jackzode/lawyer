@@ -3,7 +3,7 @@ package constant
 import "time"
 
 const (
-	UserStatusChangedCacheKey                  = "lawyer:user:status:"
+	UserStatusCacheKey                         = "lawyer:user:status:"
 	UserStatusChangedCacheTime                 = 7 * 24 * time.Hour
 	UserTokenCacheKey                          = "lawyer:user:token:"
 	UserTokenCacheTime                         = 7 * 24 * time.Hour

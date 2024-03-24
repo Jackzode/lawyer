@@ -1,6 +1,8 @@
 package services
 
 import (
+	"github.com/lawyer/commons/base/translator"
+	"github.com/lawyer/commons/config"
 	"github.com/lawyer/service"
 	"github.com/lawyer/service/action"
 	activity2 "github.com/lawyer/service/activity"
@@ -38,6 +40,7 @@ import (
 	usercommon "github.com/lawyer/service/user_common"
 	user_external_login2 "github.com/lawyer/service/user_external_login"
 	user_notification_config2 "github.com/lawyer/service/user_notification_config"
+	"github.com/segmentfault/pacman/i18n"
 )
 
 var (
@@ -93,6 +96,16 @@ var (
 	DashboardService            dashboard.DashboardService
 	ActivityService             *activity2.ActivityService
 )
+
+var (
+	I18nTranslator i18n.Translator
+)
+
+// todo
+func InitTranslator(i18nConf *config.I18n) (err error) {
+	I18nTranslator, err = translator.NewTranslator(i18nConf)
+	return err
+}
 
 func InitServices() {
 

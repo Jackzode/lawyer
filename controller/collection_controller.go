@@ -4,19 +4,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/service"
 )
 
 // CollectionController collection controller
 type CollectionController struct {
-	collectionService *service.CollectionService
 }
 
 // NewCollectionController new controller
-func NewCollectionController(collectionService *service.CollectionService) *CollectionController {
-	return &CollectionController{collectionService: collectionService}
+func NewCollectionController() *CollectionController {
+	return &CollectionController{}
 }
 
 // CollectionSwitch add collection
@@ -38,6 +37,6 @@ func (cc *CollectionController) CollectionSwitch(ctx *gin.Context) {
 	req.ObjectID = uid.DeShortID(req.ObjectID)
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	resp, err := cc.collectionService.CollectionSwitch(ctx, req)
+	resp, err := services.CollectionService.CollectionSwitch(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }

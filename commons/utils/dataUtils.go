@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
+	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/mojocn/base64Captcha"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/i18n"
 	"github.com/segmentfault/pacman/log"
+	"image/color"
 )
 
 func GetConfigByID(ctx context.Context, id int) (c *entity.Config, err error) {
@@ -147,29 +148,29 @@ func GetIDByKey(ctx context.Context, key string) (id int, err error) {
 	return cf.ID, nil
 }
 
-// GetEnableShortID get language from header
-func GetEnableShortID(ctx context.Context) bool {
-	flag, ok := ctx.Value(constant.ShortIDFlag).(bool)
-	if ok {
-		return flag
+func GenerateCaptcha(ctx context.Context) (key, captchaBase64 string, err error) {
+	driverString := base64Captcha.DriverString{
+		Height:          60,
+		Width:           200,
+		NoiseCount:      0,
+		ShowLineOptions: 2 | 4,
+		Length:          4,
+		Source:          "1234567890qwertyuioplkjhgfdsazxcvbnm",
+		BgColor:         &color.RGBA{R: 211, G: 211, B: 211, A: 0},
+		Fonts:           []string{"wqy-microhei.ttc"},
 	}
-	return false
-}
+	driver := driverString.ConvertFonts()
 
-// GetLang get language from header
-func GetLang(ctx *gin.Context) i18n.Language {
-	acceptLanguage := ctx.GetHeader(constant.AcceptLanguageFlag)
-	if len(acceptLanguage) == 0 {
-		return i18n.DefaultLanguage
+	id, content, answer := driver.GenerateIdQuestionAnswer()
+	item, err := driver.DrawCaptcha(content)
+	if err != nil {
+		return "", "", errors.InternalServer(reason.UnknownError).WithError(err).WithStack()
 	}
-	return i18n.Language(acceptLanguage)
-}
+	err = repo.CaptchaRepo.SetCaptcha(ctx, id, answer)
+	if err != nil {
+		return "", "", err
+	}
 
-// GetLangByCtx get language from header
-func GetLangByCtx(ctx context.Context) i18n.Language {
-	acceptLanguage, ok := ctx.Value(constant.AcceptLanguageFlag).(i18n.Language)
-	if ok {
-		return acceptLanguage
-	}
-	return i18n.DefaultLanguage
+	captchaBase64 = item.EncodeB64string()
+	return id, captchaBase64, nil
 }

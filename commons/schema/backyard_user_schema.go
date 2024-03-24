@@ -2,11 +2,11 @@ package schema
 
 import (
 	"context"
-	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/base/validator"
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
+	"github.com/lawyer/commons/utils"
 	"github.com/segmentfault/pacman/errors"
 	"strings"
 )
@@ -118,7 +118,7 @@ type AddUsersErrorData struct {
 func (e *AddUsersErrorData) GetErrField(ctx context.Context) (errFields []*validator.FormErrorField) {
 	return append([]*validator.FormErrorField{}, &validator.FormErrorField{
 		ErrorField: "users",
-		ErrorMsg:   translator.TrWithData(handler.GetLangByCtx(ctx), reason.AddBulkUsersFormatError, e),
+		ErrorMsg:   translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersFormatError, e),
 	})
 }
 
@@ -131,7 +131,7 @@ func (req *AddUsersReq) ParseUsers(ctx context.Context) (errFields []*validator.
 		if len(arr) != 3 {
 			errFields = append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "users",
-				ErrorMsg: translator.TrWithData(handler.GetLangByCtx(ctx), reason.AddBulkUsersFormatError,
+				ErrorMsg: translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersFormatError,
 					&AddUsersErrorData{
 						Line:    i + 1,
 						Content: line,
@@ -150,7 +150,7 @@ func (req *AddUsersReq) ParseUsers(ctx context.Context) (errFields []*validator.
 	if len(req.Users) <= 0 || len(req.Users) > constant2.DefaultBulkUser {
 		errFields = append([]*validator.FormErrorField{}, &validator.FormErrorField{
 			ErrorField: "users",
-			ErrorMsg: translator.TrWithData(handler.GetLangByCtx(ctx), reason.AddBulkUsersAmountError,
+			ErrorMsg: translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersAmountError,
 				map[string]int{
 					"MaxAmount": constant2.DefaultBulkUser,
 				}),

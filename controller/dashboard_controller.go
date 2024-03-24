@@ -3,20 +3,16 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
-	"github.com/lawyer/service/dashboard"
+	services "github.com/lawyer/initServer/initServices"
 )
 
 type DashboardController struct {
-	dashboardService dashboard.DashboardService
+	//dashboardService dashboard.DashboardService
 }
 
 // NewDashboardController new controller
-func NewDashboardController(
-	dashboardService dashboard.DashboardService,
-) *DashboardController {
-	return &DashboardController{
-		dashboardService: dashboardService,
-	}
+func NewDashboardController() *DashboardController {
+	return &DashboardController{}
 }
 
 // DashboardInfo godoc
@@ -29,7 +25,7 @@ func NewDashboardController(
 // @Router /answer/admin/api/dashboard [get]
 // @Success 200 {object} handler.RespBody
 func (ac *DashboardController) DashboardInfo(ctx *gin.Context) {
-	info, err := ac.dashboardService.Statistical(ctx)
+	info, err := services.DashboardService.Statistical(ctx)
 	handler.HandleResponse(ctx, err, gin.H{
 		"info": info,
 	})

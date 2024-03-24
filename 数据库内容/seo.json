@@ -1,9 +1,0 @@
-{
-  "permalink": 1,
-  "robots": "User-agent: *\nDisallow: /admin\nDisallow: /search\nDisallow: /install\nDisallow: /review\nDisallow: /users/login\nDisallow: /users/register\nDisallow: /users/account-recovery\nDisallow: /users/oauth/*\nDisallow: /users/*/*\nDisallow: /answer/api\nDisallow: /*?code*\n\nSitemap: http://localhost:9080/sitemap.xml"
-}
-[email]
-smtpHost = "smtp.gmail.com"
-smtpPort = 587
-smtpUsername = "jackzhi4716@gmail.com"
-smtpPassword = "tkft cwpv tffr hefa"

@@ -34,8 +34,8 @@ func NewCaptchaService() *CaptchaService {
 }
 
 // ActionRecord action record
-func (cs *CaptchaService) ActionRecord(ctx context.Context, req *schema.ActionRecordReq) (resp *schema.ActionRecordResp, err error) {
-	resp = &schema.ActionRecordResp{}
+func (cs *CaptchaService) GetActionRecordUnit(ctx context.Context, req *schema.ActionRecordReq) string {
+
 	unit := req.IP
 	switch req.Action {
 	case entity.CaptchaActionEditUserinfo:
@@ -61,12 +61,7 @@ func (cs *CaptchaService) ActionRecord(ctx context.Context, req *schema.ActionRe
 	case entity.CaptchaActionVote:
 		unit = req.UserID
 	}
-	verificationResult := cs.ValidationStrategy(ctx, unit, req.Action)
-	if !verificationResult {
-		resp.CaptchaID, resp.CaptchaImg, err = cs.GenerateCaptcha(ctx)
-		resp.Verify = true
-	}
-	return
+	return unit
 }
 
 func (cs *CaptchaService) UserRegisterCaptcha(ctx context.Context) (resp *schema.ActionRecordResp, err error) {
@@ -76,9 +71,7 @@ func (cs *CaptchaService) UserRegisterCaptcha(ctx context.Context) (resp *schema
 	return
 }
 
-func (cs *CaptchaService) UserRegisterVerifyCaptcha(
-	ctx context.Context, id string, VerifyValue string,
-) bool {
+func (cs *CaptchaService) UserRegisterVerifyCaptcha(ctx context.Context, id, VerifyValue string) bool {
 	if id == "" || VerifyValue == "" {
 		return false
 	}
@@ -91,9 +84,7 @@ func (cs *CaptchaService) UserRegisterVerifyCaptcha(
 
 // ActionRecordVerifyCaptcha
 // Verify that you need to enter a CAPTCHA, and that the CAPTCHA is correct
-func (cs *CaptchaService) ActionRecordVerifyCaptcha(
-	ctx context.Context, actionType string, IP string, CaptchaId string, CaptchaCode string,
-) bool {
+func (cs *CaptchaService) ActionRecordVerifyCaptcha(ctx context.Context, actionType, IP, CaptchaId, CaptchaCode string) bool {
 	verificationResult := cs.ValidationStrategy(ctx, IP, actionType)
 	if !verificationResult {
 		if CaptchaId == "" || CaptchaCode == "" {

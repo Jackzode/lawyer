@@ -4,17 +4,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
+	"github.com/lawyer/commons/utils"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service/rank"
 )
 
 type PermissionController struct {
-	rankService *rank.RankService
+	//rankService *rank.RankService
 }
 
 // NewPermissionController new language controller.
-func NewPermissionController(rankService *rank.RankService) *PermissionController {
-	return &PermissionController{rankService: rankService}
+func NewPermissionController() *PermissionController {
+	return &PermissionController{}
 }
 
 // GetPermission check user permission
@@ -34,13 +35,13 @@ func (u *PermissionController) GetPermission(ctx *gin.Context) {
 	}
 
 	userID := middleware.GetLoginUserIDFromContext(ctx)
-	ops, requireRanks, err := u.rankService.CheckOperationPermissionsForRanks(ctx, userID, req.Actions)
+	ops, requireRanks, err := services.RankService.CheckOperationPermissionsForRanks(ctx, userID, req.Actions)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
 	}
 
-	lang := handler.GetLangByCtx(ctx)
+	lang := utils.GetLangByCtx(ctx)
 	mapping := make(map[string]*schema.GetPermissionResp, len(ops))
 	for i, action := range req.Actions {
 		t := &schema.GetPermissionResp{HasPermission: ops[i]}

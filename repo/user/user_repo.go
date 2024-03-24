@@ -34,22 +34,24 @@ func NewUserRepo() usercommon.UserRepo {
 
 // AddUser add user
 func (ur *userRepo) AddUser(ctx context.Context, user *entity.User) (err error) {
-	_, err = ur.DB.Transaction(func(session *xorm.Session) (interface{}, error) {
-		session = session.Context(ctx)
-		userInfo := &entity.User{}
-		exist, err := session.Where("username = ?", user.Username).Get(userInfo)
-		if err != nil {
-			return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-		}
-		if exist {
-			return nil, errors.InternalServer(reason.UsernameDuplicate)
-		}
-		_, err = session.Insert(user)
-		if err != nil {
-			return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-		}
-		return nil, nil
-	})
+
+	_, err = ur.DB.Transaction(
+		func(session *xorm.Session) (interface{}, error) {
+			session = session.Context(ctx)
+			userInfo := &entity.User{}
+			exist, err := session.Where("username = ?", user.Username).Get(userInfo)
+			if err != nil {
+				return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+			}
+			if exist {
+				return nil, errors.InternalServer(reason.UsernameDuplicate)
+			}
+			_, err = session.Insert(user)
+			if err != nil {
+				return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+			}
+			return nil, nil
+		})
 	return
 }
 
@@ -165,6 +167,7 @@ func (ur *userRepo) GetByUserID(ctx context.Context, userID string) (userInfo *e
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 		return
 	}
+	//todo  due to plugin
 	err = tryToDecorateUserInfoFromUserCenter(ctx, ur.DB, userInfo)
 	if err != nil {
 		return nil, false, err

@@ -35,7 +35,8 @@ func NewUserService() *UserService {
 
 // GetUserInfoByUserID get user info by user id
 func (us *UserService) GetUserInfoByUserID(ctx context.Context, token, userID string) (
-	resp *schema.GetCurrentLoginUserInfoResp, err error) {
+	userInfo *entity.User, err error) {
+
 	userInfo, exist, err := repo.UserRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -46,17 +47,8 @@ func (us *UserService) GetUserInfoByUserID(ctx context.Context, token, userID st
 	if userInfo.Status == entity.UserStatusDeleted {
 		return nil, errors.Unauthorized(reason.UnauthorizedError)
 	}
+	return userInfo, nil
 
-	resp = &schema.GetCurrentLoginUserInfoResp{}
-	resp.ConvertFromUserEntity(userInfo)
-	resp.RoleID, err = services.UserRoleRelService.GetUserRole(ctx, userInfo.ID)
-	if err != nil {
-		log.Error(err)
-	}
-	resp.Avatar = services.SiteInfoCommonService.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status)
-	resp.AccessToken = token
-	resp.HavePassword = len(userInfo.Pass) > 0
-	return resp, nil
 }
 
 func (us *UserService) GetOtherUserInfoByUsername(ctx context.Context, username string) (
@@ -335,19 +327,14 @@ func (us *UserService) UserUpdateInterface(ctx context.Context, req *schema.Upda
 
 // UserRegisterByEmail user register
 func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo *schema.UserRegisterReq) (
-	resp *schema.UserLoginResp, errFields []*validator.FormErrorField, err error,
-) {
+	resp *schema.UserLoginResp, err error) {
 	//先查一下数据库是否有这个邮箱地址，有则是重复注册
 	_, has, err := repo.UserRepo.GetByEmail(ctx, registerUserInfo.Email)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if has {
-		errFields = append(errFields, &validator.FormErrorField{
-			ErrorField: "e_mail",
-			ErrorMsg:   reason.EmailDuplicate,
-		})
-		return nil, errFields, errors.BadRequest(reason.EmailDuplicate)
+		return nil, errors.BadRequest(reason.EmailDuplicate)
 	}
 
 	userInfo := &entity.User{}
@@ -355,24 +342,22 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	userInfo.DisplayName = registerUserInfo.Name
 	userInfo.Pass, err = us.encryptPassword(ctx, registerUserInfo.Pass)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	userInfo.Username, err = services.UserCommon.MakeUsername(ctx, registerUserInfo.Name)
 	if err != nil {
-		errFields = append(errFields, &validator.FormErrorField{
-			ErrorField: "name",
-			ErrorMsg:   reason.UsernameInvalid,
-		})
-		return nil, errFields, err
+		return nil, err
 	}
 	userInfo.IPInfo = registerUserInfo.IP
 	userInfo.MailStatus = entity.EmailStatusToBeVerified
 	userInfo.Status = entity.UserStatusAvailable
 	userInfo.LastLoginDate = time.Now()
+	//todo 这里有疑问  userInfo.ID是哪来的？插入mysql生成的？
 	err = repo.UserRepo.AddUser(ctx, userInfo)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+	//todo  userInfo.ID这里
 	if err = services.UserNotificationConfigService.SetDefaultUserNotificationConfig(ctx, []string{userInfo.ID}); err != nil {
 		glog.Logger.Error("set default user notification config failed, err: " + err.Error())
 	}
@@ -386,7 +371,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	verifyEmailURL := fmt.Sprintf("%s/users/account-activation?code=%s", us.getSiteUrl(ctx), code)
 	title, body, err := services.EmailService.RegisterTemplate(ctx, verifyEmailURL)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	go services.EmailService.SendAndSaveCode(ctx, userInfo.EMail, title, body, code, data.ToJSONString())
 
@@ -407,16 +392,16 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	}
 	resp.AccessToken, resp.VisitToken, err = services.AuthService.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	resp.RoleID = userCacheInfo.RoleID
 	if resp.RoleID == role2.RoleAdminID {
 		err = services.AuthService.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
-	return resp, nil, nil
+	return resp, nil
 }
 
 func (us *UserService) UserVerifyEmailSend(ctx context.Context, userID string) error {

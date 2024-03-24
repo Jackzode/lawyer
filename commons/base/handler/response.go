@@ -14,6 +14,8 @@ type RespBody struct {
 	Reason string `json:"reason"`
 	// response message
 	Message string `json:"msg"`
+	//
+	TraceId string `json:"trace_id"`
 	// response data
 	Data interface{} `json:"data"`
 }
@@ -44,10 +46,10 @@ func NewRespBodyFromError(e *errors.Error) *RespBody {
 }
 
 // NewRespBodyData new response body with data
-func NewRespBodyData(code int, reason string, data interface{}) *RespBody {
+func NewRespBodyData(code int, msg string, data interface{}) *RespBody {
 	return &RespBody{
-		Code:   code,
-		Reason: reason,
-		Data:   data,
+		Code:    code,
+		Message: msg,
+		Data:    data,
 	}
 }

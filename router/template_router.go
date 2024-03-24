@@ -1,5 +1,7 @@
 package router
 
+/*
+
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/controller"
@@ -52,3 +54,4 @@ func (a *TemplateRouter) RegisterTemplateRouter(r *gin.RouterGroup) {
 	seo.GET("/tags/:tag", a.templateController.TagInfo)
 	seo.GET("/users/:username", a.templateController.UserInfo)
 }
+*/
