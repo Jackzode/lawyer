@@ -3,6 +3,7 @@ package activity_common
 import (
 	"context"
 	"fmt"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
@@ -11,8 +12,6 @@ import (
 	"time"
 
 	"github.com/lawyer/pkg/obj"
-	"github.com/lawyer/service/activity_common"
-	"github.com/lawyer/service/activity_type"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 
@@ -26,7 +25,7 @@ type ActivityRepo struct {
 }
 
 // NewActivityRepo new repository
-func NewActivityRepo() activity_common.ActivityRepo {
+func NewActivityRepo() *ActivityRepo {
 	return &ActivityRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -131,7 +130,7 @@ func (ar *ActivityRepo) GetUsersWhoHasVoteMost(
 	voteStat = make([]*entity.ActivityUserVoteStat, 0)
 
 	actIDs := make([]int, 0)
-	for _, act := range activity_type.ActivityTypeList {
+	for _, act := range constant.ActivityTypeList {
 		cfg, err := utils.GetConfigByKey(ctx, act)
 		if err == nil {
 			actIDs = append(actIDs, cfg.ID)

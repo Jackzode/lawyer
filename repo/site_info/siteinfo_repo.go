@@ -10,7 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"xorm.io/builder"
@@ -21,7 +20,7 @@ type siteInfoRepo struct {
 	Cache *redis.Client
 }
 
-func NewSiteInfo() siteinfo_common.SiteInfoRepo {
+func NewSiteInfo() *siteInfoRepo {
 	return &siteInfoRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

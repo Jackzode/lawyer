@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/plugin"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentfault/pacman/log"
@@ -24,7 +23,6 @@ import (
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/htmltext"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/service/question_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -35,7 +33,7 @@ type questionRepo struct {
 }
 
 // NewQuestionRepo new repository
-func NewQuestionRepo() questioncommon.QuestionRepo {
+func NewQuestionRepo() *questionRepo {
 	return &questionRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -44,7 +42,7 @@ func NewQuestionRepo() questioncommon.QuestionRepo {
 
 // AddQuestion add question
 func (qr *questionRepo) AddQuestion(ctx context.Context, question *entity.Question) (err error) {
-	question.ID, err = repo.UniqueIDRepo.GenUniqueIDStr(ctx, question.TableName())
+	question.ID, err = utils.GenUniqueIDStr(ctx, question.TableName())
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}

@@ -7,11 +7,11 @@ import (
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
+
 	"github.com/redis/go-redis/v9"
 	"xorm.io/builder"
 
-	"github.com/lawyer/service/activity"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/xorm"
 )
@@ -27,7 +27,7 @@ const (
 )
 
 // NewUserActiveActivityRepo new repository
-func NewUserActiveActivityRepo() activity.UserActiveActivityRepo {
+func NewUserActiveActivityRepo() *UserActiveActivityRepo {
 	return &UserActiveActivityRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

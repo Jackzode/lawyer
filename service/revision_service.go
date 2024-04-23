@@ -6,8 +6,8 @@ import (
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity2 "github.com/lawyer/commons/entity"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 	"time"
 
 	"github.com/jinzhu/copier"

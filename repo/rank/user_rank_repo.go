@@ -3,7 +3,7 @@ package rank
 import (
 	"context"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
 	"github.com/redis/go-redis/v9"
@@ -11,8 +11,6 @@ import (
 	"github.com/jinzhu/now"
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/plugin"
-	"github.com/lawyer/service/config"
-	"github.com/lawyer/service/rank"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"xorm.io/builder"
@@ -21,13 +19,13 @@ import (
 
 // UserRankRepo user rank repository
 type UserRankRepo struct {
-	DB            *xorm.Engine
-	Cache         *redis.Client
-	configService *config.ConfigService
+	DB    *xorm.Engine
+	Cache *redis.Client
+	//configService *config.ConfigService
 }
 
 // NewUserRankRepo new repository
-func NewUserRankRepo() rank.UserRankRepo {
+func NewUserRankRepo() *UserRankRepo {
 	return &UserRankRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

@@ -6,14 +6,13 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/commons/utils"
 	"github.com/redis/go-redis/v9"
 	"strconv"
 	"strings"
 	"xorm.io/xorm"
 
 	"github.com/lawyer/commons/utils/pager"
-	tagcommon "github.com/lawyer/service/tag_common"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/builder"
 )
@@ -25,7 +24,7 @@ type tagCommonRepo struct {
 }
 
 // NewTagCommonRepo new repository
-func NewTagCommonRepo() tagcommon.TagCommonRepo {
+func NewTagCommonRepo() *tagCommonRepo {
 	return &tagCommonRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -212,7 +211,7 @@ func (tr *tagCommonRepo) AddTagList(ctx context.Context, tagList []*entity.Tag) 
 			continue
 		}
 		addTags = append(addTags, item)
-		item.ID, err = repo.UniqueIDRepo.GenUniqueIDStr(ctx, item.TableName())
+		item.ID, err = utils.GenUniqueIDStr(ctx, item.TableName())
 		if err != nil {
 			return err
 		}

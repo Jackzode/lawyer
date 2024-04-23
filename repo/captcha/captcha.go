@@ -11,7 +11,6 @@ import (
 	"time"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/action"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 )
@@ -23,7 +22,7 @@ type captchaRepo struct {
 }
 
 // NewCaptchaRepo new repository
-func NewCaptchaRepo() action.CaptchaRepo {
+func NewCaptchaRepo() *captchaRepo {
 	return &captchaRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

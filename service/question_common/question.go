@@ -9,8 +9,8 @@ import (
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 	"math"
 	"time"
 

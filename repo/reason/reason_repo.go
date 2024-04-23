@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/service/reason_common"
 	"github.com/segmentfault/pacman/log"
 )
 
 type reasonRepo struct {
 }
 
-func NewReasonRepo() reason_common.ReasonRepo {
+func NewReasonRepo() *reasonRepo {
 	return &reasonRepo{}
 }
 

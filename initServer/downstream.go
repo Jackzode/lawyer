@@ -3,11 +3,9 @@ package initServer
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/controller"
-	"github.com/lawyer/controller_admin"
 	repo "github.com/lawyer/initServer/initRepo"
 	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/router"
-	"github.com/lawyer/router/lawyerRoutes"
 	"github.com/lawyer/router/plugin_api"
 	userexternallogin2 "github.com/lawyer/service/user_external_login"
 )
@@ -21,35 +19,35 @@ func newApplication(server *gin.Engine) *gin.Engine {
 
 func initApplication(debug bool) (*gin.Engine, error) {
 
-	langController := controller.NewLangController()
-	userController := controller.NewUserController()
-	//todo
-	//rateLimitMiddleware := middleware2.NewRateLimitMiddleware(repo.LimitRepo)
-	commentController := controller.NewCommentController()
-	reportController := controller.NewReportController()
-	voteController := controller.NewVoteController()
-	tagController := controller.NewTagController()
-	followController := controller.NewFollowController()
-	collectionController := controller.NewCollectionController()
-	questionController := controller.NewQuestionController()
-	answerController := controller.NewAnswerController()
-	searchController := controller.NewSearchController()
-	revisionController := controller.NewRevisionController()
-	rankController := controller.NewRankController()
-	controllerAdminReportController := controller_admin.NewReportController()
-	userAdminController := controller_admin.NewUserAdminController()
-	reasonController := controller.NewReasonController()
-	themeController := controller_admin.NewThemeController()
-	siteInfoController := controller_admin.NewSiteInfoController()
-	controllerSiteInfoController := controller.NewSiteInfoController()
-	notificationController := controller.NewNotificationController()
-	dashboardController := controller.NewDashboardController()
-	uploadController := controller.NewUploadController()
-	activityController := controller.NewActivityController()
-	roleController := controller_admin.NewRoleController()
-	pluginController := controller_admin.NewPluginController()
-	permissionController := controller.NewPermissionController()
-	answerAPIRouter := lawyerRoutes.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, controllerAdminReportController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController)
+	//langController := controller.NewLangController()
+	//userController := controller.NewUserController()
+	////todo
+	////rateLimitMiddleware := middleware2.NewRateLimitMiddleware(repo.LimitRepo)
+	//commentController := controller.NewCommentController()
+	//reportController := controller.NewReportController()
+	//voteController := controller.NewVoteController()
+	//tagController := controller.NewTagController()
+	//followController := controller.NewFollowController()
+	//collectionController := controller.NewCollectionController()
+	//questionController := controller.NewQuestionController()
+	//answerController := controller.NewAnswerController()
+	//searchController := controller.NewSearchController()
+	//revisionController := controller.NewRevisionController()
+	//rankController := controller.NewRankController()
+	//controllerAdminReportController := controller_admin.NewReportController()
+	//userAdminController := controller_admin.NewUserAdminController()
+	//reasonController := controller.NewReasonController()
+	//themeController := controller_admin.NewThemeController()
+	//siteInfoController := controller_admin.NewSiteInfoController()
+	//controllerSiteInfoController := controller.NewSiteInfoController()
+	//notificationController := controller.NewNotificationController()
+	//dashboardController := controller.NewDashboardController()
+	//uploadController := controller.NewUploadController()
+	//activityController := controller.NewActivityController()
+	//roleController := controller_admin.NewRoleController()
+	//pluginController := controller_admin.NewPluginController()
+	//permissionController := controller.NewPermissionController()
+	//answerAPIRouter := lawyerRoutes.NewAnswerAPIRouter(langController, userController, commentController, reportController, voteController, tagController, followController, collectionController, questionController, answerController, searchController, revisionController, rankController, controllerAdminReportController, userAdminController, reasonController, themeController, siteInfoController, controllerSiteInfoController, notificationController, dashboardController, uploadController, activityController, roleController, pluginController, permissionController)
 	//uiRouter := router.NewUIRouter(controllerSiteInfoController, siteInfoCommonService)
 	//authUserMiddleware := middleware2.NewAuthUserMiddleware(services.AuthService, services.SiteInfoCommonService)
 	//avatarMiddleware := middleware2.NewAvatarMiddleware(services.UploaderService)
@@ -58,15 +56,15 @@ func initApplication(debug bool) (*gin.Engine, error) {
 	//templateRenderController := templaterender.NewTemplateRenderController()
 	//templateController := controller.NewTemplateController()
 	//templateRouter := router.NewTemplateRouter(templateController, templateRenderController, siteInfoController, authUserMiddleware)
-	connectorController := controller.NewConnectorController()
-	userCenterLoginService := userexternallogin2.NewUserCenterLoginService(repo.UserRepo, services.UserCommon, repo.UserExternalLoginRepo, repo.UserActiveActivityRepo, services.SiteInfoCommonService)
-	userCenterController := controller.NewUserCenterController(userCenterLoginService)
-	pluginAPIRouter := plugin_api.NewPluginAPIRouter(connectorController, userCenterController)
+	//connectorController := controller.NewConnectorController()
+	//userCenterLoginService := userexternallogin2.NewUserCenterLoginService(repo.UserRepo, services.UserCommon, repo.UserExternalLoginRepo, repo.UserActiveActivityRepo, services.SiteInfoCommonService)
+	//userCenterController := controller.NewUserCenterController(userCenterLoginService)
+	//pluginAPIRouter := plugin_api.NewPluginAPIRouter(connectorController, userCenterController)
 	//
-	ginEngine := router.NewHTTPServer(debug, answerAPIRouter, pluginAPIRouter)
+	//ginEngine := router.NewHTTPServer(debug, pluginAPIRouter)
 	//scheduledTaskManager := cron.NewScheduledTaskManager(services.SiteInfoCommonService, services.QuestionService)
 	//todo
 	//application := newApplication(serverConf, ginEngine, scheduledTaskManager)
-	application := newApplication(ginEngine)
-	return application, nil
+	//application := newApplication(ginEngine)
+	return ginEngine, nil
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/plugin_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -18,7 +17,7 @@ type pluginConfigRepo struct {
 }
 
 // NewPluginConfigRepo new repository
-func NewPluginConfigRepo() plugin_common.PluginConfigRepo {
+func NewPluginConfigRepo() *pluginConfigRepo {
 	return &pluginConfigRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

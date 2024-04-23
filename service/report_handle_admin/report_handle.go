@@ -6,9 +6,9 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/obj"
+	"github.com/lawyer/repo"
 )
 
 type ReportHandle struct {

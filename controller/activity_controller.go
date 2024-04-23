@@ -4,19 +4,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/service/activity"
 	"github.com/lawyer/service/role"
 )
 
 type ActivityController struct {
-	//activityService *activity.ActivityService
+	activityService *activity.ActivityService
 }
 
 // NewActivityController new activity controller.
-func NewActivityController() *ActivityController {
-	return &ActivityController{}
+func NewActivityController(activityService *activity.ActivityService) *ActivityController {
+	return &ActivityController{
+		activityService: activityService,
+	}
 }
 
 // GetObjectTimeline get object timeline
@@ -42,7 +44,7 @@ func (ac *ActivityController) GetObjectTimeline(ctx *gin.Context) {
 		req.IsAdmin = userInfo.RoleID == role.RoleAdminID
 	}
 
-	resp, err := services.ActivityService.GetObjectTimeline(ctx, req)
+	resp, err := ac.activityService.GetObjectTimeline(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -62,6 +64,6 @@ func (ac *ActivityController) GetObjectTimelineDetail(ctx *gin.Context) {
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	resp, err := services.ActivityService.GetObjectTimelineDetail(ctx, req)
+	resp, err := ac.activityService.GetObjectTimelineDetail(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }

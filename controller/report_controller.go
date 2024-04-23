@@ -9,19 +9,33 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/service/action"
 	"github.com/lawyer/service/permission"
+	"github.com/lawyer/service/rank"
+	"github.com/lawyer/service/report"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // ReportController report controller
 type ReportController struct {
+	reportService *report.ReportService
+	rankService   *rank.RankService
+	actionService *action.CaptchaService
 }
 
-func NewReportController() *ReportController {
-	return &ReportController{}
+// NewReportController new controller
+func NewReportController(
+	reportService *report.ReportService,
+	rankService *rank.RankService,
+	actionService *action.CaptchaService,
+) *ReportController {
+	return &ReportController{
+		reportService: reportService,
+		rankService:   rankService,
+		actionService: actionService,
+	}
 }
 
 // AddReport add report
@@ -44,7 +58,7 @@ func (rc *ReportController) AddReport(ctx *gin.Context) {
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionReport, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := rc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionReport, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -55,7 +69,7 @@ func (rc *ReportController) AddReport(ctx *gin.Context) {
 		}
 	}
 
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, permission.ReportAdd, "")
+	can, err := rc.rankService.CheckOperationPermission(ctx, req.UserID, permission.ReportAdd, "")
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -65,9 +79,9 @@ func (rc *ReportController) AddReport(ctx *gin.Context) {
 		return
 	}
 
-	err = services.ReportService.AddReport(ctx, req)
+	err = rc.reportService.AddReport(ctx, req)
 	if !isAdmin {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionReport, req.UserID)
+		rc.actionService.ActionRecordAdd(ctx, entity.CaptchaActionReport, req.UserID)
 	}
 	handler.HandleResponse(ctx, err, nil)
 }

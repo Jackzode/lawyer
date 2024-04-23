@@ -8,7 +8,7 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 	"github.com/mojocn/base64Captcha"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
@@ -173,4 +173,16 @@ func GenerateCaptcha(ctx context.Context) (key, captchaBase64 string, err error)
 
 	captchaBase64 = item.EncodeB64string()
 	return id, captchaBase64, nil
+}
+
+// GenUniqueIDStr generate unique id string
+// 1 + 00x(objectType) + 000000000000x(id)
+func GenUniqueIDStr(ctx context.Context, key string) (uniqueID string, err error) {
+	objectType := constant.ObjectTypeStrMapping[key]
+	bean := &entity.Uniqid{UniqidType: objectType}
+	_, err = handler.Engine.Context(ctx).Insert(bean)
+	if err != nil {
+		return "", errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+	}
+	return fmt.Sprintf("1%03d%013d", objectType, bean.ID), nil
 }

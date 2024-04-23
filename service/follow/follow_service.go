@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 )
 
 type FollowRepo interface {

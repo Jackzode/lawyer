@@ -3,8 +3,10 @@ package controller
 import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant/reason"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
+	"github.com/lawyer/service/rank"
+	"github.com/lawyer/service/tag"
+	"github.com/lawyer/service/tag_common"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -15,11 +17,18 @@ import (
 
 // TagController tag controller
 type TagController struct {
+	tagService       *tag.TagService
+	tagCommonService *tag_common.TagCommonService
+	rankService      *rank.RankService
 }
 
 // NewTagController new controller
-func NewTagController() *TagController {
-	return &TagController{}
+func NewTagController(
+	tagService *tag.TagService,
+	tagCommonService *tag_common.TagCommonService,
+	rankService *rank.RankService,
+) *TagController {
+	return &TagController{tagService: tagService, tagCommonService: tagCommonService, rankService: rankService}
 }
 
 // SearchTagLike get tag list
@@ -36,7 +45,7 @@ func (tc *TagController) SearchTagLike(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	resp, err := services.TagCommonService.SearchTagLike(ctx, req)
+	resp, err := tc.tagCommonService.SearchTagLike(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -55,7 +64,7 @@ func (tc *TagController) GetTagsBySlugName(ctx *gin.Context) {
 	}
 	req.TagList = strings.Split(req.Tags, ",")
 	// req.IsAdmin = middleware.GetIsAdminFromContext(ctx)
-	resp, err := services.TagService.GetTagsBySlugName(ctx, req.TagList)
+	resp, err := tc.tagService.GetTagsBySlugName(ctx, req.TagList)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -75,7 +84,7 @@ func (tc *TagController) RemoveTag(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, permission.TagDelete, "")
+	can, err := tc.rankService.CheckOperationPermission(ctx, req.UserID, permission.TagDelete, "")
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -84,7 +93,7 @@ func (tc *TagController) RemoveTag(ctx *gin.Context) {
 		handler.HandleResponse(ctx, errors.Forbidden(reason.RankFailToMeetTheCondition), nil)
 		return
 	}
-	err = services.TagService.RemoveTag(ctx, req)
+	err = tc.tagService.RemoveTag(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -104,7 +113,7 @@ func (tc *TagController) AddTag(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := tc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.TagAdd,
 	})
 	if err != nil {
@@ -116,7 +125,7 @@ func (tc *TagController) AddTag(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := services.TagCommonService.AddTag(ctx, req)
+	resp, err := tc.tagCommonService.AddTag(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -136,7 +145,7 @@ func (tc *TagController) UpdateTag(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := tc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.TagEdit,
 		permission.TagEditWithoutReview,
 	})
@@ -150,7 +159,7 @@ func (tc *TagController) UpdateTag(ctx *gin.Context) {
 	}
 	req.NoNeedReview = canList[1]
 
-	err = services.TagService.UpdateTag(ctx, req)
+	err = tc.tagService.UpdateTag(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 	} else {
@@ -174,7 +183,7 @@ func (tc *TagController) RecoverTag(ctx *gin.Context) {
 	}
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := tc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.TagUnDelete,
 	})
 	if err != nil {
@@ -186,7 +195,7 @@ func (tc *TagController) RecoverTag(ctx *gin.Context) {
 		return
 	}
 
-	err = services.TagService.RecoverTag(ctx, req)
+	err = tc.tagService.RecoverTag(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -207,7 +216,7 @@ func (tc *TagController) GetTagInfo(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := tc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.TagEdit,
 		permission.TagDelete,
 		permission.TagUnDelete,
@@ -220,7 +229,7 @@ func (tc *TagController) GetTagInfo(ctx *gin.Context) {
 	req.CanDelete = canList[1]
 	req.CanRecover = canList[2]
 
-	resp, err := services.TagService.GetTagInfo(ctx, req)
+	resp, err := tc.tagService.GetTagInfo(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -243,7 +252,7 @@ func (tc *TagController) GetTagWithPage(ctx *gin.Context) {
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	resp, err := services.TagService.GetTagWithPage(ctx, req)
+	resp, err := tc.tagService.GetTagWithPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -257,7 +266,7 @@ func (tc *TagController) GetTagWithPage(ctx *gin.Context) {
 // @Router /answer/api/v1/tags/following [get]
 func (tc *TagController) GetFollowingTags(ctx *gin.Context) {
 	userID := middleware.GetLoginUserIDFromContext(ctx)
-	resp, err := services.TagService.GetFollowingTags(ctx, userID)
+	resp, err := tc.tagService.GetFollowingTags(ctx, userID)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -276,14 +285,14 @@ func (tc *TagController) GetTagSynonyms(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, permission.TagSynonym, "")
+	can, err := tc.rankService.CheckOperationPermission(ctx, req.UserID, permission.TagSynonym, "")
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
 	}
 	req.CanEdit = can
 
-	resp, err := services.TagService.GetTagSynonyms(ctx, req)
+	resp, err := tc.tagService.GetTagSynonyms(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -303,7 +312,7 @@ func (tc *TagController) UpdateTagSynonym(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, permission.TagSynonym, "")
+	can, err := tc.rankService.CheckOperationPermission(ctx, req.UserID, permission.TagSynonym, "")
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -313,6 +322,6 @@ func (tc *TagController) UpdateTagSynonym(ctx *gin.Context) {
 		return
 	}
 
-	err = services.TagService.UpdateTagSynonym(ctx, req)
+	err = tc.tagService.UpdateTagSynonym(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

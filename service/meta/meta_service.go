@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 
 	"github.com/segmentfault/pacman/errors"
 )

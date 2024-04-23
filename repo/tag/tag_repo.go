@@ -6,7 +6,6 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/pkg/converter"
-	"github.com/lawyer/service/tag_common"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/builder"
@@ -20,7 +19,7 @@ type tagRepo struct {
 }
 
 // NewTagRepo new repository
-func NewTagRepo() tag_common.TagRepo {
+func NewTagRepo() *tagRepo {
 	return &tagRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

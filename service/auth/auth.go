@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"github.com/lawyer/commons/entity"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/plugin"

@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/redis/go-redis/v9"
 	"strings"
@@ -12,7 +12,6 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/plugin"
-	usercommon "github.com/lawyer/service/user_common"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"xorm.io/xorm"
@@ -25,7 +24,7 @@ type userRepo struct {
 }
 
 // NewUserRepo new repository
-func NewUserRepo() usercommon.UserRepo {
+func NewUserRepo() *userRepo {
 	return &userRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

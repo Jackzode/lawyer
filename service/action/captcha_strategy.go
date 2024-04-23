@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/lawyer/commons/entity"
 	glog "github.com/lawyer/commons/logger"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 	"time"
 )
 

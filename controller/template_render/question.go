@@ -2,8 +2,8 @@ package templaterender
 
 import (
 	constant2 "github.com/lawyer/commons/constant"
-	repo "github.com/lawyer/initServer/initRepo"
 	services "github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 	"html/template"
 	"math"
 	"net/http"

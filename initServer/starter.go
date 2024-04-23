@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/config"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 )
 
 func checkErr(err error) {

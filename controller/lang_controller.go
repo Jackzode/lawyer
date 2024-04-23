@@ -1,36 +1,29 @@
 package controller
 
 import (
-	"encoding/json"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
-	"github.com/lawyer/commons/utils"
-	services "github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/service/siteinfo_common"
 
 	"github.com/gin-gonic/gin"
 )
 
 type LangController struct {
+	//translator      i18n.Translator
+	siteInfoService siteinfo_common.SiteInfoCommonService
 }
 
 // NewLangController new language controller.
-func NewLangController() *LangController {
-	return &LangController{}
+func NewLangController( siteInfoService siteinfo_common.SiteInfoCommonService) *LangController {
+	return &LangController{siteInfoService: siteInfoService}
 }
 
-// GetLangMapping get language config mapping
-// @Summary get language config mapping
-// @Description get language config mapping
-// @Tags Lang
-// @Param Accept-Language header string true "Accept-Language"
-// @Produce json
-// @Success 200 {object} handler.RespBody{}
-// @Router /answer/api/v1/language/config [get]
+
 func (u *LangController) GetLangMapping(ctx *gin.Context) {
-	data, _ := services.I18nTranslator.Dump(utils.GetLang(ctx))
-	var resp map[string]any
-	_ = json.Unmarshal(data, &resp)
-	handler.HandleResponse(ctx, nil, resp)
+	//data, _ := u.translator.Dump(utils.GetLang(ctx))
+	//var resp map[string]any
+	//_ = json.Unmarshal(data, &resp)
+	//handler.HandleResponse(ctx, nil, resp)
 }
 
 // GetAdminLangOptions Get language options
@@ -52,7 +45,7 @@ func (u *LangController) GetAdminLangOptions(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{}
 // @Router /answer/api/v1/language/options [get]
 func (u *LangController) GetUserLangOptions(ctx *gin.Context) {
-	siteInterfaceResp, err := services.SiteInfoCommonService.GetSiteInterface(ctx)
+	siteInterfaceResp, err := u.siteInfoService.GetSiteInterface(ctx)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return

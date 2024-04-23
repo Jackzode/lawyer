@@ -6,9 +6,9 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/htmltext"
+	"github.com/lawyer/repo"
 	"github.com/segmentfault/pacman/log"
 
 	"github.com/jinzhu/copier"

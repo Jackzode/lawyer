@@ -6,7 +6,6 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/service/user_notification_config"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/xorm"
@@ -19,7 +18,7 @@ type userNotificationConfigRepo struct {
 }
 
 // NewUserNotificationConfigRepo new repository
-func NewUserNotificationConfigRepo() user_notification_config.UserNotificationConfigRepo {
+func NewUserNotificationConfigRepo() *userNotificationConfigRepo {
 	return &userNotificationConfigRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

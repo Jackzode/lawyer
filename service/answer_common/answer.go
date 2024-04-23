@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/htmltext"

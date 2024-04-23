@@ -7,23 +7,30 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/obj"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
+	"github.com/lawyer/service/rank"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // RevisionController revision controller
 type RevisionController struct {
-	//revisionListService *service.RevisionService
-	//rankService         *rank.RankService
+	revisionListService *service.RevisionService
+	rankService         *rank.RankService
 }
 
 // NewRevisionController new controller
-func NewRevisionController() *RevisionController {
-	return &RevisionController{}
+func NewRevisionController(
+	revisionListService *service.RevisionService,
+	rankService *rank.RankService,
+) *RevisionController {
+	return &RevisionController{
+		revisionListService: revisionListService,
+		rankService:         rankService,
+	}
 }
 
 // GetRevisionList godoc
@@ -45,7 +52,7 @@ func (rc *RevisionController) GetRevisionList(ctx *gin.Context) {
 		ObjectID: objectID,
 	}
 
-	resp, err := services.ServiceRevisionService.GetRevisionList(ctx, req)
+	resp, err := rc.revisionListService.GetRevisionList(ctx, req)
 	list := make([]schema.GetRevisionResp, 0)
 	for _, item := range resp {
 		if item.Status == entity.RevisioNnormalStatus || item.Status == entity.RevisionReviewPassStatus {
@@ -71,7 +78,7 @@ func (rc *RevisionController) GetUnreviewedRevisionList(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := rc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.QuestionAudit,
 		permission.AnswerAudit,
 		permission.TagAudit,
@@ -84,7 +91,7 @@ func (rc *RevisionController) GetUnreviewedRevisionList(ctx *gin.Context) {
 	req.CanReviewAnswer = canList[1]
 	req.CanReviewTag = canList[2]
 
-	resp, err := services.ServiceRevisionService.GetUnreviewedRevisionPage(ctx, req)
+	resp, err := rc.revisionListService.GetUnreviewedRevisionPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -103,7 +110,7 @@ func (rc *RevisionController) RevisionAudit(ctx *gin.Context) {
 		return
 	}
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := rc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.QuestionAudit,
 		permission.AnswerAudit,
 		permission.TagAudit,
@@ -116,7 +123,7 @@ func (rc *RevisionController) RevisionAudit(ctx *gin.Context) {
 	req.CanReviewAnswer = canList[1]
 	req.CanReviewTag = canList[2]
 
-	err = services.ServiceRevisionService.RevisionAudit(ctx, req)
+	err = rc.revisionListService.RevisionAudit(ctx, req)
 	handler.HandleResponse(ctx, err, gin.H{})
 }
 
@@ -152,7 +159,7 @@ func (rc *RevisionController) CheckCanUpdateRevision(ctx *gin.Context) {
 		return
 	}
 
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, action, req.ID)
+	can, err := rc.rankService.CheckOperationPermission(ctx, req.UserID, action, req.ID)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -162,6 +169,6 @@ func (rc *RevisionController) CheckCanUpdateRevision(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := services.ServiceRevisionService.CheckCanUpdateRevision(ctx, req)
+	resp, err := rc.revisionListService.CheckCanUpdateRevision(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }

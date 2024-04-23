@@ -11,7 +11,6 @@ import (
 	"xorm.io/xorm"
 
 	"github.com/lawyer/commons/schema"
-	"github.com/lawyer/service/user_external_login"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -21,7 +20,7 @@ type userExternalLoginRepo struct {
 }
 
 // NewUserExternalLoginRepo new repository
-func NewUserExternalLoginRepo() user_external_login.UserExternalLoginRepo {
+func NewUserExternalLoginRepo() *userExternalLoginRepo {
 	return &userExternalLoginRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

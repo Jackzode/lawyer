@@ -5,14 +5,12 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/commons/utils"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentfault/pacman/log"
 	"xorm.io/xorm"
 
 	"github.com/lawyer/commons/utils/pager"
-	"github.com/lawyer/service/comment"
-	"github.com/lawyer/service/comment_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -23,7 +21,7 @@ type commentRepo struct {
 }
 
 // NewCommentRepo new repository
-func NewCommentRepo() comment.CommentRepo {
+func NewCommentRepo() *commentRepo {
 	return &commentRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -31,7 +29,7 @@ func NewCommentRepo() comment.CommentRepo {
 }
 
 // NewCommentCommonRepo new repository
-func NewCommentCommonRepo() comment_common.CommentCommonRepo {
+func NewCommentCommonRepo() *commentRepo {
 	return &commentRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -40,7 +38,7 @@ func NewCommentCommonRepo() comment_common.CommentCommonRepo {
 
 // AddComment add comment
 func (cr *commentRepo) AddComment(ctx context.Context, comment *entity.Comment) (err error) {
-	comment.ID, err = repo.UniqueIDRepo.GenUniqueIDStr(ctx, comment.TableName())
+	comment.ID, err = utils.GenUniqueIDStr(ctx, comment.TableName())
 	if err != nil {
 		return err
 	}
@@ -95,7 +93,7 @@ func (cr *commentRepo) GetCommentCount(ctx context.Context) (count int64, err er
 }
 
 // GetCommentPage get comment page
-func (cr *commentRepo) GetCommentPage(ctx context.Context, commentQuery *comment.CommentQuery) (
+func (cr *commentRepo) GetCommentPage(ctx context.Context, commentQuery *utils.CommentQuery) (
 	commentList []*entity.Comment, total int64, err error,
 ) {
 	commentList = make([]*entity.Comment, 0)

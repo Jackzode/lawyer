@@ -13,17 +13,38 @@ import (
 	services "github.com/lawyer/initServer/initServices"
 	middleware "github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/service"
+	"github.com/lawyer/service/action"
 	"github.com/lawyer/service/permission"
+	"github.com/lawyer/service/rank"
+	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // AnswerController answer controller
 type AnswerController struct {
+	answerService         *service.AnswerService
+	rankService           *rank.RankService
+	actionService         *action.CaptchaService
+	siteInfoCommonService siteinfo_common.SiteInfoCommonService
+	rateLimitMiddleware   *middleware.RateLimitMiddleware
 }
 
 // NewAnswerController new controller
-func NewAnswerController() *AnswerController {
-	return &AnswerController{}
+func NewAnswerController(
+	answerService *service.AnswerService,
+	rankService *rank.RankService,
+	actionService *action.CaptchaService,
+	siteInfoCommonService siteinfo_common.SiteInfoCommonService,
+	rateLimitMiddleware *middleware.RateLimitMiddleware,
+) *AnswerController {
+	return &AnswerController{
+		answerService:         answerService,
+		rankService:           rankService,
+		actionService:         actionService,
+		siteInfoCommonService: siteInfoCommonService,
+		rateLimitMiddleware:   rateLimitMiddleware,
+	}
 }
 
 // RemoveAnswer delete answer
@@ -45,7 +66,7 @@ func (ac *AnswerController) RemoveAnswer(ctx *gin.Context) {
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionDelete, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := ac.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionDelete, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -56,8 +77,8 @@ func (ac *AnswerController) RemoveAnswer(ctx *gin.Context) {
 		}
 	}
 
-	objectOwner := services.RankService.CheckOperationObjectOwner(ctx, req.UserID, req.ID)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	objectOwner := ac.rankService.CheckOperationObjectOwner(ctx, req.UserID, req.ID)
+	canList, err := ac.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.AnswerDelete,
 	})
 	if err != nil {
@@ -70,9 +91,9 @@ func (ac *AnswerController) RemoveAnswer(ctx *gin.Context) {
 		return
 	}
 
-	err = services.AnswerService.RemoveAnswer(ctx, req)
+	err = ac.answerService.RemoveAnswer(ctx, req)
 	if !isAdmin {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionDelete, req.UserID)
+		ac.actionService.ActionRecordAdd(ctx, entity.CaptchaActionDelete, req.UserID)
 	}
 	handler.HandleResponse(ctx, err, nil)
 }
@@ -95,7 +116,7 @@ func (ac *AnswerController) RecoverAnswer(ctx *gin.Context) {
 	req.AnswerID = uid.DeShortID(req.AnswerID)
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := ac.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.AnswerUnDelete,
 	})
 	if err != nil {

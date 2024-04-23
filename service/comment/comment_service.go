@@ -5,9 +5,10 @@ import (
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity2 "github.com/lawyer/commons/entity"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/token"
+	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
 	"time"
 
@@ -26,28 +27,8 @@ type CommentRepo interface {
 	RemoveComment(ctx context.Context, commentID string) (err error)
 	UpdateCommentContent(ctx context.Context, commentID string, original string, parsedText string) (err error)
 	GetComment(ctx context.Context, commentID string) (comment *entity2.Comment, exist bool, err error)
-	GetCommentPage(ctx context.Context, commentQuery *CommentQuery) (
+	GetCommentPage(ctx context.Context, commentQuery *utils.CommentQuery) (
 		comments []*entity2.Comment, total int64, err error)
-}
-
-type CommentQuery struct {
-	pager.PageCond
-	// object id
-	ObjectID string
-	// query condition
-	QueryCond string
-	// user id
-	UserID string
-}
-
-func (c *CommentQuery) GetOrderBy() string {
-	if c.QueryCond == "vote" {
-		return "vote_count DESC,created_at ASC"
-	}
-	if c.QueryCond == "created_at" {
-		return "created_at DESC"
-	}
-	return "created_at ASC"
 }
 
 // CommentService user service
@@ -277,7 +258,7 @@ func (cs *CommentService) GetComment(ctx context.Context, req *schema.GetComment
 // GetCommentWithPage get comment list page
 func (cs *CommentService) GetCommentWithPage(ctx context.Context, req *schema.GetCommentWithPageReq) (
 	pageModel *pager.PageModel, err error) {
-	dto := &CommentQuery{
+	dto := &utils.CommentQuery{
 		PageCond:  pager.PageCond{Page: req.Page, PageSize: req.PageSize},
 		ObjectID:  req.ObjectID,
 		QueryCond: req.QueryCond,
@@ -392,7 +373,7 @@ func (cs *CommentService) GetCommentPersonalWithPage(ctx context.Context, req *s
 		return nil, errors.BadRequest(reason.UserNotFound)
 	}
 
-	dto := &CommentQuery{
+	dto := &utils.CommentQuery{
 		PageCond:  pager.PageCond{Page: req.Page, PageSize: req.PageSize},
 		UserID:    req.UserID,
 		QueryCond: "created_at",

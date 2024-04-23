@@ -2,8 +2,8 @@ package role
 
 import (
 	"context"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 )
 
 // RolePowerRelRepo rolePowerRel repository

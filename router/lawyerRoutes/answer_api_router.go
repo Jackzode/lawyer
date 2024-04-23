@@ -222,7 +222,7 @@ func RegisterOtherApi(r *gin.RouterGroup) {
 	reasonC := controller.NewReasonController()
 	r.GET("/reasons", reasonC.Reasons)
 	// activity
-	acc := controller.NewActivityController()
+	acc := controller.NewActivityController(nil)
 	r.GET("/activity/timeline", acc.GetObjectTimeline)
 	r.GET("/activity/timeline/detail", acc.GetObjectTimelineDetail)
 	// theme

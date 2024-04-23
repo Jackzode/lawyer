@@ -10,7 +10,6 @@ import (
 
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils/pager"
-	"github.com/lawyer/service"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -21,7 +20,7 @@ type collectionGroupRepo struct {
 }
 
 // NewCollectionGroupRepo new repository
-func NewCollectionGroupRepo() service.CollectionGroupRepo {
+func NewCollectionGroupRepo() *collectionGroupRepo {
 	return &collectionGroupRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

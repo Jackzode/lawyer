@@ -6,9 +6,9 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	checker "github.com/lawyer/commons/utils/checker"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/converter"
+	"github.com/lawyer/repo"
 	role2 "github.com/lawyer/service/role"
 	"strings"
 

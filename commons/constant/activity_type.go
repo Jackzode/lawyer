@@ -1,4 +1,4 @@
-package activity_type
+package constant
 
 const (
 	QuestionVoteUp    = "question.vote_up"

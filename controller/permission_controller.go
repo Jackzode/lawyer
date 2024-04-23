@@ -5,17 +5,17 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
+	"github.com/lawyer/service/rank"
 )
 
 type PermissionController struct {
-	//rankService *rank.RankService
+	rankService *rank.RankService
 }
 
 // NewPermissionController new language controller.
-func NewPermissionController() *PermissionController {
-	return &PermissionController{}
+func NewPermissionController(rankService *rank.RankService) *PermissionController {
+	return &PermissionController{rankService: rankService}
 }
 
 // GetPermission check user permission
@@ -35,7 +35,7 @@ func (u *PermissionController) GetPermission(ctx *gin.Context) {
 	}
 
 	userID := middleware.GetLoginUserIDFromContext(ctx)
-	ops, requireRanks, err := services.RankService.CheckOperationPermissionsForRanks(ctx, userID, req.Actions)
+	ops, requireRanks, err := u.rankService.CheckOperationPermissionsForRanks(ctx, userID, req.Actions)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return

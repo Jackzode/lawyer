@@ -5,12 +5,11 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/repo"
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/activity_common"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 )
@@ -22,7 +21,7 @@ type VoteRepo struct {
 }
 
 // NewVoteRepo new repository
-func NewVoteRepo() activity_common.VoteRepo {
+func NewVoteRepo() *VoteRepo {
 	return &VoteRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

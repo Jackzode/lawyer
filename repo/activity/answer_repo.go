@@ -7,7 +7,7 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity2 "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentfault/pacman/log"
 	"time"
@@ -15,7 +15,6 @@ import (
 
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/converter"
-	"github.com/lawyer/service/activity"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/xorm"
 )
@@ -27,7 +26,7 @@ type AnswerActivityRepo struct {
 }
 
 // NewAnswerActivityRepo new repository
-func NewAnswerActivityRepo() activity.AnswerActivityRepo {
+func NewAnswerActivityRepo() *AnswerActivityRepo {
 	return &AnswerActivityRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

@@ -4,17 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
-	services "github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/service/reason"
 )
 
 // ReasonController answer controller
 type ReasonController struct {
-	//reasonService *reason.ReasonService
+	reasonService *reason.ReasonService
 }
 
 // NewReasonController new controller
-func NewReasonController() *ReasonController {
-	return &ReasonController{}
+func NewReasonController(answerService *reason.ReasonService) *ReasonController {
+	return &ReasonController{reasonService: answerService}
 }
 
 // Reasons godoc
@@ -34,6 +34,6 @@ func (rc *ReasonController) Reasons(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	reasons, err := services.ReasonService.GetReasons(ctx, *req)
+	reasons, err := rc.reasonService.GetReasons(ctx, *req)
 	handler.HandleResponse(ctx, err, reasons)
 }

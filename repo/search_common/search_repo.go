@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/plugin"
-	tagcommon "github.com/lawyer/service/tag_common"
 	"github.com/redis/go-redis/v9"
 	"strconv"
 	"strings"
@@ -21,8 +20,6 @@ import (
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/pkg/obj"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/service/search_common"
-	usercommon "github.com/lawyer/service/user_common"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/builder"
 )
@@ -61,12 +58,12 @@ type searchRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 	//todo
-	userCommon *usercommon.UserCommon
-	tagCommon  *tagcommon.TagCommonService
+	//userCommon *usercommon.UserCommon
+	//tagCommon  *tagcommon.TagCommonService
 }
 
 // NewSearchRepo new repository
-func NewSearchRepo() search_common.SearchRepo {
+func NewSearchRepo() *searchRepo {
 	return &searchRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -99,14 +96,14 @@ func (sr *searchRepo) SearchContents(ctx context.Context, words []string, tagIDs
 	ub = builder.MySQL().Select(afs...).From("`answer`").
 		LeftJoin("`question`", "`question`.id = `answer`.question_id")
 
-	b.Where(builder.Lt{"`question`.`status`": entity2.QuestionStatusDeleted}).
-		And(builder.Eq{"`question`.`show`": entity2.QuestionShow})
-	ub.Where(builder.Lt{"`question`.`status`": entity2.QuestionStatusDeleted}).
-		And(builder.Lt{"`answer`.`status`": entity2.AnswerStatusDeleted}).
-		And(builder.Eq{"`question`.`show`": entity2.QuestionShow})
+	b.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
+		And(builder.Eq{"`question`.`show`": entity.QuestionShow})
+	ub.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
+		And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).
+		And(builder.Eq{"`question`.`show`": entity.QuestionShow})
 
-	argsQ = append(argsQ, entity2.QuestionStatusDeleted, entity2.QuestionShow)
-	argsA = append(argsA, entity2.QuestionStatusDeleted, entity2.AnswerStatusDeleted, entity2.QuestionShow)
+	argsQ = append(argsQ, entity.QuestionStatusDeleted, entity.QuestionShow)
+	argsA = append(argsA, entity.QuestionStatusDeleted, entity.AnswerStatusDeleted, entity.QuestionShow)
 
 	likeConQ := builder.NewCond()
 	likeConA := builder.NewCond()
@@ -129,15 +126,15 @@ func (sr *searchRepo) SearchContents(ctx context.Context, words []string, tagIDs
 		b.Join("INNER", "tag_rel as "+ast, "question.id = "+ast+".object_id").
 			And(builder.Eq{
 				ast + ".tag_id": tagID,
-				ast + ".status": entity2.TagRelStatusAvailable,
+				ast + ".status": entity.TagRelStatusAvailable,
 			})
 		ub.Join("INNER", "tag_rel as "+ast, "question_id = "+ast+".object_id").
 			And(builder.Eq{
 				ast + ".tag_id": tagID,
-				ast + ".status": entity2.TagRelStatusAvailable,
+				ast + ".status": entity.TagRelStatusAvailable,
 			})
-		argsQ = append(argsQ, entity2.TagRelStatusAvailable, tagID)
-		argsA = append(argsA, entity2.TagRelStatusAvailable, tagID)
+		argsQ = append(argsQ, entity.TagRelStatusAvailable, tagID)
+		argsA = append(argsA, entity.TagRelStatusAvailable, tagID)
 	}
 
 	// check user
@@ -228,8 +225,8 @@ func (sr *searchRepo) SearchQuestions(ctx context.Context, words []string, tagID
 
 	b := builder.MySQL().Select(qfs...).From("question")
 
-	b.Where(builder.Lt{"`question`.`status`": entity2.QuestionStatusDeleted}).And(builder.Eq{"`question`.`show`": entity2.QuestionShow})
-	args = append(args, entity2.QuestionStatusDeleted, entity2.QuestionShow)
+	b.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).And(builder.Eq{"`question`.`show`": entity.QuestionShow})
+	args = append(args, entity.QuestionStatusDeleted, entity.QuestionShow)
 
 	likeConQ := builder.NewCond()
 	for _, word := range words {
@@ -246,9 +243,9 @@ func (sr *searchRepo) SearchQuestions(ctx context.Context, words []string, tagID
 		b.Join("INNER", "tag_rel as "+ast, "question.id = "+ast+".object_id").
 			And(builder.Eq{
 				ast + ".tag_id": tagID,
-				ast + ".status": entity2.TagRelStatusAvailable,
+				ast + ".status": entity.TagRelStatusAvailable,
 			})
-		args = append(args, entity2.TagRelStatusAvailable, tagID)
+		args = append(args, entity.TagRelStatusAvailable, tagID)
 	}
 
 	// check need filter has not accepted
@@ -337,9 +334,9 @@ func (sr *searchRepo) SearchAnswers(ctx context.Context, words []string, tagIDs 
 	b := builder.MySQL().Select(afs...).From("`answer`").
 		LeftJoin("`question`", "`question`.id = `answer`.question_id")
 
-	b.Where(builder.Lt{"`question`.`status`": entity2.QuestionStatusDeleted}).
-		And(builder.Lt{"`answer`.`status`": entity2.AnswerStatusDeleted}).And(builder.Eq{"`question`.`show`": entity2.QuestionShow})
-	args = append(args, entity2.QuestionStatusDeleted, entity2.AnswerStatusDeleted, entity2.QuestionShow)
+	b.Where(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
+		And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).And(builder.Eq{"`question`.`show`": entity.QuestionShow})
+	args = append(args, entity.QuestionStatusDeleted, entity.AnswerStatusDeleted, entity.QuestionShow)
 
 	likeConA := builder.NewCond()
 	for _, word := range words {
@@ -355,9 +352,9 @@ func (sr *searchRepo) SearchAnswers(ctx context.Context, words []string, tagIDs 
 		b.Join("INNER", "tag_rel as "+ast, "question_id = "+ast+".object_id").
 			And(builder.Eq{
 				ast + ".tag_id": tagID,
-				ast + ".status": entity2.TagRelStatusAvailable,
+				ast + ".status": entity.TagRelStatusAvailable,
 			})
-		args = append(args, entity2.TagRelStatusAvailable, tagID)
+		args = append(args, entity.TagRelStatusAvailable, tagID)
 	}
 
 	// check limit accepted
@@ -436,12 +433,12 @@ func (sr *searchRepo) ParseSearchPluginResult(ctx context.Context, sres []plugin
 		switch r.Type {
 		case "question":
 			b = builder.MySQL().Select(qFields...).From("question").Where(builder.Eq{"id": r.ID}).
-				And(builder.Lt{"`status`": entity2.QuestionStatusDeleted})
+				And(builder.Lt{"`status`": entity.QuestionStatusDeleted})
 		case "answer":
 			b = builder.MySQL().Select(aFields...).From("answer").LeftJoin("`question`", "`question`.`id` = `answer`.`question_id`").
 				Where(builder.Eq{"`answer`.`id`": r.ID}).
-				And(builder.Lt{"`question`.`status`": entity2.QuestionStatusDeleted}).
-				And(builder.Lt{"`answer`.`status`": entity2.AnswerStatusDeleted}).And(builder.Eq{"`question`.`show`": entity2.QuestionShow})
+				And(builder.Lt{"`question`.`status`": entity.QuestionStatusDeleted}).
+				And(builder.Lt{"`answer`.`status`": entity.AnswerStatusDeleted}).And(builder.Eq{"`question`.`show`": entity.QuestionShow})
 		}
 		qres, err = sr.DB.Context(ctx).Query(b)
 		if err != nil || len(qres) == 0 {
@@ -492,14 +489,14 @@ func (sr *searchRepo) parseResult(ctx context.Context, res []map[string][]byte) 
 
 		switch objectKey {
 		case "question":
-			for k, v := range entity2.AdminQuestionSearchStatus {
+			for k, v := range entity.AdminQuestionSearchStatus {
 				if v == converter.StringToInt(string(r["status"])) {
 					object.StatusStr = k
 					break
 				}
 			}
 		case "answer":
-			for k, v := range entity2.AdminAnswerSearchStatus {
+			for k, v := range entity.AdminAnswerSearchStatus {
 				if v == converter.StringToInt(string(r["status"])) {
 					object.StatusStr = k
 					break
@@ -512,8 +509,8 @@ func (sr *searchRepo) parseResult(ctx context.Context, res []map[string][]byte) 
 			Object:     object,
 		})
 	}
-
-	tagsMap, err := sr.tagCommon.BatchGetObjectTag(ctx, questionIDs)
+	//todo
+	/*tagsMap, err := sr.tagCommon.BatchGetObjectTag(ctx, questionIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -533,7 +530,7 @@ func (sr *searchRepo) parseResult(ctx context.Context, res []map[string][]byte) 
 			item.Object.UserInfo.Rank = userInfo.Rank
 			item.Object.UserInfo.Status = userInfo.Status
 		}
-	}
+	}*/
 	return resultList, nil
 }
 

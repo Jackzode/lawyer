@@ -3,8 +3,8 @@ package activity_common
 import (
 	"context"
 	"github.com/lawyer/commons/entity"
-	repo "github.com/lawyer/initServer/initRepo"
 	services "github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 	"time"
 
 	"github.com/lawyer/commons/schema"

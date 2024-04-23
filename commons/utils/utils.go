@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/utils/pager"
 	"github.com/segmentfault/pacman/i18n"
 )
 
@@ -43,4 +44,24 @@ func GetLangByCtx(ctx context.Context) i18n.Language {
 func GenerateTraceId() string {
 	newUUID, _ := uuid.NewUUID()
 	return newUUID.String()
+}
+
+type CommentQuery struct {
+	pager.PageCond
+	// object id
+	ObjectID string
+	// query condition
+	QueryCond string
+	// user id
+	UserID string
+}
+
+func (c *CommentQuery) GetOrderBy() string {
+	if c.QueryCond == "vote" {
+		return "vote_count DESC,created_at ASC"
+	}
+	if c.QueryCond == "created_at" {
+		return "created_at DESC"
+	}
+	return "created_at ASC"
 }

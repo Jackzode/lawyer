@@ -7,7 +7,6 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/service/auth"
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
@@ -22,7 +21,7 @@ type authRepo struct {
 }
 
 // NewAuthRepo new repository
-func NewAuthRepo() auth.AuthRepo {
+func NewAuthRepo() *authRepo {
 	return &authRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

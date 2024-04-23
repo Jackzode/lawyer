@@ -8,7 +8,6 @@ import (
 	"time"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/export"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -19,7 +18,7 @@ type emailRepo struct {
 }
 
 // NewEmailRepo new repository
-func NewEmailRepo() export.EmailRepo {
+func NewEmailRepo() *emailRepo {
 	return &emailRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

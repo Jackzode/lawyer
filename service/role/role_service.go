@@ -5,7 +5,7 @@ import (
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 
 	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/schema"

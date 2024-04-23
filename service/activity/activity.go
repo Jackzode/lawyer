@@ -7,8 +7,8 @@ import (
 	constant2 "github.com/lawyer/commons/constant"
 	entity2 "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 	"strings"
 
 	"github.com/lawyer/commons/schema"

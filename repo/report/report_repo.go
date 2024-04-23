@@ -6,14 +6,12 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/commons/utils"
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils/pager"
-	"github.com/lawyer/service/report_common"
-
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -24,7 +22,7 @@ type reportRepo struct {
 }
 
 // NewReportRepo new repository
-func NewReportRepo() report_common.ReportRepo {
+func NewReportRepo() *reportRepo {
 	return &reportRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -33,7 +31,7 @@ func NewReportRepo() report_common.ReportRepo {
 
 // AddReport add report
 func (rr *reportRepo) AddReport(ctx context.Context, report *entity.Report) (err error) {
-	report.ID, err = repo.UniqueIDRepo.GenUniqueIDStr(ctx, report.TableName())
+	report.ID, err = utils.GenUniqueIDStr(ctx, report.TableName())
 	if err != nil {
 		return err
 	}

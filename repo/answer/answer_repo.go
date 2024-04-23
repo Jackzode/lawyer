@@ -7,7 +7,6 @@ import (
 	entity "github.com/lawyer/commons/entity"
 	handler "github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/redis/go-redis/v9"
 	"time"
 	"xorm.io/xorm"
@@ -16,7 +15,6 @@ import (
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/plugin"
-	answercommon "github.com/lawyer/service/answer_common"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 )
@@ -28,7 +26,7 @@ type answerRepo struct {
 }
 
 // NewAnswerRepo new repository
-func NewAnswerRepo() answercommon.AnswerRepo {
+func NewAnswerRepo() *answerRepo {
 	return &answerRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -38,7 +36,7 @@ func NewAnswerRepo() answercommon.AnswerRepo {
 // AddAnswer add answer
 func (ar *answerRepo) AddAnswer(ctx context.Context, answer *entity.Answer) (err error) {
 	answer.QuestionID = uid.DeShortID(answer.QuestionID)
-	ID, err := repo.UniqueIDRepo.GenUniqueIDStr(ctx, answer.TableName())
+	ID, err := utils.GenUniqueIDStr(ctx, answer.TableName())
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}

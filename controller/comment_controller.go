@@ -12,23 +12,36 @@ import (
 	services "github.com/lawyer/initServer/initServices"
 	middleware2 "github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/service/action"
+	"github.com/lawyer/service/comment"
 	"github.com/lawyer/service/permission"
+	"github.com/lawyer/service/rank"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // CommentController comment controller
 type CommentController struct {
-	//commentService      *comment.CommentService
-	//rankService         *rank.RankService
-	//actionService       *action.CaptchaService
-	//rateLimitMiddleware *middleware2.RateLimitMiddleware
+	commentService      *comment.CommentService
+	rankService         *rank.RankService
+	actionService       *action.CaptchaService
+	rateLimitMiddleware *middleware2.RateLimitMiddleware
 }
 
 // services.CommentService, services.RankService,
 // services.CaptchaService, rateLimitMiddleware
 // NewCommentController new controller
-func NewCommentController() *CommentController {
-	return &CommentController{}
+func NewCommentController(
+	commentService *comment.CommentService,
+	rankService *rank.RankService,
+	actionService *action.CaptchaService,
+	rateLimitMiddleware *middleware2.RateLimitMiddleware,
+) *CommentController {
+	return &CommentController{
+		commentService:      commentService,
+		rankService:         rankService,
+		actionService:       actionService,
+		rateLimitMiddleware: rateLimitMiddleware,
+	}
 }
 
 // AddComment add comment
@@ -60,7 +73,7 @@ func (cc *CommentController) AddComment(ctx *gin.Context) {
 	req.ObjectID = uid.DeShortID(req.ObjectID)
 	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
 
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := cc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.CommentAdd,
 		permission.CommentEdit,
 		permission.CommentDelete,
@@ -73,7 +86,7 @@ func (cc *CommentController) AddComment(ctx *gin.Context) {
 	linkUrlLimitUser := canList[3]
 	isAdmin := middleware2.GetUserIsAdminModerator(ctx)
 	if !isAdmin || !linkUrlLimitUser {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionComment, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := cc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionComment, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",

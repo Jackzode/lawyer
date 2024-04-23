@@ -23,7 +23,6 @@ import (
 	"github.com/lawyer/repo/site_info"
 	"github.com/lawyer/repo/tag"
 	"github.com/lawyer/repo/tag_common"
-	"github.com/lawyer/repo/unique"
 	"github.com/lawyer/repo/user"
 	"github.com/lawyer/repo/user_external_login"
 	"github.com/lawyer/repo/user_notification_config"
@@ -52,7 +51,6 @@ import (
 	ssear "github.com/lawyer/service/search_common"
 	"github.com/lawyer/service/siteinfo_common"
 	stag "github.com/lawyer/service/tag_common"
-	su "github.com/lawyer/service/unique"
 	sur "github.com/lawyer/service/user_admin"
 	usercommon "github.com/lawyer/service/user_common"
 	suel "github.com/lawyer/service/user_external_login"
@@ -63,7 +61,6 @@ var (
 	SiteInfoRepo               siteinfo_common.SiteInfoRepo
 	AuthRepo                   sau.AuthRepo
 	UserRepo                   usercommon.UserRepo
-	UniqueIDRepo               su.UniqueIDRepo
 	ActivityRepo               ac.ActivityRepo
 	UserRankRepo               sr.UserRankRepo
 	UserActiveActivityRepo     sa.UserActiveActivityRepo
@@ -105,7 +102,6 @@ func InitRepo() {
 	SiteInfoRepo = site_info.NewSiteInfo()
 	AuthRepo = auth.NewAuthRepo()
 	UserRepo = user.NewUserRepo()
-	UniqueIDRepo = unique.NewUniqueIDRepo()
 	ActivityRepo = activity_common.NewActivityRepo()
 	UserRankRepo = rank.NewUserRankRepo()
 	UserActiveActivityRepo = activity.NewUserActiveActivityRepo()

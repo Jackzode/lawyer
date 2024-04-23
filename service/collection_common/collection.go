@@ -3,7 +3,7 @@ package collectioncommon
 import (
 	"context"
 	"github.com/lawyer/commons/entity"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 )
 
 // CollectionRepo collection repository

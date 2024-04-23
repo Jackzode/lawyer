@@ -5,12 +5,11 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity2 "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 	"github.com/redis/go-redis/v9"
 	"time"
 
 	"github.com/lawyer/pkg/obj"
-	"github.com/lawyer/service/follow"
 	"github.com/segmentfault/pacman/log"
 	"xorm.io/builder"
 
@@ -25,7 +24,7 @@ type FollowRepo struct {
 }
 
 // NewFollowRepo new repository
-func NewFollowRepo() follow.FollowRepo {
+func NewFollowRepo() *FollowRepo {
 	return &FollowRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

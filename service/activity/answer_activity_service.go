@@ -2,10 +2,10 @@ package activity
 
 import (
 	"context"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
-	"github.com/lawyer/service/activity_type"
+	"github.com/lawyer/repo"
 	"github.com/segmentfault/pacman/log"
 )
 
@@ -65,7 +65,7 @@ func (as *AnswerActivityService) getActivities(ctx context.Context, op *schema.A
 	activities []*schema.AcceptAnswerActivity) {
 	activities = make([]*schema.AcceptAnswerActivity, 0)
 
-	for _, action := range []string{activity_type.AnswerAccept, activity_type.AnswerAccepted} {
+	for _, action := range []string{constant.AnswerAccept, constant.AnswerAccepted} {
 		t := &schema.AcceptAnswerActivity{}
 		cfg, err := utils.GetConfigByKey(ctx, action)
 		if err != nil {
@@ -74,7 +74,7 @@ func (as *AnswerActivityService) getActivities(ctx context.Context, op *schema.A
 		}
 		t.ActivityType, t.Rank = cfg.ID, cfg.GetIntValue()
 
-		if action == activity_type.AnswerAccept {
+		if action == constant.AnswerAccept {
 			t.ActivityUserID = op.QuestionUserID
 			t.TriggerUserID = op.TriggerUserID
 			t.OriginalObjectID = op.QuestionObjectID // if activity is 'accept' means this question is accept the answer.

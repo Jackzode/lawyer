@@ -5,18 +5,19 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/service/follow"
 )
 
 // FollowController activity controller
 type FollowController struct {
+	followService *follow.FollowService
 }
 
 // NewFollowController new controller
-func NewFollowController() *FollowController {
-	return &FollowController{}
+func NewFollowController(followService *follow.FollowService) *FollowController {
+	return &FollowController{followService: followService}
 }
 
 // Follow godoc
@@ -39,7 +40,7 @@ func (fc *FollowController) Follow(ctx *gin.Context) {
 	_ = copier.Copy(dto, req)
 	dto.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	resp, err := services.FollowService.Follow(ctx, dto)
+	resp, err := fc.followService.Follow(ctx, dto)
 	if err != nil {
 		handler.HandleResponse(ctx, err, schema.ErrTypeToast)
 	} else {
@@ -65,6 +66,6 @@ func (fc *FollowController) UpdateFollowTags(ctx *gin.Context) {
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := services.FollowService.UpdateFollowTags(ctx, req)
+	err := fc.followService.UpdateFollowTags(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

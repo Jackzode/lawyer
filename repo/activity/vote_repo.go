@@ -7,7 +7,7 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity2 "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	repo "github.com/lawyer/initServer/initRepo"
+	"github.com/lawyer/repo"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentfault/pacman/log"
 	"time"
@@ -18,7 +18,6 @@ import (
 	"xorm.io/builder"
 
 	"github.com/lawyer/commons/schema"
-	"github.com/lawyer/service"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/xorm"
 )
@@ -30,7 +29,7 @@ type VoteRepo struct {
 }
 
 // NewVoteRepo new repository
-func NewVoteRepo() service.VoteRepo {
+func NewVoteRepo() *VoteRepo {
 	return &VoteRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

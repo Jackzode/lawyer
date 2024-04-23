@@ -7,7 +7,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/role"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -18,7 +17,7 @@ type powerRepo struct {
 }
 
 // NewPowerRepo new repository
-func NewPowerRepo(DB *xorm.Engine, Cache *redis.Client) role.PowerRepo {
+func NewPowerRepo(DB *xorm.Engine, Cache *redis.Client) *powerRepo {
 	return &powerRepo{
 		DB:    DB,
 		Cache: Cache,

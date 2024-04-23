@@ -12,10 +12,10 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/pager"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/repo"
 	"github.com/segmentfault/pacman/log"
 )
 

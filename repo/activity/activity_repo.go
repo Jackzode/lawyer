@@ -2,6 +2,7 @@ package activity
 
 import (
 	"context"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
@@ -9,8 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/activity"
-	"github.com/lawyer/service/activity_type"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 )
@@ -22,7 +21,7 @@ type activityRepo struct {
 }
 
 // NewActivityRepo new repository
-func NewActivityRepo() activity.ActivityRepo {
+func NewActivityRepo() *activityRepo {
 	return &activityRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
@@ -47,7 +46,7 @@ func (ar *activityRepo) GetObjectAllActivity(ctx context.Context, objectID strin
 
 func (ar *activityRepo) getAllActivityType(ctx context.Context) (activityTypes []int) {
 	var activityTypeNotShown []int
-	for _, key := range activity_type.VoteActivityTypeList {
+	for _, key := range constant.VoteActivityTypeList {
 		id, err := utils.GetIDByKey(ctx, key)
 		if err != nil {
 			log.Errorf("get config id by key [%s] error: %v", key, err)

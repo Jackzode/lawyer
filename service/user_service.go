@@ -12,8 +12,8 @@ import (
 	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	checker2 "github.com/lawyer/commons/utils/checker"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 	role2 "github.com/lawyer/service/role"
 	"time"
 

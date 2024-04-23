@@ -12,7 +12,6 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/uid"
-	notficationcommon "github.com/lawyer/service/notification_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -23,7 +22,7 @@ type notificationRepo struct {
 }
 
 // NewNotificationRepo new repository
-func NewNotificationRepo() notficationcommon.NotificationRepo {
+func NewNotificationRepo() *notificationRepo {
 	return &notificationRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

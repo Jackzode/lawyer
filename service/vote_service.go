@@ -7,9 +7,8 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity2 "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
-	"github.com/lawyer/service/activity_type"
+	"github.com/lawyer/repo"
 	"github.com/lawyer/service/config"
 	"strings"
 
@@ -130,10 +129,10 @@ func (vs *VoteService) VoteDown(ctx context.Context, req *schema.VoteReq) (resp 
 // ListUserVotes list user's votes
 func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWithPageReq) (resp *pager.PageModel, err error) {
 	typeKeys := []string{
-		activity_type.QuestionVoteUp,
-		activity_type.QuestionVoteDown,
-		activity_type.AnswerVoteUp,
-		activity_type.AnswerVoteDown,
+		constant2.QuestionVoteUp,
+		constant2.QuestionVoteDown,
+		constant2.AnswerVoteUp,
+		constant2.AnswerVoteDown,
 	}
 	activityTypes := make([]int, 0)
 	activityTypeMapping := make(map[int]string, 0)
@@ -173,7 +172,7 @@ func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWith
 			Content:    objInfo.Content,
 		}
 		item.VoteType = translator.Tr(lang,
-			activity_type.ActivityTypeFlagMapping[activityTypeMapping[voteInfo.ActivityType]])
+			constant2.ActivityTypeFlagMapping[activityTypeMapping[voteInfo.ActivityType]])
 		if objInfo.QuestionStatus == entity2.QuestionStatusDeleted {
 			item.Title = translator.Tr(lang, constant2.DeletedQuestionTitleTrKey)
 		}
@@ -205,18 +204,18 @@ func (vs *VoteService) getActivities(ctx context.Context, op *schema.VoteOperati
 	switch op.ObjectType {
 	case constant2.QuestionObjectType:
 		if op.VoteUp {
-			actions = []string{activity_type.QuestionVoteUp, activity_type.QuestionVotedUp}
+			actions = []string{constant2.QuestionVoteUp, constant2.QuestionVotedUp}
 		} else {
-			actions = []string{activity_type.QuestionVoteDown, activity_type.QuestionVotedDown}
+			actions = []string{constant2.QuestionVoteDown, constant2.QuestionVotedDown}
 		}
 	case constant2.AnswerObjectType:
 		if op.VoteUp {
-			actions = []string{activity_type.AnswerVoteUp, activity_type.AnswerVotedUp}
+			actions = []string{constant2.AnswerVoteUp, constant2.AnswerVotedUp}
 		} else {
-			actions = []string{activity_type.AnswerVoteDown, activity_type.AnswerVotedDown}
+			actions = []string{constant2.AnswerVoteDown, constant2.AnswerVotedDown}
 		}
 	case constant2.CommentObjectType:
-		actions = []string{activity_type.CommentVoteUp}
+		actions = []string{constant2.CommentVoteUp}
 	}
 
 	for _, action := range actions {

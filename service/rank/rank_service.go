@@ -9,12 +9,11 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/pager"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/htmltext"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/plugin"
-	"github.com/lawyer/service/activity_type"
+	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
@@ -273,7 +272,7 @@ func (rs *RankService) decorateRankPersonalPageResp(
 			log.Error(err)
 			continue
 		}
-		commentResp.RankType = translator.Tr(lang, activity_type.ActivityTypeFlagMapping[cfg.Key])
+		commentResp.RankType = translator.Tr(lang, constant2.ActivityTypeFlagMapping[cfg.Key])
 		commentResp.ObjectType = objInfo.ObjectType
 		commentResp.Title = objInfo.Title
 		commentResp.UrlTitle = htmltext.UrlTitle(objInfo.Title)

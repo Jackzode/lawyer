@@ -10,8 +10,8 @@ import (
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repo"
 	"time"
 
 	"github.com/google/uuid"

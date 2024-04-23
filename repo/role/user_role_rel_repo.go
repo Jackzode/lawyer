@@ -7,7 +7,6 @@ import (
 	"github.com/lawyer/commons/handler"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/lawyer/service/role"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -20,7 +19,7 @@ type userRoleRelRepo struct {
 }
 
 // NewUserRoleRelRepo new repository
-func NewUserRoleRelRepo() role.UserRoleRelRepo {
+func NewUserRoleRelRepo() *userRoleRelRepo {
 	return &userRoleRelRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

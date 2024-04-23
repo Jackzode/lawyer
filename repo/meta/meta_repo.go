@@ -8,7 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
-	"github.com/lawyer/service/meta"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/builder"
 )
@@ -20,7 +19,7 @@ type metaRepo struct {
 }
 
 // NewMetaRepo new repository
-func NewMetaRepo() meta.MetaRepo {
+func NewMetaRepo() *metaRepo {
 	return &metaRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,

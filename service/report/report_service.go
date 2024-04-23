@@ -3,9 +3,9 @@ package report
 import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/obj"
+	"github.com/lawyer/repo"
 	"golang.org/x/net/context"
 )
 

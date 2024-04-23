@@ -6,10 +6,10 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	repo "github.com/lawyer/initServer/initRepo"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/obj"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/repo"
 	"github.com/segmentfault/pacman/errors"
 )
 

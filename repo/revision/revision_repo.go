@@ -11,7 +11,6 @@ import (
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/pkg/obj"
-	"github.com/lawyer/service/revision"
 	"github.com/segmentfault/pacman/errors"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -24,7 +23,7 @@ type revisionRepo struct {
 }
 
 // NewRevisionRepo new repository
-func NewRevisionRepo() revision.RevisionRepo {
+func NewRevisionRepo() *revisionRepo {
 	return &revisionRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
