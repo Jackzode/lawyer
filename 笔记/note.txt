@@ -1,8 +1,0 @@
-/user/register/email", c.UserRegisterByEmail  userService中引用了
-services.UserCommon.MakeUsername
-services.UserNotificationConfigService
-services.EmailService
-services.UserRoleRelService
-services.SiteInfoCommonService
-services.AuthService.SetUserCacheInfo
-services.AuthService.SetAdminUserCacheInfo
