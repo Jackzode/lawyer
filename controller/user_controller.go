@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
@@ -454,7 +455,9 @@ func (uc *UserController) ActionRecord(ctx *gin.Context) {
 
 func (uc *UserController) UserRegisterCaptcha(ctx *gin.Context) {
 	resp := &schema.ActionRecordResp{}
-	CaptchaID, CaptchaImg, err := utils.GenerateCaptcha(ctx)
+	CaptchaID, ans, CaptchaImg, err := utils.GenerateCaptcha(ctx)
+	//save ans to redis
+	fmt.Println(ans)
 	resp.Verify = true
 	resp.CaptchaID = CaptchaID
 	resp.CaptchaImg = CaptchaImg

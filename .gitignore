@@ -1,8 +1,8 @@
 *.exe
-/.idea
+.idea
 /.vscode/*.log
 /vendor
 tmp
 vendor/
-./笔记
+笔记
 

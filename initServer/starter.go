@@ -27,7 +27,7 @@ func Init(filename string) *gin.Engine {
 	err = services.InitTranslator(c.I18n)
 	checkErr(err)
 	repo.InitRepo()
-	services.InitServices()
+	//services.InitServices()
 	application, err := initApplication(c.Debug)
 	checkErr(err)
 	return application

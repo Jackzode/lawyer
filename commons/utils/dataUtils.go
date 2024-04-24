@@ -8,7 +8,6 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/repo"
 	"github.com/mojocn/base64Captcha"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
@@ -148,7 +147,7 @@ func GetIDByKey(ctx context.Context, key string) (id int, err error) {
 	return cf.ID, nil
 }
 
-func GenerateCaptcha(ctx context.Context) (key, captchaBase64 string, err error) {
+func GenerateCaptcha(ctx context.Context) (key, answer, captchaBase64 string, err error) {
 	driverString := base64Captcha.DriverString{
 		Height:          60,
 		Width:           200,
@@ -164,15 +163,15 @@ func GenerateCaptcha(ctx context.Context) (key, captchaBase64 string, err error)
 	id, content, answer := driver.GenerateIdQuestionAnswer()
 	item, err := driver.DrawCaptcha(content)
 	if err != nil {
-		return "", "", errors.InternalServer(reason.UnknownError).WithError(err).WithStack()
+		return "", "", "", err
 	}
-	err = repo.CaptchaRepo.SetCaptcha(ctx, id, answer)
-	if err != nil {
-		return "", "", err
-	}
+	//err = repo.CaptchaRepo.SetCaptcha(ctx, id, answer)
+	//if err != nil {
+	//	return "", "", err
+	//}
 
 	captchaBase64 = item.EncodeB64string()
-	return id, captchaBase64, nil
+	return id, answer, captchaBase64, nil
 }
 
 // GenUniqueIDStr generate unique id string

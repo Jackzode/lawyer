@@ -2,12 +2,7 @@ package initServer
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lawyer/controller"
-	repo "github.com/lawyer/initServer/initRepo"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/router"
-	"github.com/lawyer/router/plugin_api"
-	userexternallogin2 "github.com/lawyer/service/user_external_login"
 )
 
 // todo
@@ -61,7 +56,7 @@ func initApplication(debug bool) (*gin.Engine, error) {
 	//userCenterController := controller.NewUserCenterController(userCenterLoginService)
 	//pluginAPIRouter := plugin_api.NewPluginAPIRouter(connectorController, userCenterController)
 	//
-	//ginEngine := router.NewHTTPServer(debug, pluginAPIRouter)
+	ginEngine := router.NewHTTPServer(debug, nil)
 	//scheduledTaskManager := cron.NewScheduledTaskManager(services.SiteInfoCommonService, services.QuestionService)
 	//todo
 	//application := newApplication(serverConf, ginEngine, scheduledTaskManager)
