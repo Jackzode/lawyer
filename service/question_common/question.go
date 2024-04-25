@@ -3,7 +3,7 @@ package questioncommon
 import (
 	"context"
 	"encoding/json"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
@@ -459,7 +459,7 @@ func (qs *QuestionCommon) CloseQuestion(ctx context.Context, req *schema.CloseQu
 		UserID:           questionInfo.UserID,
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
-		ActivityTypeKey:  constant2.ActQuestionClosed,
+		ActivityTypeKey:  constant.ActQuestionClosed,
 	})
 	return nil
 }
@@ -498,7 +498,7 @@ func (qs *QuestionCommon) SitemapCron(ctx context.Context) {
 		log.Error(err)
 		return
 	}
-	if questionNum <= constant2.SitemapMaxSize {
+	if questionNum <= constant.SitemapMaxSize {
 		_, err = repo.QuestionRepo.SitemapQuestions(ctx, 1, int(questionNum))
 		if err != nil {
 			log.Errorf("get site map question error: %v", err)
@@ -506,9 +506,9 @@ func (qs *QuestionCommon) SitemapCron(ctx context.Context) {
 		return
 	}
 
-	totalPages := int(math.Ceil(float64(questionNum) / float64(constant2.SitemapMaxSize)))
+	totalPages := int(math.Ceil(float64(questionNum) / float64(constant.SitemapMaxSize)))
 	for i := 1; i <= totalPages; i++ {
-		_, err = repo.QuestionRepo.SitemapQuestions(ctx, i, constant2.SitemapMaxSize)
+		_, err = repo.QuestionRepo.SitemapQuestions(ctx, i, constant.SitemapMaxSize)
 		if err != nil {
 			log.Errorf("get site map question error: %v", err)
 			return

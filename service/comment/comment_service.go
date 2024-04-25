@@ -2,11 +2,12 @@ package comment
 
 import (
 	"context"
-	constant2 "github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/initServer/initServices"
+	services "github.com/lawyer/initServer/initServices"
+
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
@@ -55,7 +56,7 @@ func (cs *CommentService) AddComment(ctx context.Context, req *schema.AddComment
 	objInfo.ObjectID = uid.DeShortID(objInfo.ObjectID)
 	objInfo.QuestionID = uid.DeShortID(objInfo.QuestionID)
 	objInfo.AnswerID = uid.DeShortID(objInfo.AnswerID)
-	if objInfo.ObjectType == constant2.QuestionObjectType || objInfo.ObjectType == constant2.AnswerObjectType {
+	if objInfo.ObjectType == constant.QuestionObjectType || objInfo.ObjectType == constant.AnswerObjectType {
 		comment.QuestionID = objInfo.QuestionID
 	}
 
@@ -105,13 +106,13 @@ func (cs *CommentService) AddComment(ctx context.Context, req *schema.AddComment
 		UserID:           comment.UserID,
 		ObjectID:         comment.ID,
 		OriginalObjectID: req.ObjectID,
-		ActivityTypeKey:  constant2.ActQuestionCommented,
+		ActivityTypeKey:  constant.ActQuestionCommented,
 	}
 	switch objInfo.ObjectType {
-	case constant2.QuestionObjectType:
-		activityMsg.ActivityTypeKey = constant2.ActQuestionCommented
-	case constant2.AnswerObjectType:
-		activityMsg.ActivityTypeKey = constant2.ActAnswerCommented
+	case constant.QuestionObjectType:
+		activityMsg.ActivityTypeKey = constant.ActQuestionCommented
+	case constant.AnswerObjectType:
+		activityMsg.ActivityTypeKey = constant.ActAnswerCommented
 	}
 	services.ActivityQueueService.Send(ctx, activityMsg)
 	return resp, nil
@@ -151,10 +152,10 @@ func (cs *CommentService) addCommentNotification(
 		return nil, nil
 	}
 
-	if objInfo.ObjectType == constant2.QuestionObjectType && !alreadyNotifiedUserID[objInfo.ObjectCreatorUserID] {
+	if objInfo.ObjectType == constant.QuestionObjectType && !alreadyNotifiedUserID[objInfo.ObjectCreatorUserID] {
 		cs.notificationQuestionComment(ctx, objInfo.ObjectCreatorUserID,
 			objInfo.QuestionID, objInfo.Title, comment.ID, req.UserID, comment.OriginalText)
-	} else if objInfo.ObjectType == constant2.AnswerObjectType && !alreadyNotifiedUserID[objInfo.ObjectCreatorUserID] {
+	} else if objInfo.ObjectType == constant.AnswerObjectType && !alreadyNotifiedUserID[objInfo.ObjectCreatorUserID] {
 		cs.notificationAnswerComment(ctx, objInfo.QuestionID, objInfo.Title, objInfo.AnswerID,
 			objInfo.ObjectCreatorUserID, comment.ID, req.UserID, comment.OriginalText)
 	}
@@ -183,7 +184,7 @@ func (cs *CommentService) UpdateComment(ctx context.Context, req *schema.UpdateC
 
 	// user can edit the comment that was posted by himself before deadline.
 	// admin can edit it at any time
-	if !req.IsAdmin && (time.Now().After(old.CreatedAt.Add(constant2.CommentEditDeadline))) {
+	if !req.IsAdmin && (time.Now().After(old.CreatedAt.Add(constant.CommentEditDeadline))) {
 		return nil, errors.BadRequest(reason.CommentCannotEditAfterDeadline)
 	}
 
@@ -422,8 +423,8 @@ func (cs *CommentService) notificationQuestionComment(ctx context.Context, quest
 		Type:           schema.NotificationTypeInbox,
 		ObjectID:       commentID,
 	}
-	msg.ObjectType = constant2.CommentObjectType
-	msg.NotificationAction = constant2.NotificationCommentQuestion
+	msg.ObjectType = constant.CommentObjectType
+	msg.NotificationAction = constant.NotificationCommentQuestion
 	services.NotificationQueueService.Send(ctx, msg)
 
 	// send external notification
@@ -470,8 +471,8 @@ func (cs *CommentService) notificationAnswerComment(ctx context.Context,
 		Type:           schema.NotificationTypeInbox,
 		ObjectID:       commentID,
 	}
-	msg.ObjectType = constant2.CommentObjectType
-	msg.NotificationAction = constant2.NotificationCommentAnswer
+	msg.ObjectType = constant.CommentObjectType
+	msg.NotificationAction = constant.NotificationCommentAnswer
 	services.NotificationQueueService.Send(ctx, msg)
 
 	// Send external notification.
@@ -512,8 +513,8 @@ func (cs *CommentService) notificationCommentReply(ctx context.Context, replyUse
 		Type:           schema.NotificationTypeInbox,
 		ObjectID:       commentID,
 	}
-	msg.ObjectType = constant2.CommentObjectType
-	msg.NotificationAction = constant2.NotificationReplyToYou
+	msg.ObjectType = constant.CommentObjectType
+	msg.NotificationAction = constant.NotificationReplyToYou
 	services.NotificationQueueService.Send(ctx, msg)
 }
 
@@ -533,8 +534,8 @@ func (cs *CommentService) notificationMention(
 				Type:           schema.NotificationTypeInbox,
 				ObjectID:       commentID,
 			}
-			msg.ObjectType = constant2.CommentObjectType
-			msg.NotificationAction = constant2.NotificationMentionYou
+			msg.ObjectType = constant.CommentObjectType
+			msg.NotificationAction = constant.NotificationMentionYou
 			services.NotificationQueueService.Send(ctx, msg)
 			alreadyNotifiedUserIDs = append(alreadyNotifiedUserIDs, userInfo.ID)
 		}

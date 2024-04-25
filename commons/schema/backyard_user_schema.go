@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/base/validator"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/utils"
+
+	//"github.com/lawyer/commons/utils"
 	"github.com/segmentfault/pacman/errors"
 	"strings"
 )
@@ -19,10 +21,10 @@ type UpdateUserStatusReq struct {
 	LoginUserID      string `json:"-"`
 }
 
-func (r *UpdateUserStatusReq) IsNormal() bool    { return r.Status == constant2.UserNormal }
-func (r *UpdateUserStatusReq) IsSuspended() bool { return r.Status == constant2.UserSuspended }
-func (r *UpdateUserStatusReq) IsDeleted() bool   { return r.Status == constant2.UserDeleted }
-func (r *UpdateUserStatusReq) IsInactive() bool  { return r.Status == constant2.UserInactive }
+func (r *UpdateUserStatusReq) IsNormal() bool    { return r.Status == constant.UserNormal }
+func (r *UpdateUserStatusReq) IsSuspended() bool { return r.Status == constant.UserSuspended }
+func (r *UpdateUserStatusReq) IsDeleted() bool   { return r.Status == constant.UserDeleted }
+func (r *UpdateUserStatusReq) IsInactive() bool  { return r.Status == constant.UserInactive }
 
 // GetUserPageReq get user list page request
 type GetUserPageReq struct {
@@ -38,9 +40,9 @@ type GetUserPageReq struct {
 	Staff bool `validate:"omitempty" form:"staff"`
 }
 
-func (r *GetUserPageReq) IsSuspended() bool { return r.Status == constant2.UserSuspended }
-func (r *GetUserPageReq) IsDeleted() bool   { return r.Status == constant2.UserDeleted }
-func (r *GetUserPageReq) IsInactive() bool  { return r.Status == constant2.UserInactive }
+func (r *GetUserPageReq) IsSuspended() bool { return r.Status == constant.UserSuspended }
+func (r *GetUserPageReq) IsDeleted() bool   { return r.Status == constant.UserDeleted }
+func (r *GetUserPageReq) IsInactive() bool  { return r.Status == constant.UserInactive }
 
 // GetUserPageResp get user response
 type GetUserPageResp struct {
@@ -147,12 +149,12 @@ func (req *AddUsersReq) ParseUsers(ctx context.Context) (errFields []*validator.
 	}
 
 	// check users amount
-	if len(req.Users) <= 0 || len(req.Users) > constant2.DefaultBulkUser {
+	if len(req.Users) <= 0 || len(req.Users) > constant.DefaultBulkUser {
 		errFields = append([]*validator.FormErrorField{}, &validator.FormErrorField{
 			ErrorField: "users",
 			ErrorMsg: translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersAmountError,
 				map[string]int{
-					"MaxAmount": constant2.DefaultBulkUser,
+					"MaxAmount": constant.DefaultBulkUser,
 				}),
 		})
 		return errFields, errors.BadRequest(reason.RequestFormatError)

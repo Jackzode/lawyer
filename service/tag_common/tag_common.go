@@ -268,7 +268,7 @@ func (ts *TagCommonService) GetObjectTag(ctx context.Context, objectId string) (
 	if err != nil {
 		return nil, err
 	}
-	return ts.TagFormat(ctx, tagsInfoList)
+	return schema.TagFormat(tagsInfoList)
 }
 
 // AddTag get object tag
@@ -367,20 +367,6 @@ func (ts *TagCommonService) GetObjectEntityTag(ctx context.Context, objectId str
 	objTags, err = ts.GetTagListByIDs(ctx, tagIDList)
 	if err != nil {
 		return nil, err
-	}
-	return objTags, nil
-}
-
-func (ts *TagCommonService) TagFormat(ctx context.Context, tags []*entity.Tag) (objTags []*schema.TagResp, err error) {
-	objTags = make([]*schema.TagResp, 0)
-	for _, tagInfo := range tags {
-		objTags = append(objTags, &schema.TagResp{
-			SlugName:        tagInfo.SlugName,
-			DisplayName:     tagInfo.DisplayName,
-			MainTagSlugName: tagInfo.MainTagSlugName,
-			Recommend:       tagInfo.Recommend,
-			Reserved:        tagInfo.Reserved,
-		})
 	}
 	return objTags, nil
 }

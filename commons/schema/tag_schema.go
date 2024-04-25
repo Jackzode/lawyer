@@ -2,6 +2,7 @@ package schema
 
 import (
 	"github.com/lawyer/commons/base/validator"
+	"github.com/lawyer/commons/entity"
 	"strings"
 
 	"github.com/lawyer/pkg/converter"
@@ -284,4 +285,18 @@ type SearchTagLikeResp struct {
 	DisplayName string `json:"display_name"`
 	Recommend   bool   `json:"recommend"`
 	Reserved    bool   `json:"reserved"`
+}
+
+func TagFormat(tags []*entity.Tag) (objTags []*TagResp, err error) {
+	objTags = make([]*TagResp, 0)
+	for _, tagInfo := range tags {
+		objTags = append(objTags, &TagResp{
+			SlugName:        tagInfo.SlugName,
+			DisplayName:     tagInfo.DisplayName,
+			MainTagSlugName: tagInfo.MainTagSlugName,
+			Recommend:       tagInfo.Recommend,
+			Reserved:        tagInfo.Reserved,
+		})
+	}
+	return objTags, nil
 }

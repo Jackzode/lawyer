@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/base/translator"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/schema"
@@ -141,8 +141,8 @@ func (ns *NotificationService) formatNotificationPage(ctx context.Context, notif
 			continue
 		}
 		// If notification is downvote, the user info is not needed.
-		if item.NotificationAction == constant2.NotificationDownVotedTheQuestion ||
-			item.NotificationAction == constant2.NotificationDownVotedTheAnswer {
+		if item.NotificationAction == constant.NotificationDownVotedTheQuestion ||
+			item.NotificationAction == constant.NotificationDownVotedTheAnswer {
 			item.UserInfo = nil
 		}
 
@@ -197,7 +197,7 @@ func (ns *NotificationService) formatNotificationPage(ctx context.Context, notif
 		if userInfo.Status == entity.UserStatusDeleted {
 			item.UserInfo = &schema.UserBasicInfo{
 				DisplayName: "user" + converter.DeleteUserDisplay(userInfo.ID),
-				Status:      constant2.UserDeleted,
+				Status:      constant.UserDeleted,
 			}
 		}
 	}

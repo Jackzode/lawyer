@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lawyer/commons/base/handler"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/utils/checker"
 	services "github.com/lawyer/initServer/initServices"
 	"html/template"
@@ -112,7 +112,7 @@ func (tc *TemplateController) Index(ctx *gin.Context) {
 	siteInfo.Canonical = siteInfo.General.SiteUrl
 
 	UrlUseTitle := false
-	if siteInfo.SiteSeo.Permalink == constant2.PermalinkQuestionIDAndTitle {
+	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
 		UrlUseTitle = true
 	}
 	siteInfo.Title = ""
@@ -145,7 +145,7 @@ func (tc *TemplateController) QuestionList(ctx *gin.Context) {
 	}
 
 	UrlUseTitle := false
-	if siteInfo.SiteSeo.Permalink == constant2.PermalinkQuestionIDAndTitle {
+	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
 		UrlUseTitle = true
 	}
 	siteInfo.Title = fmt.Sprintf("Questions - %s", siteInfo.General.Name)
@@ -164,7 +164,7 @@ func (tc *TemplateController) QuestionInfoeRdirect(ctx *gin.Context, siteInfo *s
 	needChangeShortID := false
 
 	objectType, err := obj.GetObjectTypeStrByObjectID(answerID)
-	if err == nil && objectType == constant2.AnswerObjectType {
+	if err == nil && objectType == constant.AnswerObjectType {
 		titleIsAnswerID = true
 	}
 
@@ -192,7 +192,7 @@ func (tc *TemplateController) QuestionInfoeRdirect(ctx *gin.Context, siteInfo *s
 	}
 
 	url = fmt.Sprintf("%s/questions/%s", siteInfo.General.SiteUrl, questionID)
-	if siteInfo.SiteSeo.Permalink == constant2.PermalinkQuestionID || siteInfo.SiteSeo.Permalink == constant2.PermalinkQuestionIDByShortID {
+	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionID || siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDByShortID {
 		if len(ctx.Request.URL.Query()) > 0 {
 			url = fmt.Sprintf("%s?%s", url, ctx.Request.URL.RawQuery)
 		}
@@ -295,7 +295,7 @@ func (tc *TemplateController) QuestionInfo(ctx *gin.Context) {
 		return
 	}
 	siteInfo.Canonical = fmt.Sprintf("%s/questions/%s/%s", siteInfo.General.SiteUrl, id, encodeTitle)
-	if siteInfo.SiteSeo.Permalink == constant2.PermalinkQuestionID || siteInfo.SiteSeo.Permalink == constant2.PermalinkQuestionIDByShortID {
+	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionID || siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDByShortID {
 		siteInfo.Canonical = fmt.Sprintf("%s/questions/%s", siteInfo.General.SiteUrl, id)
 	}
 	jsonLD := &schema.QAPageJsonLD{}
@@ -410,7 +410,7 @@ func (tc *TemplateController) TagInfo(ctx *gin.Context) {
 	siteInfo.Keywords = taginifo.DisplayName
 
 	UrlUseTitle := false
-	if siteInfo.SiteSeo.Permalink == constant2.PermalinkQuestionIDAndTitle {
+	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
 		UrlUseTitle = true
 	}
 	siteInfo.Title = fmt.Sprintf("'%s' Questions - %s", taginifo.DisplayName, siteInfo.General.Name)
@@ -485,8 +485,8 @@ func (tc *TemplateController) html(ctx *gin.Context, code int, tpl string, siteI
 	data["HeadCode"] = siteInfo.CustomCssHtml.CustomHead
 	data["HeaderCode"] = siteInfo.CustomCssHtml.CustomHeader
 	data["FooterCode"] = siteInfo.CustomCssHtml.CustomFooter
-	data["Version"] = constant2.Version
-	data["Revision"] = constant2.Revision
+	data["Version"] = constant.Version
+	data["Revision"] = constant.Revision
 	_, ok := data["path"]
 	if !ok {
 		data["path"] = ""

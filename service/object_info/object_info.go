@@ -6,7 +6,7 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/initServer/initServices"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/obj"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/repo"
@@ -43,7 +43,7 @@ func (os *ObjService) GetUnreviewedRevisionInfo(ctx context.Context, objectID st
 			return nil, err
 		}
 		services.TagCommonService.TagsFormatRecommendAndReserved(ctx, taglist)
-		tags, err := services.TagCommonService.TagFormat(ctx, taglist)
+		tags, err := schema.TagFormat(taglist)
 		if err != nil {
 			return nil, err
 		}

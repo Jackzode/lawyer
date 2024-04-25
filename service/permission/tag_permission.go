@@ -3,7 +3,7 @@ package permission
 import (
 	"context"
 	"github.com/lawyer/commons/base/translator"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 )

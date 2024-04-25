@@ -2,7 +2,7 @@ package notification
 
 import (
 	"context"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/initServer/initServices"
@@ -33,7 +33,7 @@ func (ns *ExternalNotificationService) handleNewQuestionNotification(ctx context
 				continue
 			}
 			switch channel.Key {
-			case constant2.EmailChannel:
+			case constant.EmailChannel:
 				ns.sendNewQuestionNotificationEmail(ctx, subscriber.UserID, &schema.NewQuestionTemplateRawData{
 					QuestionTitle:   msg.NewQuestionTemplateRawData.QuestionTitle,
 					QuestionID:      msg.NewQuestionTemplateRawData.QuestionID,
@@ -69,7 +69,7 @@ func (ns *ExternalNotificationService) getNewQuestionSubscribers(ctx context.Con
 		}
 	}
 	userNotificationConfigs, err := repo.UserNotificationConfigRepo.GetByUsersAndSource(
-		ctx, tagsFollowerIDs, constant2.AllNewQuestionForFollowingTagsSource)
+		ctx, tagsFollowerIDs, constant.AllNewQuestionForFollowingTagsSource)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (ns *ExternalNotificationService) getNewQuestionSubscribers(ctx context.Con
 	log.Debugf("get %d subscribers from tags", len(subscribersMapping))
 
 	// 2. get all new question's followers
-	notificationConfigs, err := repo.UserNotificationConfigRepo.GetBySource(ctx, constant2.AllNewQuestionSource)
+	notificationConfigs, err := repo.UserNotificationConfigRepo.GetBySource(ctx, constant.AllNewQuestionSource)
 	if err != nil {
 		return nil, err
 	}
@@ -112,13 +112,13 @@ func (ns *ExternalNotificationService) getNewQuestionSubscribers(ctx context.Con
 }
 
 func (ns *ExternalNotificationService) checkSendNewQuestionNotificationEmailLimit(ctx context.Context, userID string) bool {
-	key := constant2.NewQuestionNotificationLimitCacheKeyPrefix + userID
+	key := constant.NewQuestionNotificationLimitCacheKeyPrefix + userID
 	old, err := handler.RedisClient.Get(ctx, key).Int64()
 	if err != nil {
 		log.Error(err)
 		return false
 	}
-	if old >= constant2.NewQuestionNotificationLimitMax {
+	if old >= constant.NewQuestionNotificationLimitMax {
 		log.Debugf("%s user reach new question notification limit", userID)
 		return true
 	}
@@ -143,7 +143,7 @@ func (ns *ExternalNotificationService) sendNewQuestionNotificationEmail(ctx cont
 	}
 	// If receiver has set language, use it to send email.
 	if len(userInfo.Language) > 0 {
-		ctx = context.WithValue(ctx, constant2.AcceptLanguageFlag, i18n.Language(userInfo.Language))
+		ctx = context.WithValue(ctx, constant.AcceptLanguageFlag, i18n.Language(userInfo.Language))
 	}
 	title, body, err := services.EmailService.NewQuestionTemplate(ctx, rawData)
 	if err != nil {
@@ -155,9 +155,9 @@ func (ns *ExternalNotificationService) sendNewQuestionNotificationEmail(ctx cont
 		SourceType: schema.UnsubscribeSourceType,
 		Email:      userInfo.EMail,
 		UserID:     userID,
-		NotificationSources: []constant2.NotificationSource{
-			constant2.AllNewQuestionSource,
-			constant2.AllNewQuestionForFollowingTagsSource,
+		NotificationSources: []constant.NotificationSource{
+			constant.AllNewQuestionSource,
+			constant.AllNewQuestionForFollowingTagsSource,
 		},
 	}
 	services.EmailService.SendAndSaveCodeWithTime(

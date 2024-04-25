@@ -13,7 +13,7 @@ import (
 	"github.com/lawyer/pkg/htmltext"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/plugin"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
 	"github.com/lawyer/service/permission"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
@@ -238,7 +238,7 @@ func (rs *RankService) GetRankPersonalPage(ctx context.Context, req *schema.GetR
 		return nil, errors.BadRequest(reason.UserNotFound)
 	}
 
-	userRankPage, total, err := repo.UserRankRepo.UserRankPage(ctx, req.UserID, req.Page, req.PageSize)
+	userRankPage, total, err := repoCommon.NewUserRankRepo().UserRankPage(ctx, req.UserID, req.Page, req.PageSize)
 	if err != nil {
 		return nil, err
 	}

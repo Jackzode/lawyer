@@ -2,7 +2,7 @@ package report_handle_admin
 
 import (
 	"context"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
@@ -59,7 +59,7 @@ func (rh *ReportHandle) HandleObject(ctx context.Context, reported *entity.Repor
 		switch req.FlaggedType {
 		case reasonCloseCfg.ID:
 			err = repo.CommentRepo.RemoveComment(ctx, objectID)
-			rh.sendNotification(ctx, reportedUserID, objectID, constant2.NotificationYourCommentWasDeleted)
+			rh.sendNotification(ctx, reportedUserID, objectID, constant.NotificationYourCommentWasDeleted)
 		}
 	}
 	return
@@ -72,7 +72,7 @@ func (rh *ReportHandle) sendNotification(ctx context.Context, reportedUserID, ob
 		ReceiverUserID:     reportedUserID,
 		Type:               schema.NotificationTypeInbox,
 		ObjectID:           objectID,
-		ObjectType:         constant2.ReportObjectType,
+		ObjectType:         constant.ReportObjectType,
 		NotificationAction: notificationAction,
 	}
 	services.NotificationQueueService.Send(ctx, msg)

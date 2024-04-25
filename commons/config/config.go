@@ -66,3 +66,19 @@ type AllConfig struct {
 	Data          *handler.Database  `json:"data" mapstructure:"data" yaml:"data"`
 	Cache         *handler.RedisConf `json:"redis" mapstructure:"redis" yaml:"redis"`
 }
+
+// EmailConfig email config
+type EmailConfig struct {
+	FromEmail          string `json:"from_email"`
+	FromName           string `json:"from_name"`
+	SMTPHost           string `json:"smtp_host"`
+	SMTPPort           int    `json:"smtp_port"`
+	Encryption         string `json:"encryption"` // "" SSL
+	SMTPUsername       string `json:"smtp_username"`
+	SMTPPassword       string `json:"smtp_password"`
+	SMTPAuthentication bool   `json:"smtp_authentication"`
+}
+
+func (e *EmailConfig) IsSSL() bool {
+	return e.Encryption == "SSL"
+}

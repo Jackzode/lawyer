@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/base/translator"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
@@ -14,7 +14,6 @@ import (
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/plugin"
 	"github.com/lawyer/repo"
-	"github.com/lawyer/service/export"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 )
@@ -64,7 +63,7 @@ func (s *SiteInfoService) GetSiteUsers(ctx context.Context) (resp *schema.SiteUs
 // GetSiteWrite get site info write
 func (s *SiteInfoService) GetSiteWrite(ctx context.Context) (resp *schema.SiteWriteResp, err error) {
 	resp = &schema.SiteWriteResp{}
-	siteInfo, exist, err := repo.SiteInfoRepo.GetByType(ctx, constant2.SiteTypeWrite)
+	siteInfo, exist, err := repo.SiteInfoRepo.GetByType(ctx, constant.SiteTypeWrite)
 	if err != nil {
 		log.Error(err)
 		return resp, nil
@@ -108,11 +107,11 @@ func (s *SiteInfoService) SaveSiteGeneral(ctx context.Context, req schema.SiteGe
 	req.FormatSiteUrl()
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeGeneral,
+		Type:    constant.SiteTypeGeneral,
 		Content: string(content),
 		Status:  1,
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeGeneral, data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeGeneral, data)
 }
 
 func (s *SiteInfoService) SaveSiteInterface(ctx context.Context, req schema.SiteInterfaceReq) (err error) {
@@ -124,21 +123,21 @@ func (s *SiteInfoService) SaveSiteInterface(ctx context.Context, req schema.Site
 
 	content, _ := json.Marshal(req)
 	data := entity.SiteInfo{
-		Type:    constant2.SiteTypeInterface,
+		Type:    constant.SiteTypeInterface,
 		Content: string(content),
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeInterface, &data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeInterface, &data)
 }
 
 // SaveSiteBranding save site branding information
 func (s *SiteInfoService) SaveSiteBranding(ctx context.Context, req *schema.SiteBrandingReq) (err error) {
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeBranding,
+		Type:    constant.SiteTypeBranding,
 		Content: string(content),
 		Status:  1,
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeBranding, data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeBranding, data)
 }
 
 // SaveSiteWrite save site configuration about write
@@ -150,66 +149,66 @@ func (s *SiteInfoService) SaveSiteWrite(ctx context.Context, req *schema.SiteWri
 
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeWrite,
+		Type:    constant.SiteTypeWrite,
 		Content: string(content),
 		Status:  1,
 	}
-	return nil, repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeWrite, data)
+	return nil, repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeWrite, data)
 }
 
 // SaveSiteLegal save site legal configuration
 func (s *SiteInfoService) SaveSiteLegal(ctx context.Context, req *schema.SiteLegalReq) (err error) {
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeLegal,
+		Type:    constant.SiteTypeLegal,
 		Content: string(content),
 		Status:  1,
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeLegal, data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeLegal, data)
 }
 
 // SaveSiteLogin save site legal configuration
 func (s *SiteInfoService) SaveSiteLogin(ctx context.Context, req *schema.SiteLoginReq) (err error) {
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeLogin,
+		Type:    constant.SiteTypeLogin,
 		Content: string(content),
 		Status:  1,
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeLogin, data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeLogin, data)
 }
 
 // SaveSiteCustomCssHTML save site custom html configuration
 func (s *SiteInfoService) SaveSiteCustomCssHTML(ctx context.Context, req *schema.SiteCustomCssHTMLReq) (err error) {
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeCustomCssHTML,
+		Type:    constant.SiteTypeCustomCssHTML,
 		Content: string(content),
 		Status:  1,
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeCustomCssHTML, data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeCustomCssHTML, data)
 }
 
 // SaveSiteTheme save site custom html configuration
 func (s *SiteInfoService) SaveSiteTheme(ctx context.Context, req *schema.SiteThemeReq) (err error) {
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeTheme,
+		Type:    constant.SiteTypeTheme,
 		Content: string(content),
 		Status:  1,
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeTheme, data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeTheme, data)
 }
 
 // SaveSiteUsers save site users
 func (s *SiteInfoService) SaveSiteUsers(ctx context.Context, req *schema.SiteUsersReq) (err error) {
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypeUsers,
+		Type:    constant.SiteTypeUsers,
 		Content: string(content),
 		Status:  1,
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeUsers, data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeUsers, data)
 }
 
 // GetSMTPConfig get smtp config
@@ -225,7 +224,7 @@ func (s *SiteInfoService) GetSMTPConfig(ctx context.Context) (resp *schema.GetSM
 
 // UpdateSMTPConfig get smtp config
 func (s *SiteInfoService) UpdateSMTPConfig(ctx context.Context, req *schema.UpdateSMTPConfigReq) (err error) {
-	ec := &export.EmailConfig{}
+	ec := &entity.EmailConfig{}
 	_ = copier.Copy(ec, req)
 
 	err = services.EmailService.SetEmailConfig(ctx, ec)
@@ -244,7 +243,7 @@ func (s *SiteInfoService) UpdateSMTPConfig(ctx context.Context, req *schema.Upda
 
 func (s *SiteInfoService) GetSeo(ctx context.Context) (resp *schema.SiteSeoReq, err error) {
 	resp = &schema.SiteSeoReq{}
-	if err = services.SiteInfoCommonService.GetSiteInfoByType(ctx, constant2.SiteTypeSeo, resp); err != nil {
+	if err = services.SiteInfoCommonService.GetSiteInfoByType(ctx, constant.SiteTypeSeo, resp); err != nil {
 		return resp, err
 	}
 	loginConfig, err := s.GetSiteLogin(ctx)
@@ -263,15 +262,15 @@ func (s *SiteInfoService) GetSeo(ctx context.Context) (resp *schema.SiteSeoReq, 
 func (s *SiteInfoService) SaveSeo(ctx context.Context, req schema.SiteSeoReq) (err error) {
 	content, _ := json.Marshal(req)
 	data := entity.SiteInfo{
-		Type:    constant2.SiteTypeSeo,
+		Type:    constant.SiteTypeSeo,
 		Content: string(content),
 	}
-	return repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypeSeo, &data)
+	return repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypeSeo, &data)
 }
 
 func (s *SiteInfoService) GetPrivilegesConfig(ctx context.Context) (resp *schema.GetPrivilegesConfigResp, err error) {
 	privilege := &schema.UpdatePrivilegesConfigReq{}
-	if err = services.SiteInfoCommonService.GetSiteInfoByType(ctx, constant2.SiteTypePrivileges, privilege); err != nil {
+	if err = services.SiteInfoCommonService.GetSiteInfoByType(ctx, constant.SiteTypePrivileges, privilege); err != nil {
 		return nil, err
 	}
 	resp = &schema.GetPrivilegesConfigResp{
@@ -292,7 +291,7 @@ func (s *SiteInfoService) translatePrivilegeOptions(ctx context.Context) (option
 			LevelDesc: translator.Tr(la, option.LevelDesc),
 		}
 		for _, privilege := range option.Privileges {
-			op.Privileges = append(op.Privileges, &constant2.Privilege{
+			op.Privileges = append(op.Privileges, &constant.Privilege{
 				Key:   privilege.Key,
 				Label: translator.Tr(la, privilege.Label),
 				Value: privilege.Value,
@@ -312,11 +311,11 @@ func (s *SiteInfoService) UpdatePrivilegesConfig(ctx context.Context, req *schem
 	// update site info that user choose which privilege level
 	content, _ := json.Marshal(req)
 	data := &entity.SiteInfo{
-		Type:    constant2.SiteTypePrivileges,
+		Type:    constant.SiteTypePrivileges,
 		Content: string(content),
 		Status:  1,
 	}
-	err = repo.SiteInfoRepo.SaveByType(ctx, constant2.SiteTypePrivileges, data)
+	err = repo.SiteInfoRepo.SaveByType(ctx, constant.SiteTypePrivileges, data)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,7 @@
 package templaterender
 
 import (
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"html/template"
@@ -33,21 +33,21 @@ func (t *TemplateRenderController) Sitemap(ctx *gin.Context) {
 		return
 	}
 
-	questions, err := repo.QuestionRepo.SitemapQuestions(ctx, 1, constant2.SitemapMaxSize)
+	questions, err := repo.QuestionRepo.SitemapQuestions(ctx, 1, constant.SitemapMaxSize)
 	if err != nil {
 		log.Errorf("get sitemap questions failed: %s", err)
 		return
 	}
 
 	ctx.Header("Content-Type", "application/xml")
-	if len(questions) < constant2.SitemapMaxSize {
+	if len(questions) < constant.SitemapMaxSize {
 		ctx.HTML(
 			http.StatusOK, "sitemap.xml", gin.H{
 				"xmlHeader": template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 				"list":      questions,
 				"general":   general,
-				"hastitle": siteInfo.Permalink == constant2.PermalinkQuestionIDAndTitle ||
-					siteInfo.Permalink == constant2.PermalinkQuestionIDAndTitleByShortID,
+				"hastitle": siteInfo.Permalink == constant.PermalinkQuestionIDAndTitle ||
+					siteInfo.Permalink == constant.PermalinkQuestionIDAndTitleByShortID,
 			},
 		)
 		return
@@ -59,7 +59,7 @@ func (t *TemplateRenderController) Sitemap(ctx *gin.Context) {
 		return
 	}
 	var pageList []int
-	totalPages := int(math.Ceil(float64(questionNum) / float64(constant2.SitemapMaxSize)))
+	totalPages := int(math.Ceil(float64(questionNum) / float64(constant.SitemapMaxSize)))
 	for i := 1; i <= totalPages; i++ {
 		pageList = append(pageList, i)
 	}
@@ -84,7 +84,7 @@ func (t *TemplateRenderController) SitemapPage(ctx *gin.Context, page int) error
 		return err
 	}
 
-	questions, err := repo.QuestionRepo.SitemapQuestions(ctx, page, constant2.SitemapMaxSize)
+	questions, err := repo.QuestionRepo.SitemapQuestions(ctx, page, constant.SitemapMaxSize)
 	if err != nil {
 		log.Errorf("get sitemap questions failed: %s", err)
 		return err
@@ -95,8 +95,8 @@ func (t *TemplateRenderController) SitemapPage(ctx *gin.Context, page int) error
 			"xmlHeader": template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 			"list":      questions,
 			"general":   general,
-			"hastitle": siteInfo.Permalink == constant2.PermalinkQuestionIDAndTitle ||
-				siteInfo.Permalink == constant2.PermalinkQuestionIDAndTitleByShortID,
+			"hastitle": siteInfo.Permalink == constant.PermalinkQuestionIDAndTitle ||
+				siteInfo.Permalink == constant.PermalinkQuestionIDAndTitleByShortID,
 		},
 	)
 	return nil

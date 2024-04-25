@@ -3,8 +3,8 @@ package activity_common
 import (
 	"context"
 	"github.com/lawyer/commons/entity"
-	services "github.com/lawyer/initServer/initServices"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/initServer/initServices"
+	"github.com/lawyer/repoCommon"
 	"time"
 
 	"github.com/lawyer/commons/schema"
@@ -40,7 +40,7 @@ func NewActivityCommon() *ActivityCommon {
 
 // HandleActivity handle activity message
 func (ac *ActivityCommon) HandleActivity(ctx context.Context, msg *schema.ActivityMsg) error {
-	activityType, err := repo.ActivityRepo.GetActivityTypeByConfigKey(ctx, string(msg.ActivityTypeKey))
+	activityType, err := repoCommon.NewActivityRepo().GetActivityTypeByConfigKey(ctx, string(msg.ActivityTypeKey))
 	if err != nil {
 		log.Errorf("error getting activity type %s, activity type is %d", err, activityType)
 		return err
@@ -57,7 +57,7 @@ func (ac *ActivityCommon) HandleActivity(ctx context.Context, msg *schema.Activi
 	if len(msg.RevisionID) > 0 {
 		act.RevisionID = converter.StringToInt64(msg.RevisionID)
 	}
-	if err := repo.ActivityRepo.AddActivity(ctx, act); err != nil {
+	if err = repoCommon.NewActivityRepo().AddActivity(ctx, act); err != nil {
 		return err
 	}
 	return nil

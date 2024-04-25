@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/lawyer/commons/base/translator"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
@@ -76,7 +76,7 @@ func (vs *VoteService) VoteUp(ctx context.Context, req *schema.VoteReq) (resp *s
 	}
 	resp.Votes = resp.UpVotes - resp.DownVotes
 	if !req.IsCancel {
-		resp.VoteStatus = constant2.ActVoteUp
+		resp.VoteStatus = constant.ActVoteUp
 	}
 	return resp, nil
 }
@@ -121,7 +121,7 @@ func (vs *VoteService) VoteDown(ctx context.Context, req *schema.VoteReq) (resp 
 	}
 	resp.Votes = resp.UpVotes - resp.DownVotes
 	if !req.IsCancel {
-		resp.VoteStatus = constant2.ActVoteDown
+		resp.VoteStatus = constant.ActVoteDown
 	}
 	return resp, nil
 }
@@ -129,10 +129,10 @@ func (vs *VoteService) VoteDown(ctx context.Context, req *schema.VoteReq) (resp 
 // ListUserVotes list user's votes
 func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWithPageReq) (resp *pager.PageModel, err error) {
 	typeKeys := []string{
-		constant2.QuestionVoteUp,
-		constant2.QuestionVoteDown,
-		constant2.AnswerVoteUp,
-		constant2.AnswerVoteDown,
+		constant.QuestionVoteUp,
+		constant.QuestionVoteDown,
+		constant.AnswerVoteUp,
+		constant.AnswerVoteDown,
 	}
 	activityTypes := make([]int, 0)
 	activityTypeMapping := make(map[int]string, 0)
@@ -172,9 +172,9 @@ func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWith
 			Content:    objInfo.Content,
 		}
 		item.VoteType = translator.Tr(lang,
-			constant2.ActivityTypeFlagMapping[activityTypeMapping[voteInfo.ActivityType]])
+			constant.ActivityTypeFlagMapping[activityTypeMapping[voteInfo.ActivityType]])
 		if objInfo.QuestionStatus == entity.QuestionStatusDeleted {
-			item.Title = translator.Tr(lang, constant2.DeletedQuestionTitleTrKey)
+			item.Title = translator.Tr(lang, constant.DeletedQuestionTitleTrKey)
 		}
 		votes = append(votes, item)
 	}
@@ -202,20 +202,20 @@ func (vs *VoteService) getActivities(ctx context.Context, op *schema.VoteOperati
 
 	var actions []string
 	switch op.ObjectType {
-	case constant2.QuestionObjectType:
+	case constant.QuestionObjectType:
 		if op.VoteUp {
-			actions = []string{constant2.QuestionVoteUp, constant2.QuestionVotedUp}
+			actions = []string{constant.QuestionVoteUp, constant.QuestionVotedUp}
 		} else {
-			actions = []string{constant2.QuestionVoteDown, constant2.QuestionVotedDown}
+			actions = []string{constant.QuestionVoteDown, constant.QuestionVotedDown}
 		}
-	case constant2.AnswerObjectType:
+	case constant.AnswerObjectType:
 		if op.VoteUp {
-			actions = []string{constant2.AnswerVoteUp, constant2.AnswerVotedUp}
+			actions = []string{constant.AnswerVoteUp, constant.AnswerVotedUp}
 		} else {
-			actions = []string{constant2.AnswerVoteDown, constant2.AnswerVotedDown}
+			actions = []string{constant.AnswerVoteDown, constant.AnswerVotedDown}
 		}
-	case constant2.CommentObjectType:
-		actions = []string{constant2.CommentVoteUp}
+	case constant.CommentObjectType:
+		actions = []string{constant.CommentVoteUp}
 	}
 
 	for _, action := range actions {

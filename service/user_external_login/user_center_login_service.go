@@ -6,7 +6,7 @@ import (
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/service/activity"

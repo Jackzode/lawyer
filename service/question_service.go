@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/base/validator"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
@@ -65,7 +65,7 @@ func (qs *QuestionService) CloseQuestion(ctx context.Context, req *schema.CloseQ
 		UserID:           req.UserID,
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
-		ActivityTypeKey:  constant2.ActQuestionClosed,
+		ActivityTypeKey:  constant.ActQuestionClosed,
 	})
 	return nil
 }
@@ -89,7 +89,7 @@ func (qs *QuestionService) ReopenQuestion(ctx context.Context, req *schema.Reope
 		UserID:           req.UserID,
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
-		ActivityTypeKey:  constant2.ActQuestionReopened,
+		ActivityTypeKey:  constant.ActQuestionReopened,
 	})
 	return nil
 }
@@ -272,7 +272,7 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		UserID:           question.UserID,
 		ObjectID:         question.ID,
 		OriginalObjectID: question.ID,
-		ActivityTypeKey:  constant2.ActQuestionAsked,
+		ActivityTypeKey:  constant.ActQuestionAsked,
 		RevisionID:       revisionID,
 	})
 
@@ -333,11 +333,11 @@ func (qs *QuestionService) OperationQuestion(ctx context.Context, req *schema.Op
 		return err
 	}
 
-	actMap := make(map[string]constant2.ActivityTypeKey)
-	actMap[schema.QuestionOperationPin] = constant2.ActQuestionPin
-	actMap[schema.QuestionOperationUnPin] = constant2.ActQuestionUnPin
-	actMap[schema.QuestionOperationHide] = constant2.ActQuestionHide
-	actMap[schema.QuestionOperationShow] = constant2.ActQuestionShow
+	actMap := make(map[string]constant.ActivityTypeKey)
+	actMap[schema.QuestionOperationPin] = constant.ActQuestionPin
+	actMap[schema.QuestionOperationUnPin] = constant.ActQuestionUnPin
+	actMap[schema.QuestionOperationHide] = constant.ActQuestionHide
+	actMap[schema.QuestionOperationShow] = constant.ActQuestionShow
 	_, ok := actMap[req.Operation]
 	if ok {
 		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
@@ -437,7 +437,7 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 		UserID:           req.UserID,
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
-		ActivityTypeKey:  constant2.ActQuestionDeleted,
+		ActivityTypeKey:  constant.ActQuestionDeleted,
 	})
 	return nil
 }
@@ -560,7 +560,7 @@ func (qs *QuestionService) RecoverQuestion(ctx context.Context, req *schema.Ques
 		TriggerUserID:    converter.StringToInt64(req.UserID),
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
-		ActivityTypeKey:  constant2.ActQuestionUndeleted,
+		ActivityTypeKey:  constant.ActQuestionUndeleted,
 	})
 	return nil
 }
@@ -647,8 +647,8 @@ func (qs *QuestionService) notificationInviteUser(
 			Type:           schema.NotificationTypeInbox,
 			ObjectID:       questionID,
 		}
-		msg.ObjectType = constant2.QuestionObjectType
-		msg.NotificationAction = constant2.NotificationInvitedYouToAnswer
+		msg.ObjectType = constant.QuestionObjectType
+		msg.NotificationAction = constant.NotificationInvitedYouToAnswer
 		services.NotificationQueueService.Send(ctx, msg)
 
 		receiverUserInfo, ok := invitee[userID]
@@ -826,7 +826,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			ObjectID:         question.ID,
-			ActivityTypeKey:  constant2.ActQuestionEdited,
+			ActivityTypeKey:  constant.ActQuestionEdited,
 			RevisionID:       revisionID,
 			OriginalObjectID: question.ID,
 		})
@@ -1230,9 +1230,9 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
 			OriginalObjectID: questionInfo.ID,
-			ActivityTypeKey:  constant2.ActQuestionDeleted,
+			ActivityTypeKey:  constant.ActQuestionDeleted,
 		})
-		msg.NotificationAction = constant2.NotificationYourQuestionWasDeleted
+		msg.NotificationAction = constant.NotificationYourQuestionWasDeleted
 	}
 	if setStatus == entity.QuestionStatusAvailable && questionInfo.Status == entity.QuestionStatusClosed {
 		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
@@ -1240,7 +1240,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
 			OriginalObjectID: questionInfo.ID,
-			ActivityTypeKey:  constant2.ActQuestionReopened,
+			ActivityTypeKey:  constant.ActQuestionReopened,
 		})
 	}
 	if setStatus == entity.QuestionStatusClosed && questionInfo.Status != entity.QuestionStatusClosed {
@@ -1249,9 +1249,9 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
 			OriginalObjectID: questionInfo.ID,
-			ActivityTypeKey:  constant2.ActQuestionClosed,
+			ActivityTypeKey:  constant.ActQuestionClosed,
 		})
-		msg.NotificationAction = constant2.NotificationYourQuestionIsClosed
+		msg.NotificationAction = constant.NotificationYourQuestionIsClosed
 	}
 	// recover
 	if setStatus == entity.QuestionStatusAvailable && questionInfo.Status == entity.QuestionStatusDeleted {
@@ -1260,7 +1260,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
 			OriginalObjectID: questionInfo.ID,
-			ActivityTypeKey:  constant2.ActQuestionUndeleted,
+			ActivityTypeKey:  constant.ActQuestionUndeleted,
 		})
 	}
 
@@ -1269,7 +1269,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 		msg.Type = schema.NotificationTypeInbox
 		msg.ReceiverUserID = questionInfo.UserID
 		msg.TriggerUserID = req.UserID
-		msg.ObjectType = constant2.QuestionObjectType
+		msg.ObjectType = constant.QuestionObjectType
 		services.NotificationQueueService.Send(ctx, msg)
 	}
 	return nil
@@ -1364,6 +1364,6 @@ func (qs *QuestionService) SitemapCron(ctx context.Context) {
 		log.Error(err)
 		return
 	}
-	ctx = context.WithValue(ctx, constant2.ShortIDFlag, siteSeo.IsShortLink())
+	ctx = context.WithValue(ctx, constant.ShortIDFlag, siteSeo.IsShortLink())
 	services.QuestionCommon.SitemapCron(ctx)
 }

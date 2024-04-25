@@ -14,6 +14,7 @@ import (
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/plugin"
 	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
 	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"time"
@@ -81,7 +82,7 @@ func (ns *NotificationCommon) AddNotification(ctx context.Context, msg *schema.N
 		if err != nil {
 			return fmt.Errorf("get by user id object id type id error: %w", err)
 		}
-		rank, err := repo.ActivityRepo.GetUserIDObjectIDActivitySum(ctx, req.ReceiverUserID, req.ObjectInfo.ObjectID)
+		rank, err := repoCommon.NewActivityRepo().GetUserIDObjectIDActivitySum(ctx, req.ReceiverUserID, req.ObjectInfo.ObjectID)
 		if err != nil {
 			return fmt.Errorf("get user id object id activity sum error: %w", err)
 		}

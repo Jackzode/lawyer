@@ -2,7 +2,7 @@ package notification
 
 import (
 	"context"
-	constant2 "github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
@@ -15,7 +15,7 @@ func (ns *ExternalNotificationService) handleInviteAnswerNotification(ctx contex
 	msg *schema.ExternalNotificationMsg) error {
 	log.Debugf("try to send invite answer notification %+v", msg)
 
-	notificationConfig, exist, err := repo.UserNotificationConfigRepo.GetByUserIDAndSource(ctx, msg.ReceiverUserID, constant2.InboxSource)
+	notificationConfig, exist, err := repo.UserNotificationConfigRepo.GetByUserIDAndSource(ctx, msg.ReceiverUserID, constant.InboxSource)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (ns *ExternalNotificationService) handleInviteAnswerNotification(ctx contex
 			continue
 		}
 		switch channel.Key {
-		case constant2.EmailChannel:
+		case constant.EmailChannel:
 			ns.sendInviteAnswerNotificationEmail(ctx, msg.ReceiverUserID, msg.ReceiverEmail, msg.ReceiverLang, msg.NewInviteAnswerTemplateRawData)
 		}
 	}
@@ -39,8 +39,8 @@ func (ns *ExternalNotificationService) sendInviteAnswerNotificationEmail(ctx con
 	userID, email, lang string, rawData *schema.NewInviteAnswerTemplateRawData) {
 	codeContent := &schema.EmailCodeContent{
 		SourceType: schema.UnsubscribeSourceType,
-		NotificationSources: []constant2.NotificationSource{
-			constant2.InboxSource,
+		NotificationSources: []constant.NotificationSource{
+			constant.InboxSource,
 		},
 		Email:  email,
 		UserID: userID,
@@ -48,7 +48,7 @@ func (ns *ExternalNotificationService) sendInviteAnswerNotificationEmail(ctx con
 
 	// If receiver has set language, use it to send email.
 	if len(lang) > 0 {
-		ctx = context.WithValue(ctx, constant2.AcceptLanguageFlag, i18n.Language(lang))
+		ctx = context.WithValue(ctx, constant.AcceptLanguageFlag, i18n.Language(lang))
 	}
 	title, body, err := services.EmailService.NewInviteAnswerTemplate(ctx, rawData)
 	if err != nil {

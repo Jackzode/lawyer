@@ -14,6 +14,7 @@ import (
 	checker2 "github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
 	role2 "github.com/lawyer/service/role"
 	"time"
 
@@ -696,7 +697,7 @@ func (us *UserService) getActivityUserRankStat(ctx context.Context, startTime, e
 	if plugin.RankAgentEnabled() {
 		return make([]*entity.ActivityUserRankStat, 0), make([]string, 0), nil
 	}
-	rankStat, err = repo.ActivityRepo.GetUsersWhoHasGainedTheMostReputation(ctx, startTime, endTime, limit)
+	rankStat, err = repoCommon.NewActivityRepo().GetUsersWhoHasGainedTheMostReputation(ctx, startTime, endTime, limit)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -718,7 +719,7 @@ func (us *UserService) getActivityUserVoteStat(ctx context.Context, startTime, e
 	if plugin.RankAgentEnabled() {
 		return make([]*entity.ActivityUserVoteStat, 0), make([]string, 0), nil
 	}
-	voteStat, err = repo.ActivityRepo.GetUsersWhoHasVoteMost(ctx, startTime, endTime, limit)
+	voteStat, err = repoCommon.NewActivityRepo().GetUsersWhoHasVoteMost(ctx, startTime, endTime, limit)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/initServer/initServices"
@@ -52,19 +52,19 @@ func (rs *RevisionService) RevisionAudit(ctx context.Context, req *schema.Revisi
 		rs.parseItem(ctx, revisionitem)
 		var saveErr error
 		switch objectType {
-		case constant2.QuestionObjectType:
+		case constant.QuestionObjectType:
 			if !req.CanReviewQuestion {
 				saveErr = errors.BadRequest(reason.RevisionNoPermission)
 			} else {
 				saveErr = rs.revisionAuditQuestion(ctx, revisionitem)
 			}
-		case constant2.AnswerObjectType:
+		case constant.AnswerObjectType:
 			if !req.CanReviewAnswer {
 				saveErr = errors.BadRequest(reason.RevisionNoPermission)
 			} else {
 				saveErr = rs.revisionAuditAnswer(ctx, revisionitem)
 			}
-		case constant2.TagObjectType:
+		case constant.TagObjectType:
 			if !req.CanReviewTag {
 				saveErr = errors.BadRequest(reason.RevisionNoPermission)
 			} else {
@@ -122,7 +122,7 @@ func (rs *RevisionService) revisionAuditQuestion(ctx context.Context, revisionit
 		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
 			UserID:           revisionitem.UserID,
 			ObjectID:         revisionitem.ObjectID,
-			ActivityTypeKey:  constant2.ActQuestionEdited,
+			ActivityTypeKey:  constant.ActQuestionEdited,
 			RevisionID:       revisionitem.ID,
 			OriginalObjectID: revisionitem.ObjectID,
 		})
@@ -172,15 +172,15 @@ func (rs *RevisionService) revisionAuditAnswer(ctx context.Context, revisionitem
 			Type:           schema.NotificationTypeInbox,
 			ObjectID:       answerinfo.ID,
 		}
-		msg.ObjectType = constant2.AnswerObjectType
-		msg.NotificationAction = constant2.NotificationUpdateAnswer
+		msg.ObjectType = constant.AnswerObjectType
+		msg.NotificationAction = constant.NotificationUpdateAnswer
 		services.NotificationQueueService.Send(ctx, msg)
 
 		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
 			UserID:           revisionitem.UserID,
 			ObjectID:         insertData.ID,
 			OriginalObjectID: insertData.ID,
-			ActivityTypeKey:  constant2.ActAnswerEdited,
+			ActivityTypeKey:  constant.ActAnswerEdited,
 			RevisionID:       revisionitem.ID,
 		})
 	}
@@ -226,7 +226,7 @@ func (rs *RevisionService) revisionAuditTag(ctx context.Context, revisionitem *s
 			UserID:           revisionitem.UserID,
 			ObjectID:         taginfo.TagID,
 			OriginalObjectID: taginfo.TagID,
-			ActivityTypeKey:  constant2.ActTagEdited,
+			ActivityTypeKey:  constant.ActTagEdited,
 			RevisionID:       revisionitem.ID,
 		})
 	}
@@ -247,11 +247,11 @@ func (rs *RevisionService) GetUnreviewedRevisionPage(ctx context.Context, req *s
 	}
 	for _, rev := range revisionPage {
 		item := &schema.GetUnreviewedRevisionResp{}
-		_, ok := constant2.ObjectTypeNumberMapping[rev.ObjectType]
+		_, ok := constant.ObjectTypeNumberMapping[rev.ObjectType]
 		if !ok {
 			continue
 		}
-		item.Type = constant2.ObjectTypeNumberMapping[rev.ObjectType]
+		item.Type = constant.ObjectTypeNumberMapping[rev.ObjectType]
 		info, err := services.ObjService.GetUnreviewedRevisionInfo(ctx, rev.ObjectID)
 		if err != nil {
 			return nil, err
@@ -327,21 +327,21 @@ func (rs *RevisionService) parseItem(ctx context.Context, item *schema.GetRevisi
 	)
 
 	switch item.ObjectType {
-	case constant2.ObjectTypeStrMapping["question"]:
+	case constant.ObjectTypeStrMapping["question"]:
 		err = json.Unmarshal([]byte(item.Content), &question)
 		if err != nil {
 			break
 		}
 		questionInfo = services.QuestionCommon.ShowFormatWithTag(ctx, &question)
 		item.ContentParsed = questionInfo
-	case constant2.ObjectTypeStrMapping["answer"]:
+	case constant.ObjectTypeStrMapping["answer"]:
 		err = json.Unmarshal([]byte(item.Content), &answer)
 		if err != nil {
 			break
 		}
 		answerInfo = services.AnswerService.ShowFormat(ctx, &answer)
 		item.ContentParsed = answerInfo
-	case constant2.ObjectTypeStrMapping["tag"]:
+	case constant.ObjectTypeStrMapping["tag"]:
 		err = json.Unmarshal([]byte(item.Content), &tag)
 		if err != nil {
 			break

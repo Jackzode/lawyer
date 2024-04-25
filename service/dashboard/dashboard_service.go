@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/repo"
-	"github.com/lawyer/service/export"
+	//"github.com/lawyer/service/export"
 	"io"
 	"net/http"
 	"net/url"
@@ -179,7 +180,7 @@ func (ds *dashboardService) smtpStatus(ctx context.Context) (smtpStatus string) 
 		log.Errorf("get email config failed: %s", err)
 		return "disabled"
 	}
-	ec := &export.EmailConfig{}
+	ec := &entity.EmailConfig{}
 	err = json.Unmarshal([]byte(emailConf), ec)
 	if err != nil {
 		log.Errorf("parsing email config failed: %s", err)

@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"encoding/json"
-	constant2 "github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
@@ -93,7 +93,7 @@ func (as *AnswerService) RemoveAnswer(ctx context.Context, req *schema.RemoveAns
 		UserID:           req.UserID,
 		ObjectID:         answerInfo.ID,
 		OriginalObjectID: answerInfo.ID,
-		ActivityTypeKey:  constant2.ActAnswerDeleted,
+		ActivityTypeKey:  constant.ActAnswerDeleted,
 	})
 	return
 }
@@ -131,7 +131,7 @@ func (as *AnswerService) RecoverAnswer(ctx context.Context, req *schema.RecoverA
 		TriggerUserID:    converter.StringToInt64(req.UserID),
 		ObjectID:         answerInfo.ID,
 		OriginalObjectID: answerInfo.ID,
-		ActivityTypeKey:  constant2.ActAnswerUndeleted,
+		ActivityTypeKey:  constant.ActAnswerUndeleted,
 	})
 	return nil
 }
@@ -200,14 +200,14 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 		UserID:           insertData.UserID,
 		ObjectID:         insertData.ID,
 		OriginalObjectID: insertData.ID,
-		ActivityTypeKey:  constant2.ActAnswerAnswered,
+		ActivityTypeKey:  constant.ActAnswerAnswered,
 		RevisionID:       revisionID,
 	})
 	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
 		UserID:           insertData.UserID,
 		ObjectID:         insertData.ID,
 		OriginalObjectID: questionInfo.ID,
-		ActivityTypeKey:  constant2.ActQuestionAnswered,
+		ActivityTypeKey:  constant.ActQuestionAnswered,
 	})
 	return insertData.ID, nil
 }
@@ -294,7 +294,7 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 			UserID:           req.UserID,
 			ObjectID:         insertData.ID,
 			OriginalObjectID: insertData.ID,
-			ActivityTypeKey:  constant2.ActAnswerEdited,
+			ActivityTypeKey:  constant.ActAnswerEdited,
 			RevisionID:       revisionID,
 		})
 	}
@@ -454,7 +454,7 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         answerInfo.ID,
 			OriginalObjectID: answerInfo.ID,
-			ActivityTypeKey:  constant2.ActAnswerDeleted,
+			ActivityTypeKey:  constant.ActAnswerDeleted,
 		})
 
 		msg := &schema.NotificationMsg{}
@@ -462,8 +462,8 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 		msg.Type = schema.NotificationTypeInbox
 		msg.ReceiverUserID = answerInfo.UserID
 		msg.TriggerUserID = answerInfo.UserID
-		msg.ObjectType = constant2.AnswerObjectType
-		msg.NotificationAction = constant2.NotificationYourAnswerWasDeleted
+		msg.ObjectType = constant.AnswerObjectType
+		msg.NotificationAction = constant.NotificationYourAnswerWasDeleted
 		services.NotificationQueueService.Send(ctx, msg)
 	}
 
@@ -474,7 +474,7 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         answerInfo.ID,
 			OriginalObjectID: answerInfo.ID,
-			ActivityTypeKey:  constant2.ActAnswerUndeleted,
+			ActivityTypeKey:  constant.ActAnswerUndeleted,
 		})
 	}
 	return nil
@@ -553,8 +553,8 @@ func (as *AnswerService) notificationUpdateAnswer(ctx context.Context, questionU
 		Type:           schema.NotificationTypeInbox,
 		ObjectID:       answerID,
 	}
-	msg.ObjectType = constant2.AnswerObjectType
-	msg.NotificationAction = constant2.NotificationUpdateAnswer
+	msg.ObjectType = constant.AnswerObjectType
+	msg.NotificationAction = constant.NotificationUpdateAnswer
 	services.NotificationQueueService.Send(ctx, msg)
 }
 
@@ -570,8 +570,8 @@ func (as *AnswerService) notificationAnswerTheQuestion(ctx context.Context,
 		Type:           schema.NotificationTypeInbox,
 		ObjectID:       answerID,
 	}
-	msg.ObjectType = constant2.AnswerObjectType
-	msg.NotificationAction = constant2.NotificationAnswerTheQuestion
+	msg.ObjectType = constant.AnswerObjectType
+	msg.NotificationAction = constant.NotificationAnswerTheQuestion
 	services.NotificationQueueService.Send(ctx, msg)
 
 	receiverUserInfo, exist, err := repo.UserRepo.GetByUserID(ctx, questionUserID)

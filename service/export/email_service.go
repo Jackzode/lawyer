@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lawyer/commons/base/translator"
+	c "github.com/lawyer/commons/config"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/initServer/initServices"
+	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/display"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/config"
@@ -38,22 +39,6 @@ type EmailRepo interface {
 // NewEmailService email service
 func NewEmailService() *EmailService {
 	return &EmailService{}
-}
-
-// EmailConfig email config
-type EmailConfig struct {
-	FromEmail          string `json:"from_email"`
-	FromName           string `json:"from_name"`
-	SMTPHost           string `json:"smtp_host"`
-	SMTPPort           int    `json:"smtp_port"`
-	Encryption         string `json:"encryption"` // "" SSL
-	SMTPUsername       string `json:"smtp_username"`
-	SMTPPassword       string `json:"smtp_password"`
-	SMTPAuthentication bool   `json:"smtp_authentication"`
-}
-
-func (e *EmailConfig) IsSSL() bool {
-	return e.Encryption == "SSL"
 }
 
 // SaveCode save code
@@ -290,12 +275,12 @@ func (es *EmailService) NewQuestionTemplate(ctx context.Context, raw *schema.New
 	return title, body, nil
 }
 
-func (es *EmailService) GetEmailConfig(ctx context.Context) (ec *EmailConfig, err error) {
+func (es *EmailService) GetEmailConfig(ctx context.Context) (ec *c.EmailConfig, err error) {
 	emailConf, err := utils.GetStringValue(ctx, "email.config")
 	if err != nil {
 		return nil, err
 	}
-	ec = &EmailConfig{}
+	ec = &c.EmailConfig{}
 	err = json.Unmarshal([]byte(emailConf), ec)
 	if err != nil {
 		log.Errorf("old email config format is invalid, you need to update smtp config: %v", err)
@@ -305,7 +290,7 @@ func (es *EmailService) GetEmailConfig(ctx context.Context) (ec *EmailConfig, er
 }
 
 // SetEmailConfig set email config
-func (es *EmailService) SetEmailConfig(ctx context.Context, ec *EmailConfig) (err error) {
+func (es *EmailService) SetEmailConfig(ctx context.Context, ec *c.EmailConfig) (err error) {
 	data, _ := json.Marshal(ec)
 	return es.configService.UpdateConfig(ctx, "email.config", string(data))
 }

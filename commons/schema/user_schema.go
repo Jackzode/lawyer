@@ -3,7 +3,7 @@ package schema
 import (
 	"encoding/json"
 	"github.com/lawyer/commons/base/validator"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils/checker"
 
@@ -77,7 +77,7 @@ func (r *UserLoginResp) ConvertFromUserEntity(userInfo *entity.User) {
 	_ = copier.Copy(r, userInfo)
 	r.CreatedAt = userInfo.CreatedAt.Unix()
 	r.LastLoginDate = userInfo.LastLoginDate.Unix()
-	r.Status = constant2.ConvertUserStatus(userInfo.Status, userInfo.MailStatus)
+	r.Status = constant.ConvertUserStatus(userInfo.Status, userInfo.MailStatus)
 	r.HavePassword = len(userInfo.Pass) > 0
 }
 
@@ -90,7 +90,7 @@ func (r *GetCurrentLoginUserInfoResp) ConvertFromUserEntity(userInfo *entity.Use
 	_ = copier.Copy(r, userInfo)
 	r.CreatedAt = userInfo.CreatedAt.Unix()
 	r.LastLoginDate = userInfo.LastLoginDate.Unix()
-	r.Status = constant2.ConvertUserStatus(userInfo.Status, userInfo.MailStatus)
+	r.Status = constant.ConvertUserStatus(userInfo.Status, userInfo.MailStatus)
 }
 
 // GetOtherUserInfoByUsernameResp get user response
@@ -134,7 +134,7 @@ func (r *GetOtherUserInfoByUsernameResp) ConvertFromUserEntity(userInfo *entity.
 	_ = copier.Copy(r, userInfo)
 	r.CreatedAt = userInfo.CreatedAt.Unix()
 	r.LastLoginDate = userInfo.LastLoginDate.Unix()
-	r.Status = constant2.ConvertUserStatus(userInfo.Status, userInfo.MailStatus)
+	r.Status = constant.ConvertUserStatus(userInfo.Status, userInfo.MailStatus)
 	if userInfo.MailStatus == entity.EmailStatusToBeVerified {
 		statusMsgShow, ok := UserStatusShowMsg[11]
 		if ok {
@@ -234,9 +234,9 @@ func (a *AvatarInfo) ToJsonString() string {
 
 func (a *AvatarInfo) GetURL() string {
 	switch a.Type {
-	case constant2.AvatarTypeGravatar:
+	case constant.AvatarTypeGravatar:
 		return a.Gravatar
-	case constant2.AvatarTypeCustom:
+	case constant.AvatarTypeCustom:
 		return a.Custom
 	default:
 		return ""
@@ -245,7 +245,7 @@ func (a *AvatarInfo) GetURL() string {
 
 func CustomAvatar(url string) *AvatarInfo {
 	return &AvatarInfo{
-		Type:   constant2.AvatarTypeCustom,
+		Type:   constant.AvatarTypeCustom,
 		Custom: url,
 	}
 }

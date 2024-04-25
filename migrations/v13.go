@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	constant2 "github.com/lawyer/commons/constant"
+	constant "github.com/lawyer/commons/constant"
 	entity "github.com/lawyer/commons/entity"
 	"time"
 
@@ -35,7 +35,7 @@ func updateCount(ctx context.Context, x *xorm.Engine) error {
 
 func addGravatarBaseURL(ctx context.Context, x *xorm.Engine) error {
 	usersSiteInfo := &entity.SiteInfo{
-		Type: constant2.SiteTypeUsers,
+		Type: constant.SiteTypeUsers,
 	}
 	exist, err := x.Context(ctx).Get(usersSiteInfo)
 	if err != nil {
@@ -392,9 +392,9 @@ func inBoxData(ctx context.Context, x *xorm.Engine) error {
 		if err != nil {
 			continue
 		}
-		_, ok := constant2.NotificationMsgTypeMapping[Content.NotificationAction]
+		_, ok := constant.NotificationMsgTypeMapping[Content.NotificationAction]
 		if ok {
-			v.MsgType = constant2.NotificationMsgTypeMapping[Content.NotificationAction]
+			v.MsgType = constant.NotificationMsgTypeMapping[Content.NotificationAction]
 			if _, err = x.Context(ctx).Update(v, &entity.Notification{ID: v.ID}); err != nil {
 				log.Errorf("update %+v Notification failed: %s", v.ID, err)
 			}

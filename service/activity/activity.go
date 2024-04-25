@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	constant2 "github.com/lawyer/commons/constant"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
@@ -63,7 +63,7 @@ func (as *ActivityService) GetObjectTimeline(ctx context.Context, req *schema.Ge
 			item.CancelledAt = act.CancelledAt.Unix()
 		}
 
-		if item.ObjectType == constant2.QuestionObjectType || item.ObjectType == constant2.AnswerObjectType {
+		if item.ObjectType == constant.QuestionObjectType || item.ObjectType == constant.AnswerObjectType {
 			if utils.GetEnableShortID(ctx) {
 				item.ObjectID = uid.EnShortID(act.ObjectID)
 			}
@@ -85,7 +85,7 @@ func (as *ActivityService) GetObjectTimeline(ctx context.Context, req *schema.Ge
 		}
 
 		// if activity is down vote, only admin can see who does it.
-		if item.ActivityType == constant2.ActDownVote && !req.IsAdmin {
+		if item.ActivityType == constant.ActDownVote && !req.IsAdmin {
 			item.UserInfo.Username = "N/A"
 			item.UserInfo.DisplayName = "N/A"
 		} else {
@@ -111,7 +111,7 @@ func (as *ActivityService) getTimelineMainObjInfo(ctx context.Context, objectID 
 		return nil, err
 	}
 	resp.Title = objInfo.Title
-	if objInfo.ObjectType == constant2.TagObjectType {
+	if objInfo.ObjectType == constant.TagObjectType {
 		tag, exist, _ := services.TagCommonService.GetTagByID(ctx, objInfo.TagID)
 		if exist {
 			resp.Title = tag.SlugName
@@ -137,7 +137,7 @@ func (as *ActivityService) getTimelineMainObjInfo(ctx context.Context, objectID 
 
 func (as *ActivityService) getTimelineActivityComment(ctx context.Context, objectID, objectType,
 	activityType, revisionID string) (comment string) {
-	if objectType == constant2.CommentObjectType {
+	if objectType == constant.CommentObjectType {
 		commentInfo, err := services.CommentCommonService.GetComment(ctx, objectID)
 		if err != nil {
 			log.Error(err)
@@ -147,7 +147,7 @@ func (as *ActivityService) getTimelineActivityComment(ctx context.Context, objec
 		return
 	}
 
-	if activityType == constant2.ActEdited {
+	if activityType == constant.ActEdited {
 		revision, err := services.RevisionService.GetRevision(ctx, revisionID)
 		if err != nil {
 			log.Error(err)
@@ -156,7 +156,7 @@ func (as *ActivityService) getTimelineActivityComment(ctx context.Context, objec
 		}
 		return
 	}
-	if activityType == constant2.ActClosed {
+	if activityType == constant.ActClosed {
 		// only question can be closed
 		metaInfo, err := services.MetaService.GetMetaByObjectIdAndKey(ctx, objectID, entity.QuestionCloseReasonKey)
 		if err != nil {
@@ -226,7 +226,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 	}
 
 	switch objInfo.ObjectType {
-	case constant2.QuestionObjectType:
+	case constant.QuestionObjectType:
 		data := &entity.QuestionWithTagsRevision{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
 			log.Errorf("revision parsing error %s", err)
@@ -243,7 +243,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 		}
 		resp.Title = data.Title
 		resp.OriginalText = data.OriginalText
-	case constant2.AnswerObjectType:
+	case constant.AnswerObjectType:
 		data := &entity.Answer{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
 			log.Errorf("revision parsing error %s", err)
@@ -251,7 +251,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 		}
 		resp.Title = objInfo.Title // answer show question title
 		resp.OriginalText = data.OriginalText
-	case constant2.TagObjectType:
+	case constant.TagObjectType:
 		data := &entity.Tag{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
 			log.Errorf("revision parsing error %s", err)
@@ -268,19 +268,19 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 }
 
 func formatActivity(activityType string) (isHidden bool, formattedActivityType string) {
-	if activityType == constant2.ActVotedUp ||
-		activityType == constant2.ActVotedDown ||
-		activityType == constant2.ActFollow {
+	if activityType == constant.ActVotedUp ||
+		activityType == constant.ActVotedDown ||
+		activityType == constant.ActFollow {
 		return true, ""
 	}
-	if activityType == constant2.ActVoteUp {
-		return false, constant2.ActUpVote
+	if activityType == constant.ActVoteUp {
+		return false, constant.ActUpVote
 	}
-	if activityType == constant2.ActVoteDown {
-		return false, constant2.ActDownVote
+	if activityType == constant.ActVoteDown {
+		return false, constant.ActDownVote
 	}
-	if activityType == constant2.ActAccepted {
-		return false, constant2.ActAccept
+	if activityType == constant.ActAccepted {
+		return false, constant.ActAccept
 	}
 	return false, activityType
 }
