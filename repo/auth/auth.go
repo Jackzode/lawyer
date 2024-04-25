@@ -14,22 +14,22 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-// authRepo auth repository
-type authRepo struct {
+// AuthRepo auth repository
+type AuthRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewAuthRepo new repository
-func NewAuthRepo() *authRepo {
-	return &authRepo{
+func NewAuthRepo() *AuthRepo {
+	return &AuthRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // GetUserCacheInfo get user cache info
-func (ar *authRepo) GetUserInfoFromCache(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error) {
+func (ar *AuthRepo) GetUserInfoFromCache(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error) {
 	userInfoCache := ar.Cache.Get(ctx, constant.UserTokenCacheKey+accessToken).String()
 	if userInfoCache == "" {
 		return nil, nil
@@ -40,7 +40,7 @@ func (ar *authRepo) GetUserInfoFromCache(ctx context.Context, accessToken string
 }
 
 // SetUserCacheInfo set user cache info
-func (ar *authRepo) SetUserCacheInfo(ctx context.Context,
+func (ar *AuthRepo) SetUserCacheInfo(ctx context.Context,
 	accessToken, visitToken string, userInfo *entity.UserCacheInfo) (err error) {
 	userInfo.VisitToken = visitToken
 	userInfoCache, err := json.Marshal(userInfo)
@@ -66,7 +66,7 @@ func (ar *authRepo) SetUserCacheInfo(ctx context.Context,
 }
 
 // GetUserVisitCacheInfo get user visit cache info
-func (ar *authRepo) GetUserVisitCacheInfo(ctx context.Context, visitToken string) (accessToken string, err error) {
+func (ar *AuthRepo) GetUserVisitCacheInfo(ctx context.Context, visitToken string) (accessToken string, err error) {
 	accessToken = ar.Cache.Get(ctx, constant.UserVisitTokenCacheKey+visitToken).String()
 	if accessToken == "" {
 		return "", nil
@@ -75,7 +75,7 @@ func (ar *authRepo) GetUserVisitCacheInfo(ctx context.Context, visitToken string
 }
 
 // RemoveUserCacheInfo remove user cache info
-func (ar *authRepo) RemoveUserCacheInfo(ctx context.Context, accessToken string) (err error) {
+func (ar *AuthRepo) RemoveUserCacheInfo(ctx context.Context, accessToken string) (err error) {
 	err = ar.Cache.Del(ctx, constant.UserTokenCacheKey+accessToken).Err()
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -84,7 +84,7 @@ func (ar *authRepo) RemoveUserCacheInfo(ctx context.Context, accessToken string)
 }
 
 // RemoveUserVisitCacheInfo remove visit token cache
-func (ar *authRepo) RemoveUserVisitCacheInfo(ctx context.Context, visitToken string) (err error) {
+func (ar *AuthRepo) RemoveUserVisitCacheInfo(ctx context.Context, visitToken string) (err error) {
 	err = ar.Cache.Del(ctx, constant.UserVisitTokenCacheKey+visitToken).Err()
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -93,7 +93,7 @@ func (ar *authRepo) RemoveUserVisitCacheInfo(ctx context.Context, visitToken str
 }
 
 // SetUserStatus set user status
-func (ar *authRepo) SetUserStatus(ctx context.Context, userID string, userInfo *entity.UserCacheInfo) (err error) {
+func (ar *AuthRepo) SetUserStatus(ctx context.Context, userID string, userInfo *entity.UserCacheInfo) (err error) {
 	userInfoCache, err := json.Marshal(userInfo)
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func (ar *authRepo) SetUserStatus(ctx context.Context, userID string, userInfo *
 }
 
 // GetUserStatus get user status
-func (ar *authRepo) GetUserStatusFromCache(ctx context.Context, userID string) (userInfo *entity.UserCacheInfo, err error) {
+func (ar *AuthRepo) GetUserStatusFromCache(ctx context.Context, userID string) (userInfo *entity.UserCacheInfo, err error) {
 	userInfoCache := ar.Cache.Get(ctx, constant.UserStatusCacheKey+userID).String()
 	if userInfoCache == "" {
 		return nil, nil
@@ -118,7 +118,7 @@ func (ar *authRepo) GetUserStatusFromCache(ctx context.Context, userID string) (
 }
 
 // RemoveUserStatus remove user status
-func (ar *authRepo) RemoveUserStatus(ctx context.Context, userID string) (err error) {
+func (ar *AuthRepo) RemoveUserStatus(ctx context.Context, userID string) (err error) {
 	err = ar.Cache.Del(ctx, constant.UserStatusCacheKey+userID).Err()
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -127,7 +127,7 @@ func (ar *authRepo) RemoveUserStatus(ctx context.Context, userID string) (err er
 }
 
 // GetAdminUserCacheInfo get admin user cache info
-func (ar *authRepo) GetAdminUserCacheInfo(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error) {
+func (ar *AuthRepo) GetAdminUserCacheInfo(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error) {
 	userInfoCache := ar.Cache.Get(ctx, constant.AdminTokenCacheKey+accessToken).String()
 	if userInfoCache == "" {
 		return nil, nil
@@ -138,7 +138,7 @@ func (ar *authRepo) GetAdminUserCacheInfo(ctx context.Context, accessToken strin
 }
 
 // SetAdminUserCacheInfo set admin user cache info
-func (ar *authRepo) SetAdminUserCacheInfo(ctx context.Context, accessToken string, userInfo *entity.UserCacheInfo) (err error) {
+func (ar *AuthRepo) SetAdminUserCacheInfo(ctx context.Context, accessToken string, userInfo *entity.UserCacheInfo) (err error) {
 	userInfoCache, err := json.Marshal(userInfo)
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func (ar *authRepo) SetAdminUserCacheInfo(ctx context.Context, accessToken strin
 }
 
 // RemoveAdminUserCacheInfo remove admin user cache info
-func (ar *authRepo) RemoveAdminUserCacheInfo(ctx context.Context, accessToken string) (err error) {
+func (ar *AuthRepo) RemoveAdminUserCacheInfo(ctx context.Context, accessToken string) (err error) {
 	err = ar.Cache.Del(ctx, constant.AdminTokenCacheKey+accessToken).Err()
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -162,7 +162,7 @@ func (ar *authRepo) RemoveAdminUserCacheInfo(ctx context.Context, accessToken st
 }
 
 // AddUserTokenMapping add user token mapping
-func (ar *authRepo) AddUserTokenMapping(ctx context.Context, userID, accessToken string) (err error) {
+func (ar *AuthRepo) AddUserTokenMapping(ctx context.Context, userID, accessToken string) (err error) {
 	key := constant.UserTokenMappingCacheKey + userID
 	resp := ar.Cache.Get(ctx, key).String()
 
@@ -176,7 +176,7 @@ func (ar *authRepo) AddUserTokenMapping(ctx context.Context, userID, accessToken
 }
 
 // RemoveUserTokens Log out all users under this user id
-func (ar *authRepo) RemoveUserTokens(ctx context.Context, userID string, remainToken string) {
+func (ar *AuthRepo) RemoveUserTokens(ctx context.Context, userID string, remainToken string) {
 	key := constant.UserTokenMappingCacheKey + userID
 	resp := ar.Cache.Get(ctx, key).String()
 	if resp == "" {

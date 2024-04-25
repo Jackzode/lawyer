@@ -14,21 +14,21 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-// activityRepo activity repository
-type activityRepo struct {
+// ActivityRepo activity repository
+type ActivityRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewActivityRepo new repository
-func NewActivityRepo() *activityRepo {
-	return &activityRepo{
+func NewActivityRepo() *ActivityRepo {
+	return &ActivityRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
-func (ar *activityRepo) GetObjectAllActivity(ctx context.Context, objectID string, showVote bool) (
+func (ar *ActivityRepo) GetObjectAllActivity(ctx context.Context, objectID string, showVote bool) (
 	activityList []*entity.Activity, err error) {
 	activityList = make([]*entity.Activity, 0)
 	session := ar.DB.Context(ctx).Desc("id")
@@ -44,7 +44,7 @@ func (ar *activityRepo) GetObjectAllActivity(ctx context.Context, objectID strin
 	return activityList, nil
 }
 
-func (ar *activityRepo) getAllActivityType(ctx context.Context) (activityTypes []int) {
+func (ar *ActivityRepo) getAllActivityType(ctx context.Context) (activityTypes []int) {
 	var activityTypeNotShown []int
 	for _, key := range constant.VoteActivityTypeList {
 		id, err := utils.GetIDByKey(ctx, key)

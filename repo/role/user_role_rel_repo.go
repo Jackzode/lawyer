@@ -12,22 +12,22 @@ import (
 	"xorm.io/xorm"
 )
 
-// userRoleRelRepo userRoleRel repository
-type userRoleRelRepo struct {
+// UserRoleRelRepo userRoleRel repository
+type UserRoleRelRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewUserRoleRelRepo new repository
-func NewUserRoleRelRepo() *userRoleRelRepo {
-	return &userRoleRelRepo{
+func NewUserRoleRelRepo() *UserRoleRelRepo {
+	return &UserRoleRelRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // SaveUserRoleRel save user role rel
-func (ur *userRoleRelRepo) SaveUserRoleRel(ctx context.Context, userID string, roleID int) (err error) {
+func (ur *UserRoleRelRepo) SaveUserRoleRel(ctx context.Context, userID string, roleID int) (err error) {
 	_, err = ur.DB.Transaction(func(session *xorm.Session) (interface{}, error) {
 		session = session.Context(ctx)
 		item := &entity.UserRoleRel{UserID: userID}
@@ -53,7 +53,7 @@ func (ur *userRoleRelRepo) SaveUserRoleRel(ctx context.Context, userID string, r
 }
 
 // GetUserRoleRelList get user role all
-func (ur *userRoleRelRepo) GetUserRoleRelList(ctx context.Context, userIDs []string) (
+func (ur *UserRoleRelRepo) GetUserRoleRelList(ctx context.Context, userIDs []string) (
 	userRoleRelList []*entity.UserRoleRel, err error) {
 	userRoleRelList = make([]*entity.UserRoleRel, 0)
 	err = ur.DB.Context(ctx).In("user_id", userIDs).Find(&userRoleRelList)
@@ -64,7 +64,7 @@ func (ur *userRoleRelRepo) GetUserRoleRelList(ctx context.Context, userIDs []str
 }
 
 // GetUserRoleRelListByRoleID get user role all by role id
-func (ur *userRoleRelRepo) GetUserRoleRelListByRoleID(ctx context.Context, roleIDs []int) (
+func (ur *UserRoleRelRepo) GetUserRoleRelListByRoleID(ctx context.Context, roleIDs []int) (
 	userRoleRelList []*entity.UserRoleRel, err error) {
 	userRoleRelList = make([]*entity.UserRoleRel, 0)
 	err = ur.DB.Context(ctx).In("role_id", roleIDs).Find(&userRoleRelList)
@@ -75,7 +75,7 @@ func (ur *userRoleRelRepo) GetUserRoleRelListByRoleID(ctx context.Context, roleI
 }
 
 // GetUserRoleRel get user role
-func (ur *userRoleRelRepo) GetUserRoleRel(ctx context.Context, userID string) (
+func (ur *UserRoleRelRepo) GetUserRoleRel(ctx context.Context, userID string) (
 	rolePowerRel *entity.UserRoleRel, exist bool, err error) {
 	rolePowerRel = &entity.UserRoleRel{}
 	exist, err = ur.DB.Context(ctx).Where(builder.Eq{"user_id": userID}).Get(rolePowerRel)

@@ -11,22 +11,22 @@ import (
 	"xorm.io/builder"
 )
 
-// rolePowerRelRepo rolePowerRel repository
-type rolePowerRelRepo struct {
+// RolePowerRelRepo rolePowerRel repository
+type RolePowerRelRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewRolePowerRelRepo new repository
-func NewRolePowerRelRepo() *rolePowerRelRepo {
-	return &rolePowerRelRepo{
+func NewRolePowerRelRepo() *RolePowerRelRepo {
+	return &RolePowerRelRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // GetRolePowerTypeList get role power type list
-func (rr *rolePowerRelRepo) GetRolePowerTypeList(ctx context.Context, roleID int) (powers []string, err error) {
+func (rr *RolePowerRelRepo) GetRolePowerTypeList(ctx context.Context, roleID int) (powers []string, err error) {
 	powers = make([]string, 0)
 	err = rr.DB.Context(ctx).Table("role_power_rel").
 		Cols("power_type").Where(builder.Eq{"role_id": roleID}).Find(&powers)

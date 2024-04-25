@@ -12,22 +12,22 @@ import (
 	"xorm.io/xorm"
 )
 
-// tagRepo tag repository
-type tagRepo struct {
+// TagRepo tag repository
+type TagRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewTagRepo new repository
-func NewTagRepo() *tagRepo {
-	return &tagRepo{
+func NewTagRepo() *TagRepo {
+	return &TagRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // RemoveTag delete tag
-func (tr *tagRepo) RemoveTag(ctx context.Context, tagID string) (err error) {
+func (tr *TagRepo) RemoveTag(ctx context.Context, tagID string) (err error) {
 	session := tr.DB.Context(ctx).Where(builder.Eq{"id": tagID})
 	_, err = session.Update(&entity.Tag{Status: entity.TagStatusDeleted})
 	if err != nil {
@@ -37,7 +37,7 @@ func (tr *tagRepo) RemoveTag(ctx context.Context, tagID string) (err error) {
 }
 
 // UpdateTag update tag
-func (tr *tagRepo) UpdateTag(ctx context.Context, tag *entity.Tag) (err error) {
+func (tr *TagRepo) UpdateTag(ctx context.Context, tag *entity.Tag) (err error) {
 	_, err = tr.DB.Context(ctx).Where(builder.Eq{"id": tag.ID}).Update(tag)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -46,7 +46,7 @@ func (tr *tagRepo) UpdateTag(ctx context.Context, tag *entity.Tag) (err error) {
 }
 
 // RecoverTag recover deleted tag
-func (tr *tagRepo) RecoverTag(ctx context.Context, tagID string) (err error) {
+func (tr *TagRepo) RecoverTag(ctx context.Context, tagID string) (err error) {
 	_, err = tr.DB.Context(ctx).ID(tagID).Update(&entity.Tag{Status: entity.TagStatusAvailable})
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -55,7 +55,7 @@ func (tr *tagRepo) RecoverTag(ctx context.Context, tagID string) (err error) {
 }
 
 // MustGetTagByID get tag by id
-func (tr *tagRepo) MustGetTagByNameOrID(ctx context.Context, tagID, slugName string) (
+func (tr *TagRepo) MustGetTagByNameOrID(ctx context.Context, tagID, slugName string) (
 	tag *entity.Tag, exist bool, err error) {
 	if len(tagID) == 0 && len(slugName) == 0 {
 		return nil, false, nil
@@ -76,7 +76,7 @@ func (tr *tagRepo) MustGetTagByNameOrID(ctx context.Context, tagID, slugName str
 }
 
 // UpdateTagSynonym update synonym tag
-func (tr *tagRepo) UpdateTagSynonym(ctx context.Context, tagSlugNameList []string, mainTagID int64,
+func (tr *TagRepo) UpdateTagSynonym(ctx context.Context, tagSlugNameList []string, mainTagID int64,
 	mainTagSlugName string,
 ) (err error) {
 	bean := &entity.Tag{MainTagID: mainTagID, MainTagSlugName: mainTagSlugName}
@@ -88,7 +88,7 @@ func (tr *tagRepo) UpdateTagSynonym(ctx context.Context, tagSlugNameList []strin
 	return
 }
 
-func (tr *tagRepo) GetTagSynonymCount(ctx context.Context, tagID string) (count int64, err error) {
+func (tr *TagRepo) GetTagSynonymCount(ctx context.Context, tagID string) (count int64, err error) {
 	count, err = tr.DB.Context(ctx).Count(&entity.Tag{MainTagID: converter.StringToInt64(tagID), Status: entity.TagStatusAvailable})
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -97,7 +97,7 @@ func (tr *tagRepo) GetTagSynonymCount(ctx context.Context, tagID string) (count 
 }
 
 // GetTagList get tag list all
-func (tr *tagRepo) GetTagList(ctx context.Context, tag *entity.Tag) (tagList []*entity.Tag, err error) {
+func (tr *TagRepo) GetTagList(ctx context.Context, tag *entity.Tag) (tagList []*entity.Tag, err error) {
 	tagList = make([]*entity.Tag, 0)
 	session := tr.DB.Context(ctx).Where(builder.Eq{"status": entity.TagStatusAvailable})
 	err = session.Find(&tagList, tag)

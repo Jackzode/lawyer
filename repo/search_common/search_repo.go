@@ -53,8 +53,8 @@ var (
 	}
 )
 
-// searchRepo tag repository
-type searchRepo struct {
+// SearchRepo tag repository
+type SearchRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 	//todo
@@ -63,15 +63,15 @@ type searchRepo struct {
 }
 
 // NewSearchRepo new repository
-func NewSearchRepo() *searchRepo {
-	return &searchRepo{
+func NewSearchRepo() *SearchRepo {
+	return &SearchRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // SearchContents search question and answer data
-func (sr *searchRepo) SearchContents(ctx context.Context, words []string, tagIDs []string, userID string, votes int, page, size int, order string) (resp []*schema.SearchResult, total int64, err error) {
+func (sr *SearchRepo) SearchContents(ctx context.Context, words []string, tagIDs []string, userID string, votes int, page, size int, order string) (resp []*schema.SearchResult, total int64, err error) {
 	words = filterWords(words)
 
 	var (
@@ -209,7 +209,7 @@ func (sr *searchRepo) SearchContents(ctx context.Context, words []string, tagIDs
 }
 
 // SearchQuestions search question data
-func (sr *searchRepo) SearchQuestions(ctx context.Context, words []string, tagIDs []string, notAccepted bool, views, answers int, page, size int, order string) (resp []*schema.SearchResult, total int64, err error) {
+func (sr *SearchRepo) SearchQuestions(ctx context.Context, words []string, tagIDs []string, notAccepted bool, views, answers int, page, size int, order string) (resp []*schema.SearchResult, total int64, err error) {
 	words = filterWords(words)
 	var (
 		qfs  = qFields
@@ -316,7 +316,7 @@ func (sr *searchRepo) SearchQuestions(ctx context.Context, words []string, tagID
 }
 
 // SearchAnswers search answer data
-func (sr *searchRepo) SearchAnswers(ctx context.Context, words []string, tagIDs []string, accepted bool, questionID string, page, size int, order string) (resp []*schema.SearchResult, total int64, err error) {
+func (sr *SearchRepo) SearchAnswers(ctx context.Context, words []string, tagIDs []string, accepted bool, questionID string, page, size int, order string) (resp []*schema.SearchResult, total int64, err error) {
 	words = filterWords(words)
 
 	var (
@@ -406,7 +406,7 @@ func (sr *searchRepo) SearchAnswers(ctx context.Context, words []string, tagIDs 
 	return
 }
 
-func (sr *searchRepo) parseOrder(ctx context.Context, order string) (res string) {
+func (sr *SearchRepo) parseOrder(ctx context.Context, order string) (res string) {
 	switch order {
 	case "newest":
 		res = "created_at desc"
@@ -423,7 +423,7 @@ func (sr *searchRepo) parseOrder(ctx context.Context, order string) (res string)
 }
 
 // ParseSearchPluginResult parse search plugin result
-func (sr *searchRepo) ParseSearchPluginResult(ctx context.Context, sres []plugin.SearchResult) (resp []*schema.SearchResult, err error) {
+func (sr *SearchRepo) ParseSearchPluginResult(ctx context.Context, sres []plugin.SearchResult) (resp []*schema.SearchResult, err error) {
 	var (
 		qres []map[string][]byte
 		res  = make([]map[string][]byte, 0)
@@ -450,7 +450,7 @@ func (sr *searchRepo) ParseSearchPluginResult(ctx context.Context, sres []plugin
 }
 
 // parseResult parse search result, return the data structure
-func (sr *searchRepo) parseResult(ctx context.Context, res []map[string][]byte) (resp []*schema.SearchResult, err error) {
+func (sr *SearchRepo) parseResult(ctx context.Context, res []map[string][]byte) (resp []*schema.SearchResult, err error) {
 	questionIDs := make([]string, 0)
 	userIDs := make([]string, 0)
 	resultList := make([]*schema.SearchResult, 0)

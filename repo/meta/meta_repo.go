@@ -12,22 +12,22 @@ import (
 	"xorm.io/builder"
 )
 
-// metaRepo meta repository
-type metaRepo struct {
+// MetaRepo meta repository
+type MetaRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewMetaRepo new repository
-func NewMetaRepo() *metaRepo {
-	return &metaRepo{
+func NewMetaRepo() *MetaRepo {
+	return &MetaRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddMeta add meta
-func (mr *metaRepo) AddMeta(ctx context.Context, meta *entity.Meta) (err error) {
+func (mr *MetaRepo) AddMeta(ctx context.Context, meta *entity.Meta) (err error) {
 	_, err = mr.DB.Context(ctx).Insert(meta)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -36,7 +36,7 @@ func (mr *metaRepo) AddMeta(ctx context.Context, meta *entity.Meta) (err error) 
 }
 
 // RemoveMeta delete meta
-func (mr *metaRepo) RemoveMeta(ctx context.Context, id int) (err error) {
+func (mr *MetaRepo) RemoveMeta(ctx context.Context, id int) (err error) {
 	_, err = mr.DB.Context(ctx).ID(id).Delete(&entity.Meta{})
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -45,7 +45,7 @@ func (mr *metaRepo) RemoveMeta(ctx context.Context, id int) (err error) {
 }
 
 // UpdateMeta update meta
-func (mr *metaRepo) UpdateMeta(ctx context.Context, meta *entity.Meta) (err error) {
+func (mr *MetaRepo) UpdateMeta(ctx context.Context, meta *entity.Meta) (err error) {
 	_, err = mr.DB.Context(ctx).ID(meta.ID).Update(meta)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -54,7 +54,7 @@ func (mr *metaRepo) UpdateMeta(ctx context.Context, meta *entity.Meta) (err erro
 }
 
 // GetMetaByObjectIdAndKey get meta one
-func (mr *metaRepo) GetMetaByObjectIdAndKey(ctx context.Context, objectID, key string) (
+func (mr *MetaRepo) GetMetaByObjectIdAndKey(ctx context.Context, objectID, key string) (
 	meta *entity.Meta, exist bool, err error) {
 
 	meta = &entity.Meta{}
@@ -66,7 +66,7 @@ func (mr *metaRepo) GetMetaByObjectIdAndKey(ctx context.Context, objectID, key s
 }
 
 // GetMetaList get meta list all
-func (mr *metaRepo) GetMetaList(ctx context.Context, meta *entity.Meta) (metaList []*entity.Meta, err error) {
+func (mr *MetaRepo) GetMetaList(ctx context.Context, meta *entity.Meta) (metaList []*entity.Meta, err error) {
 	metaList = make([]*entity.Meta, 0)
 	err = mr.DB.Context(ctx).Find(&metaList, meta)
 	if err != nil {

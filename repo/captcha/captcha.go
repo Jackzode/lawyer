@@ -15,21 +15,21 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-// captchaRepo captcha repository
-type captchaRepo struct {
+// CaptchaRepo captcha repository
+type CaptchaRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewCaptchaRepo new repository
-func NewCaptchaRepo() *captchaRepo {
-	return &captchaRepo{
+func NewCaptchaRepo() *CaptchaRepo {
+	return &CaptchaRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
-func (cr *captchaRepo) SetActionType(ctx context.Context, unit, actionType, config string, amount int) (err error) {
+func (cr *CaptchaRepo) SetActionType(ctx context.Context, unit, actionType, config string, amount int) (err error) {
 	now := time.Now()
 	cacheKey := fmt.Sprintf("ActionRecord:%s@%s@%s", unit, actionType, now.Format("2006-1-02"))
 	value := &entity.ActionRecordInfo{}
@@ -46,7 +46,7 @@ func (cr *captchaRepo) SetActionType(ctx context.Context, unit, actionType, conf
 	return
 }
 
-func (cr *captchaRepo) GetActionType(ctx context.Context, Ip, actionType string) (actionInfo *entity.ActionRecordInfo, err error) {
+func (cr *CaptchaRepo) GetActionType(ctx context.Context, Ip, actionType string) (actionInfo *entity.ActionRecordInfo, err error) {
 	now := time.Now()
 	cacheKey := fmt.Sprintf("ActionRecord:%s@%s@%s", Ip, actionType, now.Format("2006-1-02"))
 	res := cr.Cache.Get(ctx, cacheKey).String()
@@ -58,7 +58,7 @@ func (cr *captchaRepo) GetActionType(ctx context.Context, Ip, actionType string)
 	return actionInfo, nil
 }
 
-func (cr *captchaRepo) DelActionType(ctx context.Context, unit, actionType string) (err error) {
+func (cr *CaptchaRepo) DelActionType(ctx context.Context, unit, actionType string) (err error) {
 	now := time.Now()
 	cacheKey := fmt.Sprintf("ActionRecord:%s@%s@%s", unit, actionType, now.Format("2006-1-02"))
 	err = cr.Cache.Del(ctx, cacheKey).Err()
@@ -69,7 +69,7 @@ func (cr *captchaRepo) DelActionType(ctx context.Context, unit, actionType strin
 }
 
 // SetCaptcha set captcha to cache
-func (cr *captchaRepo) SetCaptcha(ctx context.Context, key, captcha string) (err error) {
+func (cr *CaptchaRepo) SetCaptcha(ctx context.Context, key, captcha string) (err error) {
 	err = cr.Cache.Set(ctx, key, captcha, 6*time.Minute).Err()
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -78,7 +78,7 @@ func (cr *captchaRepo) SetCaptcha(ctx context.Context, key, captcha string) (err
 }
 
 // GetCaptcha get captcha from cache
-func (cr *captchaRepo) GetCaptcha(ctx context.Context, key string) (captcha string, err error) {
+func (cr *CaptchaRepo) GetCaptcha(ctx context.Context, key string) (captcha string, err error) {
 	captcha = cr.Cache.Get(ctx, key).String()
 	if captcha == "" {
 		return "", fmt.Errorf("captcha not exist")
@@ -86,7 +86,7 @@ func (cr *captchaRepo) GetCaptcha(ctx context.Context, key string) (captcha stri
 	return captcha, nil
 }
 
-func (cr *captchaRepo) DelCaptcha(ctx context.Context, key string) (err error) {
+func (cr *CaptchaRepo) DelCaptcha(ctx context.Context, key string) (err error) {
 	err = cr.Cache.Del(ctx, key).Err()
 	if err != nil {
 		log.Debug(err)

@@ -18,22 +18,22 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-// userAdminRepo user repository
-type userAdminRepo struct {
+// UserAdminRepo user repository
+type UserAdminRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewUserAdminRepo new repository
-func NewUserAdminRepo() *userAdminRepo {
-	return &userAdminRepo{
+func NewUserAdminRepo() *UserAdminRepo {
+	return &UserAdminRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // UpdateUserStatus update user status
-func (ur *userAdminRepo) UpdateUserStatus(ctx context.Context, userID string, userStatus, mailStatus int,
+func (ur *UserAdminRepo) UpdateUserStatus(ctx context.Context, userID string, userStatus, mailStatus int,
 	email string,
 ) (err error) {
 	cond := &entity.User{Status: userStatus, MailStatus: mailStatus, EMail: email}
@@ -63,7 +63,7 @@ func (ur *userAdminRepo) UpdateUserStatus(ctx context.Context, userID string, us
 }
 
 // AddUser add user
-func (ur *userAdminRepo) AddUser(ctx context.Context, user *entity.User) (err error) {
+func (ur *UserAdminRepo) AddUser(ctx context.Context, user *entity.User) (err error) {
 	_, err = ur.DB.Context(ctx).Insert(user)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -72,7 +72,7 @@ func (ur *userAdminRepo) AddUser(ctx context.Context, user *entity.User) (err er
 }
 
 // AddUsers add users
-func (ur *userAdminRepo) AddUsers(ctx context.Context, users []*entity.User) (err error) {
+func (ur *UserAdminRepo) AddUsers(ctx context.Context, users []*entity.User) (err error) {
 	_, err = ur.DB.Context(ctx).Insert(users)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -81,7 +81,7 @@ func (ur *userAdminRepo) AddUsers(ctx context.Context, users []*entity.User) (er
 }
 
 // UpdateUserPassword update user password
-func (ur *userAdminRepo) UpdateUserPassword(ctx context.Context, userID string, password string) (err error) {
+func (ur *UserAdminRepo) UpdateUserPassword(ctx context.Context, userID string, password string) (err error) {
 	_, err = ur.DB.Context(ctx).ID(userID).Update(&entity.User{Pass: password})
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -90,7 +90,7 @@ func (ur *userAdminRepo) UpdateUserPassword(ctx context.Context, userID string, 
 }
 
 // GetUserInfo get user info
-func (ur *userAdminRepo) GetUserInfo(ctx context.Context, userID string) (user *entity.User, exist bool, err error) {
+func (ur *UserAdminRepo) GetUserInfo(ctx context.Context, userID string) (user *entity.User, exist bool, err error) {
 	user = &entity.User{}
 	exist, err = ur.DB.Context(ctx).ID(userID).Get(user)
 	if err != nil {
@@ -107,7 +107,7 @@ func (ur *userAdminRepo) GetUserInfo(ctx context.Context, userID string) (user *
 }
 
 // GetUserInfoByEmail get user info
-func (ur *userAdminRepo) GetUserInfoByEmail(ctx context.Context, email string) (user *entity.User, exist bool, err error) {
+func (ur *UserAdminRepo) GetUserInfoByEmail(ctx context.Context, email string) (user *entity.User, exist bool, err error) {
 	userInfo := &entity.User{}
 	exist, err = ur.DB.Context(ctx).Where("e_mail = ?", email).
 		Where("status != ?", entity.UserStatusDeleted).Get(userInfo)
@@ -126,7 +126,7 @@ func (ur *userAdminRepo) GetUserInfoByEmail(ctx context.Context, email string) (
 }
 
 // GetUserPage get user page
-func (ur *userAdminRepo) GetUserPage(ctx context.Context, page, pageSize int, user *entity.User,
+func (ur *UserAdminRepo) GetUserPage(ctx context.Context, page, pageSize int, user *entity.User,
 	usernameOrDisplayName string, isStaff bool) (users []*entity.User, total int64, err error) {
 	users = make([]*entity.User, 0)
 	session := ur.DB.Context(ctx)

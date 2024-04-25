@@ -9,14 +9,14 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-type reasonRepo struct {
+type ReasonRepo struct {
 }
 
-func NewReasonRepo() *reasonRepo {
-	return &reasonRepo{}
+func NewReasonRepo() *ReasonRepo {
+	return &ReasonRepo{}
 }
 
-func (rr *reasonRepo) ListReasons(ctx context.Context, objectType, action string) (resp []*schema.ReasonItem, err error) {
+func (rr *ReasonRepo) ListReasons(ctx context.Context, objectType, action string) (resp []*schema.ReasonItem, err error) {
 	lang := utils.GetLangByCtx(ctx)
 	reasonAction := fmt.Sprintf("%s.%s.reasons", objectType, action)
 	resp = make([]*schema.ReasonItem, 0)

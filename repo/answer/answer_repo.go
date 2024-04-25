@@ -19,22 +19,22 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-// answerRepo answer repository
-type answerRepo struct {
+// AnswerRepo answer repository
+type AnswerRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewAnswerRepo new repository
-func NewAnswerRepo() *answerRepo {
-	return &answerRepo{
+func NewAnswerRepo() *AnswerRepo {
+	return &AnswerRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddAnswer add answer
-func (ar *answerRepo) AddAnswer(ctx context.Context, answer *entity.Answer) (err error) {
+func (ar *AnswerRepo) AddAnswer(ctx context.Context, answer *entity.Answer) (err error) {
 	answer.QuestionID = uid.DeShortID(answer.QuestionID)
 	ID, err := utils.GenUniqueIDStr(ctx, answer.TableName())
 	if err != nil {
@@ -55,7 +55,7 @@ func (ar *answerRepo) AddAnswer(ctx context.Context, answer *entity.Answer) (err
 }
 
 // RemoveAnswer delete answer
-func (ar *answerRepo) RemoveAnswer(ctx context.Context, answerID string) (err error) {
+func (ar *AnswerRepo) RemoveAnswer(ctx context.Context, answerID string) (err error) {
 	answerID = uid.DeShortID(answerID)
 	_, err = ar.DB.Context(ctx).ID(answerID).Cols("status").Update(&entity.Answer{
 		Status: entity.AnswerStatusDeleted,
@@ -68,7 +68,7 @@ func (ar *answerRepo) RemoveAnswer(ctx context.Context, answerID string) (err er
 }
 
 // RecoverAnswer recover answer
-func (ar *answerRepo) RecoverAnswer(ctx context.Context, answerID string) (err error) {
+func (ar *AnswerRepo) RecoverAnswer(ctx context.Context, answerID string) (err error) {
 	answerID = uid.DeShortID(answerID)
 	_, err = ar.DB.Context(ctx).ID(answerID).Cols("status").Update(&entity.Answer{
 		Status: entity.AnswerStatusAvailable,
@@ -81,7 +81,7 @@ func (ar *answerRepo) RecoverAnswer(ctx context.Context, answerID string) (err e
 }
 
 // RemoveAllUserAnswer remove all user answer
-func (ar *answerRepo) RemoveAllUserAnswer(ctx context.Context, userID string) (err error) {
+func (ar *AnswerRepo) RemoveAllUserAnswer(ctx context.Context, userID string) (err error) {
 	// find all answer id that need to be deleted
 	answerIDs := make([]string, 0)
 	session := ar.DB.Context(ctx).Where("user_id = ?", userID)
@@ -115,7 +115,7 @@ func (ar *answerRepo) RemoveAllUserAnswer(ctx context.Context, userID string) (e
 }
 
 // UpdateAnswer update answer
-func (ar *answerRepo) UpdateAnswer(ctx context.Context, answer *entity.Answer, cols []string) (err error) {
+func (ar *AnswerRepo) UpdateAnswer(ctx context.Context, answer *entity.Answer, cols []string) (err error) {
 	answer.ID = uid.DeShortID(answer.ID)
 	answer.QuestionID = uid.DeShortID(answer.QuestionID)
 	_, err = ar.DB.Context(ctx).ID(answer.ID).Cols(cols...).Update(answer)
@@ -126,7 +126,7 @@ func (ar *answerRepo) UpdateAnswer(ctx context.Context, answer *entity.Answer, c
 	return err
 }
 
-func (ar *answerRepo) UpdateAnswerStatus(ctx context.Context, answerID string, status int) (err error) {
+func (ar *AnswerRepo) UpdateAnswerStatus(ctx context.Context, answerID string, status int) (err error) {
 	answerID = uid.DeShortID(answerID)
 	_, err = ar.DB.Context(ctx).ID(answerID).Cols("status").Update(&entity.Answer{Status: status})
 	if err != nil {
@@ -137,7 +137,7 @@ func (ar *answerRepo) UpdateAnswerStatus(ctx context.Context, answerID string, s
 }
 
 // GetAnswer get answer one
-func (ar *answerRepo) GetAnswer(ctx context.Context, id string) (
+func (ar *AnswerRepo) GetAnswer(ctx context.Context, id string) (
 	answer *entity.Answer, exist bool, err error,
 ) {
 	id = uid.DeShortID(id)
@@ -154,7 +154,7 @@ func (ar *answerRepo) GetAnswer(ctx context.Context, id string) (
 }
 
 // GetQuestionCount
-func (ar *answerRepo) GetAnswerCount(ctx context.Context) (count int64, err error) {
+func (ar *AnswerRepo) GetAnswerCount(ctx context.Context) (count int64, err error) {
 	var resp = new(entity.Answer)
 	count, err = ar.DB.Context(ctx).Where("status = ?", entity.AnswerStatusAvailable).Count(resp)
 	if err != nil {
@@ -164,7 +164,7 @@ func (ar *answerRepo) GetAnswerCount(ctx context.Context) (count int64, err erro
 }
 
 // GetAnswerList get answer list all
-func (ar *answerRepo) GetAnswerList(ctx context.Context, answer *entity.Answer) (answerList []*entity.Answer, err error) {
+func (ar *AnswerRepo) GetAnswerList(ctx context.Context, answer *entity.Answer) (answerList []*entity.Answer, err error) {
 	answerList = make([]*entity.Answer, 0)
 	answer.ID = uid.DeShortID(answer.ID)
 	answer.QuestionID = uid.DeShortID(answer.QuestionID)
@@ -182,7 +182,7 @@ func (ar *answerRepo) GetAnswerList(ctx context.Context, answer *entity.Answer) 
 }
 
 // GetAnswerPage get answer page
-func (ar *answerRepo) GetAnswerPage(ctx context.Context, page, pageSize int, answer *entity.Answer) (answerList []*entity.Answer, total int64, err error) {
+func (ar *AnswerRepo) GetAnswerPage(ctx context.Context, page, pageSize int, answer *entity.Answer) (answerList []*entity.Answer, total int64, err error) {
 	answer.ID = uid.DeShortID(answer.ID)
 	answer.QuestionID = uid.DeShortID(answer.QuestionID)
 	answerList = make([]*entity.Answer, 0)
@@ -200,7 +200,7 @@ func (ar *answerRepo) GetAnswerPage(ctx context.Context, page, pageSize int, ans
 }
 
 // UpdateAcceptedStatus update all accepted status of this question's answers
-func (ar *answerRepo) UpdateAcceptedStatus(ctx context.Context, acceptedAnswerID string, questionID string) error {
+func (ar *AnswerRepo) UpdateAcceptedStatus(ctx context.Context, acceptedAnswerID string, questionID string) error {
 	acceptedAnswerID = uid.DeShortID(acceptedAnswerID)
 	questionID = uid.DeShortID(questionID)
 
@@ -226,7 +226,7 @@ func (ar *answerRepo) UpdateAcceptedStatus(ctx context.Context, acceptedAnswerID
 }
 
 // GetByID
-func (ar *answerRepo) GetByID(ctx context.Context, answerID string) (*entity.Answer, bool, error) {
+func (ar *AnswerRepo) GetByID(ctx context.Context, answerID string) (*entity.Answer, bool, error) {
 	var resp entity.Answer
 	answerID = uid.DeShortID(answerID)
 	has, err := ar.DB.Context(ctx).ID(answerID).Get(&resp)
@@ -240,7 +240,7 @@ func (ar *answerRepo) GetByID(ctx context.Context, answerID string) (*entity.Ans
 	return &resp, has, nil
 }
 
-func (ar *answerRepo) GetCountByQuestionID(ctx context.Context, questionID string) (int64, error) {
+func (ar *AnswerRepo) GetCountByQuestionID(ctx context.Context, questionID string) (int64, error) {
 	questionID = uid.DeShortID(questionID)
 	var resp = new(entity.Answer)
 	count, err := ar.DB.Context(ctx).Where("question_id =? and  status = ?", questionID, entity.AnswerStatusAvailable).Count(resp)
@@ -250,7 +250,7 @@ func (ar *answerRepo) GetCountByQuestionID(ctx context.Context, questionID strin
 	return count, nil
 }
 
-func (ar *answerRepo) GetCountByUserID(ctx context.Context, userID string) (int64, error) {
+func (ar *AnswerRepo) GetCountByUserID(ctx context.Context, userID string) (int64, error) {
 	var resp = new(entity.Answer)
 	count, err := ar.DB.Context(ctx).Where(" user_id = ?  and  status = ?", userID, entity.AnswerStatusAvailable).Count(resp)
 	if err != nil {
@@ -259,7 +259,7 @@ func (ar *answerRepo) GetCountByUserID(ctx context.Context, userID string) (int6
 	return count, nil
 }
 
-func (ar *answerRepo) GetIDsByUserIDAndQuestionID(ctx context.Context, userID string, questionID string) ([]string, error) {
+func (ar *AnswerRepo) GetIDsByUserIDAndQuestionID(ctx context.Context, userID string, questionID string) ([]string, error) {
 	questionID = uid.DeShortID(questionID)
 	var ids []string
 	resp := make([]string, 0)
@@ -278,7 +278,7 @@ func (ar *answerRepo) GetIDsByUserIDAndQuestionID(ctx context.Context, userID st
 }
 
 // SearchList
-func (ar *answerRepo) SearchList(ctx context.Context, search *entity.AnswerSearch) ([]*entity.Answer, int64, error) {
+func (ar *AnswerRepo) SearchList(ctx context.Context, search *entity.AnswerSearch) ([]*entity.Answer, int64, error) {
 	if search.QuestionID != "" {
 		search.QuestionID = uid.DeShortID(search.QuestionID)
 	}
@@ -333,7 +333,7 @@ func (ar *answerRepo) SearchList(ctx context.Context, search *entity.AnswerSearc
 	return rows, count, nil
 }
 
-func (ar *answerRepo) AdminSearchList(ctx context.Context, req *schema.AdminAnswerPageReq) (
+func (ar *AnswerRepo) AdminSearchList(ctx context.Context, req *schema.AdminAnswerPageReq) (
 	resp []*entity.Answer, total int64, err error) {
 	cond := &entity.Answer{}
 	session := ar.DB.Context(ctx)
@@ -363,7 +363,7 @@ func (ar *answerRepo) AdminSearchList(ctx context.Context, req *schema.AdminAnsw
 }
 
 // updateSearch update search, if search plugin not enable, do nothing
-func (ar *answerRepo) updateSearch(ctx context.Context, answerID string) (err error) {
+func (ar *AnswerRepo) updateSearch(ctx context.Context, answerID string) (err error) {
 	answerID = uid.DeShortID(answerID)
 	// check search plugin
 	var (

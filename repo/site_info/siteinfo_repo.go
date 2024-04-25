@@ -15,20 +15,20 @@ import (
 	"xorm.io/builder"
 )
 
-type siteInfoRepo struct {
+type SitInfoRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
-func NewSiteInfo() *siteInfoRepo {
-	return &siteInfoRepo{
+func NewSiteInfo() *SitInfoRepo {
+	return &SitInfoRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // SaveByType save site setting by type
-func (sr *siteInfoRepo) SaveByType(ctx context.Context, siteType string, data *entity.SiteInfo) (err error) {
+func (sr *SitInfoRepo) SaveByType(ctx context.Context, siteType string, data *entity.SiteInfo) (err error) {
 	old := &entity.SiteInfo{}
 	exist, err := sr.DB.Context(ctx).Where(builder.Eq{"type": siteType}).Get(old)
 	if err != nil {
@@ -47,7 +47,7 @@ func (sr *siteInfoRepo) SaveByType(ctx context.Context, siteType string, data *e
 }
 
 // GetByType get site info by type
-func (sr *siteInfoRepo) GetByType(ctx context.Context, siteType string) (siteInfo *entity.SiteInfo, exist bool, err error) {
+func (sr *SitInfoRepo) GetByType(ctx context.Context, siteType string) (siteInfo *entity.SiteInfo, exist bool, err error) {
 	siteInfo = sr.getCache(ctx, siteType)
 	if siteInfo != nil {
 		return siteInfo, true, nil
@@ -64,7 +64,7 @@ func (sr *siteInfoRepo) GetByType(ctx context.Context, siteType string) (siteInf
 	return
 }
 
-func (sr *siteInfoRepo) getCache(ctx context.Context, siteType string) (siteInfo *entity.SiteInfo) {
+func (sr *SitInfoRepo) getCache(ctx context.Context, siteType string) (siteInfo *entity.SiteInfo) {
 	siteInfoCache := sr.Cache.Get(ctx, constant.SiteInfoCacheKey+siteType).String()
 	if siteInfoCache == "" {
 		return nil
@@ -74,7 +74,7 @@ func (sr *siteInfoRepo) getCache(ctx context.Context, siteType string) (siteInfo
 	return siteInfo
 }
 
-func (sr *siteInfoRepo) setCache(ctx context.Context, siteType string, siteInfo *entity.SiteInfo) {
+func (sr *SitInfoRepo) setCache(ctx context.Context, siteType string, siteInfo *entity.SiteInfo) {
 	siteInfoCache, _ := json.Marshal(siteInfo)
 	err := sr.Cache.Set(ctx,
 		constant.SiteInfoCacheKey+siteType, string(siteInfoCache), constant.SiteInfoCacheTime).Err()

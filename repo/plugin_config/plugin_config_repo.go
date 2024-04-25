@@ -11,20 +11,20 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-type pluginConfigRepo struct {
+type PluginConfigRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewPluginConfigRepo new repository
-func NewPluginConfigRepo() *pluginConfigRepo {
-	return &pluginConfigRepo{
+func NewPluginConfigRepo() *PluginConfigRepo {
+	return &PluginConfigRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
-func (ur *pluginConfigRepo) SavePluginConfig(ctx context.Context, pluginSlugName, configValue string) (err error) {
+func (ur *PluginConfigRepo) SavePluginConfig(ctx context.Context, pluginSlugName, configValue string) (err error) {
 	old := &entity.PluginConfig{PluginSlugName: pluginSlugName}
 	exist, err := ur.DB.Context(ctx).Get(old)
 	if err != nil {
@@ -42,7 +42,7 @@ func (ur *pluginConfigRepo) SavePluginConfig(ctx context.Context, pluginSlugName
 	return nil
 }
 
-func (ur *pluginConfigRepo) GetPluginConfigAll(ctx context.Context) (pluginConfigs []*entity.PluginConfig, err error) {
+func (ur *PluginConfigRepo) GetPluginConfigAll(ctx context.Context) (pluginConfigs []*entity.PluginConfig, err error) {
 	pluginConfigs = make([]*entity.PluginConfig, 0)
 	err = ur.DB.Context(ctx).Find(&pluginConfigs)
 	if err != nil {

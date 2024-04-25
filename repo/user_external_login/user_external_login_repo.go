@@ -14,21 +14,21 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-type userExternalLoginRepo struct {
+type UserExternalLoginRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewUserExternalLoginRepo new repository
-func NewUserExternalLoginRepo() *userExternalLoginRepo {
-	return &userExternalLoginRepo{
+func NewUserExternalLoginRepo() *UserExternalLoginRepo {
+	return &UserExternalLoginRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddUserExternalLogin add external login information
-func (ur *userExternalLoginRepo) AddUserExternalLogin(ctx context.Context, user *entity.UserExternalLogin) (err error) {
+func (ur *UserExternalLoginRepo) AddUserExternalLogin(ctx context.Context, user *entity.UserExternalLogin) (err error) {
 	_, err = ur.DB.Context(ctx).Insert(user)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -37,7 +37,7 @@ func (ur *userExternalLoginRepo) AddUserExternalLogin(ctx context.Context, user 
 }
 
 // UpdateInfo update user info
-func (ur *userExternalLoginRepo) UpdateInfo(ctx context.Context, userInfo *entity.UserExternalLogin) (err error) {
+func (ur *UserExternalLoginRepo) UpdateInfo(ctx context.Context, userInfo *entity.UserExternalLogin) (err error) {
 	_, err = ur.DB.Context(ctx).ID(userInfo.ID).Update(userInfo)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -46,7 +46,7 @@ func (ur *userExternalLoginRepo) UpdateInfo(ctx context.Context, userInfo *entit
 }
 
 // GetByExternalID get by external ID
-func (ur *userExternalLoginRepo) GetByExternalID(ctx context.Context, provider, externalID string) (
+func (ur *UserExternalLoginRepo) GetByExternalID(ctx context.Context, provider, externalID string) (
 	userInfo *entity.UserExternalLogin, exist bool, err error) {
 	userInfo = &entity.UserExternalLogin{}
 	exist, err = ur.DB.Context(ctx).Where("external_id = ?", externalID).Where("provider = ?", provider).Get(userInfo)
@@ -57,7 +57,7 @@ func (ur *userExternalLoginRepo) GetByExternalID(ctx context.Context, provider, 
 }
 
 // GetUserExternalLoginList get by external ID
-func (ur *userExternalLoginRepo) GetUserExternalLoginList(ctx context.Context, userID string) (
+func (ur *UserExternalLoginRepo) GetUserExternalLoginList(ctx context.Context, userID string) (
 	resp []*entity.UserExternalLogin, err error) {
 	resp = make([]*entity.UserExternalLogin, 0)
 	err = ur.DB.Context(ctx).Where("user_id = ?", userID).Find(&resp)
@@ -68,7 +68,7 @@ func (ur *userExternalLoginRepo) GetUserExternalLoginList(ctx context.Context, u
 }
 
 // DeleteUserExternalLogin delete external user login info
-func (ur *userExternalLoginRepo) DeleteUserExternalLogin(ctx context.Context, userID, externalID string) (err error) {
+func (ur *UserExternalLoginRepo) DeleteUserExternalLogin(ctx context.Context, userID, externalID string) (err error) {
 	cond := &entity.UserExternalLogin{}
 	_, err = ur.DB.Context(ctx).Where("user_id = ? AND external_id = ?", userID, externalID).Delete(cond)
 	if err != nil {
@@ -78,7 +78,7 @@ func (ur *userExternalLoginRepo) DeleteUserExternalLogin(ctx context.Context, us
 }
 
 // SetCacheUserExternalLoginInfo cache user info for external login
-func (ur *userExternalLoginRepo) SetCacheUserExternalLoginInfo(
+func (ur *UserExternalLoginRepo) SetCacheUserExternalLoginInfo(
 	ctx context.Context, key string, info *schema.ExternalLoginUserInfoCache) (err error) {
 	cacheData, _ := json.Marshal(info)
 	return ur.Cache.Set(ctx, constant.ConnectorUserExternalInfoCacheKey+key,
@@ -86,7 +86,7 @@ func (ur *userExternalLoginRepo) SetCacheUserExternalLoginInfo(
 }
 
 // GetCacheUserExternalLoginInfo cache user info for external login
-func (ur *userExternalLoginRepo) GetCacheUserExternalLoginInfo(
+func (ur *UserExternalLoginRepo) GetCacheUserExternalLoginInfo(
 	ctx context.Context, key string) (info *schema.ExternalLoginUserInfoCache, err error) {
 	res := ur.Cache.Get(ctx, constant.ConnectorUserExternalInfoCacheKey+key).String()
 	if res == "" {

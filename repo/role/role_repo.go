@@ -11,22 +11,22 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// roleRepo role repository
-type roleRepo struct {
+// RoleRepo role repository
+type RoleRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewRoleRepo new repository
-func NewRoleRepo() *roleRepo {
-	return &roleRepo{
+func NewRoleRepo() *RoleRepo {
+	return &RoleRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // GetRoleAllList get role list all
-func (rr *roleRepo) GetRoleAllList(ctx context.Context) (roleList []*entity.Role, err error) {
+func (rr *RoleRepo) GetRoleAllList(ctx context.Context) (roleList []*entity.Role, err error) {
 	roleList = make([]*entity.Role, 0)
 	err = rr.DB.Context(ctx).Find(&roleList)
 	if err != nil {
@@ -36,7 +36,7 @@ func (rr *roleRepo) GetRoleAllList(ctx context.Context) (roleList []*entity.Role
 }
 
 // GetRoleAllMapping get role all mapping
-func (rr *roleRepo) GetRoleAllMapping(ctx context.Context) (roleMapping map[int]*entity.Role, err error) {
+func (rr *RoleRepo) GetRoleAllMapping(ctx context.Context) (roleMapping map[int]*entity.Role, err error) {
 	roleList, err := rr.GetRoleAllList(ctx)
 	if err != nil {
 		return nil, err

@@ -16,15 +16,15 @@ import (
 	"xorm.io/xorm"
 )
 
-// revisionRepo revision repository
-type revisionRepo struct {
+// RevisionRepo revision repository
+type RevisionRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewRevisionRepo new repository
-func NewRevisionRepo() *revisionRepo {
-	return &revisionRepo{
+func NewRevisionRepo() *RevisionRepo {
+	return &RevisionRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
@@ -34,7 +34,7 @@ func NewRevisionRepo() *revisionRepo {
 // autoUpdateRevisionID bool : if autoUpdateRevisionID is true , the object.revision_id will be updated,
 // if not need auto update object.revision_id, it must be false.
 // example: user can edit the object, but need audit, the revision_id will be updated when admin approved
-func (rr *revisionRepo) AddRevision(ctx context.Context, revision *entity.Revision, autoUpdateRevisionID bool) (err error) {
+func (rr *RevisionRepo) AddRevision(ctx context.Context, revision *entity.Revision, autoUpdateRevisionID bool) (err error) {
 	objectTypeNumber, err := obj.GetObjectTypeNumberByObjectID(revision.ObjectID)
 	if err != nil {
 		return errors.BadRequest(reason.ObjectNotFound)
@@ -65,7 +65,7 @@ func (rr *revisionRepo) AddRevision(ctx context.Context, revision *entity.Revisi
 }
 
 // UpdateObjectRevisionId updates the object.revision_id field
-func (rr *revisionRepo) UpdateObjectRevisionId(ctx context.Context, revision *entity.Revision, session *xorm.Session) (err error) {
+func (rr *RevisionRepo) UpdateObjectRevisionId(ctx context.Context, revision *entity.Revision, session *xorm.Session) (err error) {
 	tableName, err := obj.GetObjectTypeStrByObjectID(revision.ObjectID)
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -82,7 +82,7 @@ func (rr *revisionRepo) UpdateObjectRevisionId(ctx context.Context, revision *en
 }
 
 // UpdateStatus update revision status
-func (rr *revisionRepo) UpdateStatus(ctx context.Context, id string, status int, reviewUserID string) (err error) {
+func (rr *RevisionRepo) UpdateStatus(ctx context.Context, id string, status int, reviewUserID string) (err error) {
 	if id == "" {
 		return nil
 	}
@@ -98,7 +98,7 @@ func (rr *revisionRepo) UpdateStatus(ctx context.Context, id string, status int,
 }
 
 // GetRevision get revision one
-func (rr *revisionRepo) GetRevision(ctx context.Context, id string) (
+func (rr *RevisionRepo) GetRevision(ctx context.Context, id string) (
 	revision *entity.Revision, exist bool, err error,
 ) {
 	revision = &entity.Revision{}
@@ -110,7 +110,7 @@ func (rr *revisionRepo) GetRevision(ctx context.Context, id string) (
 }
 
 // GetRevisionByID get object's last revision by object TagID
-func (rr *revisionRepo) GetRevisionByID(ctx context.Context, revisionID string) (
+func (rr *RevisionRepo) GetRevisionByID(ctx context.Context, revisionID string) (
 	revision *entity.Revision, exist bool, err error) {
 	revision = &entity.Revision{}
 	exist, err = rr.DB.Context(ctx).Where("id = ?", revisionID).Get(revision)
@@ -120,7 +120,7 @@ func (rr *revisionRepo) GetRevisionByID(ctx context.Context, revisionID string) 
 	return
 }
 
-func (rr *revisionRepo) ExistUnreviewedByObjectID(ctx context.Context, objectID string) (
+func (rr *RevisionRepo) ExistUnreviewedByObjectID(ctx context.Context, objectID string) (
 	revision *entity.Revision, exist bool, err error) {
 	revision = &entity.Revision{}
 	exist, err = rr.DB.Context(ctx).Where("object_id = ?", objectID).And("status = ?", entity.RevisionUnreviewedStatus).Get(revision)
@@ -131,7 +131,7 @@ func (rr *revisionRepo) ExistUnreviewedByObjectID(ctx context.Context, objectID 
 }
 
 // GetLastRevisionByObjectID get object's last revision by object TagID
-func (rr *revisionRepo) GetLastRevisionByObjectID(ctx context.Context, objectID string) (
+func (rr *RevisionRepo) GetLastRevisionByObjectID(ctx context.Context, objectID string) (
 	revision *entity.Revision, exist bool, err error,
 ) {
 	revision = &entity.Revision{}
@@ -143,7 +143,7 @@ func (rr *revisionRepo) GetLastRevisionByObjectID(ctx context.Context, objectID 
 }
 
 // GetRevisionList get revision list all
-func (rr *revisionRepo) GetRevisionList(ctx context.Context, revision *entity.Revision) (revisionList []entity.Revision, err error) {
+func (rr *RevisionRepo) GetRevisionList(ctx context.Context, revision *entity.Revision) (revisionList []entity.Revision, err error) {
 	revisionList = []entity.Revision{}
 	err = rr.DB.Context(ctx).Where(builder.Eq{
 		"object_id": revision.ObjectID,
@@ -155,7 +155,7 @@ func (rr *revisionRepo) GetRevisionList(ctx context.Context, revision *entity.Re
 }
 
 // allowRecord check the object type can record revision or not
-func (rr *revisionRepo) allowRecord(objectType int) (ok bool) {
+func (rr *RevisionRepo) allowRecord(objectType int) (ok bool) {
 	switch objectType {
 	case constant.ObjectTypeStrMapping["question"]:
 		return true
@@ -169,7 +169,7 @@ func (rr *revisionRepo) allowRecord(objectType int) (ok bool) {
 }
 
 // GetUnreviewedRevisionPage get unreviewed revision page
-func (rr *revisionRepo) GetUnreviewedRevisionPage(ctx context.Context, page int, pageSize int,
+func (rr *RevisionRepo) GetUnreviewedRevisionPage(ctx context.Context, page int, pageSize int,
 	objectTypeList []int) (revisionList []*entity.Revision, total int64, err error) {
 	revisionList = make([]*entity.Revision, 0)
 	if len(objectTypeList) == 0 {

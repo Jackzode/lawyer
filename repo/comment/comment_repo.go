@@ -14,30 +14,30 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// commentRepo comment repository
-type commentRepo struct {
+// CommentRepo comment repository
+type CommentRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewCommentRepo new repository
-func NewCommentRepo() *commentRepo {
-	return &commentRepo{
+func NewCommentRepo() *CommentRepo {
+	return &CommentRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // NewCommentCommonRepo new repository
-func NewCommentCommonRepo() *commentRepo {
-	return &commentRepo{
+func NewCommentCommonRepo() *CommentRepo {
+	return &CommentRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddComment add comment
-func (cr *commentRepo) AddComment(ctx context.Context, comment *entity.Comment) (err error) {
+func (cr *CommentRepo) AddComment(ctx context.Context, comment *entity.Comment) (err error) {
 	comment.ID, err = utils.GenUniqueIDStr(ctx, comment.TableName())
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (cr *commentRepo) AddComment(ctx context.Context, comment *entity.Comment) 
 }
 
 // RemoveComment delete comment
-func (cr *commentRepo) RemoveComment(ctx context.Context, commentID string) (err error) {
+func (cr *CommentRepo) RemoveComment(ctx context.Context, commentID string) (err error) {
 	session := cr.DB.Context(ctx).ID(commentID)
 	_, err = session.Update(&entity.Comment{Status: entity.CommentStatusDeleted})
 	if err != nil {
@@ -60,7 +60,7 @@ func (cr *commentRepo) RemoveComment(ctx context.Context, commentID string) (err
 }
 
 // UpdateCommentContent update comment
-func (cr *commentRepo) UpdateCommentContent(
+func (cr *CommentRepo) UpdateCommentContent(
 	ctx context.Context, commentID string, originalText string, parsedText string) (err error) {
 	_, err = cr.DB.Context(ctx).ID(commentID).Update(&entity.Comment{
 		OriginalText: originalText,
@@ -73,7 +73,7 @@ func (cr *commentRepo) UpdateCommentContent(
 }
 
 // GetComment get comment one
-func (cr *commentRepo) GetComment(ctx context.Context, commentID string) (
+func (cr *CommentRepo) GetComment(ctx context.Context, commentID string) (
 	comment *entity.Comment, exist bool, err error) {
 	comment = &entity.Comment{}
 	exist, err = cr.DB.Context(ctx).ID(commentID).Get(comment)
@@ -83,7 +83,7 @@ func (cr *commentRepo) GetComment(ctx context.Context, commentID string) (
 	return
 }
 
-func (cr *commentRepo) GetCommentCount(ctx context.Context) (count int64, err error) {
+func (cr *CommentRepo) GetCommentCount(ctx context.Context) (count int64, err error) {
 	list := make([]*entity.Comment, 0)
 	count, err = cr.DB.Context(ctx).Where("status = ?", entity.CommentStatusAvailable).FindAndCount(&list)
 	if err != nil {
@@ -93,7 +93,7 @@ func (cr *commentRepo) GetCommentCount(ctx context.Context) (count int64, err er
 }
 
 // GetCommentPage get comment page
-func (cr *commentRepo) GetCommentPage(ctx context.Context, commentQuery *utils.CommentQuery) (
+func (cr *CommentRepo) GetCommentPage(ctx context.Context, commentQuery *utils.CommentQuery) (
 	commentList []*entity.Comment, total int64, err error,
 ) {
 	commentList = make([]*entity.Comment, 0)
@@ -111,7 +111,7 @@ func (cr *commentRepo) GetCommentPage(ctx context.Context, commentQuery *utils.C
 }
 
 // RemoveAllUserComment remove all user comment
-func (cr *commentRepo) RemoveAllUserComment(ctx context.Context, userID string) (err error) {
+func (cr *CommentRepo) RemoveAllUserComment(ctx context.Context, userID string) (err error) {
 	session := cr.DB.Context(ctx).Where("user_id = ?", userID)
 	session.Where("status != ?", entity.CommentStatusDeleted)
 	affected, err := session.Update(&entity.Comment{Status: entity.CommentStatusDeleted})

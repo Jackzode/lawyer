@@ -17,22 +17,22 @@ import (
 	"xorm.io/xorm"
 )
 
-// userRepo user repository
-type userRepo struct {
+// UserRepo user repository
+type UserRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewUserRepo new repository
-func NewUserRepo() *userRepo {
-	return &userRepo{
+func NewUserRepo() *UserRepo {
+	return &UserRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddUser add user
-func (ur *userRepo) AddUser(ctx context.Context, user *entity.User) (err error) {
+func (ur *UserRepo) AddUser(ctx context.Context, user *entity.User) (err error) {
 
 	_, err = ur.DB.Transaction(
 		func(session *xorm.Session) (interface{}, error) {
@@ -55,7 +55,7 @@ func (ur *userRepo) AddUser(ctx context.Context, user *entity.User) (err error) 
 }
 
 // IncreaseAnswerCount increase answer count
-func (ur *userRepo) IncreaseAnswerCount(ctx context.Context, userID string, amount int) (err error) {
+func (ur *UserRepo) IncreaseAnswerCount(ctx context.Context, userID string, amount int) (err error) {
 	user := &entity.User{}
 	_, err = ur.DB.Context(ctx).Where("id = ?", userID).Incr("answer_count", amount).Update(user)
 	if err != nil {
@@ -65,7 +65,7 @@ func (ur *userRepo) IncreaseAnswerCount(ctx context.Context, userID string, amou
 }
 
 // IncreaseQuestionCount increase question count
-func (ur *userRepo) IncreaseQuestionCount(ctx context.Context, userID string, amount int) (err error) {
+func (ur *UserRepo) IncreaseQuestionCount(ctx context.Context, userID string, amount int) (err error) {
 	user := &entity.User{}
 	_, err = ur.DB.Context(ctx).Where("id = ?", userID).Incr("question_count", amount).Update(user)
 	if err != nil {
@@ -74,7 +74,7 @@ func (ur *userRepo) IncreaseQuestionCount(ctx context.Context, userID string, am
 	return nil
 }
 
-func (ur *userRepo) UpdateQuestionCount(ctx context.Context, userID string, count int64) (err error) {
+func (ur *UserRepo) UpdateQuestionCount(ctx context.Context, userID string, count int64) (err error) {
 	user := &entity.User{}
 	user.QuestionCount = int(count)
 	_, err = ur.DB.Context(ctx).Where("id = ?", userID).Cols("question_count").Update(user)
@@ -84,7 +84,7 @@ func (ur *userRepo) UpdateQuestionCount(ctx context.Context, userID string, coun
 	return nil
 }
 
-func (ur *userRepo) UpdateAnswerCount(ctx context.Context, userID string, count int) (err error) {
+func (ur *UserRepo) UpdateAnswerCount(ctx context.Context, userID string, count int) (err error) {
 	user := &entity.User{}
 	user.AnswerCount = count
 	_, err = ur.DB.Context(ctx).Where("id = ?", userID).Cols("answer_count").Update(user)
@@ -95,7 +95,7 @@ func (ur *userRepo) UpdateAnswerCount(ctx context.Context, userID string, count 
 }
 
 // UpdateLastLoginDate update last login date
-func (ur *userRepo) UpdateLastLoginDate(ctx context.Context, userID string) (err error) {
+func (ur *UserRepo) UpdateLastLoginDate(ctx context.Context, userID string) (err error) {
 	user := &entity.User{LastLoginDate: time.Now()}
 	_, err = ur.DB.Context(ctx).Where("id = ?", userID).Cols("last_login_date").Update(user)
 	if err != nil {
@@ -105,7 +105,7 @@ func (ur *userRepo) UpdateLastLoginDate(ctx context.Context, userID string) (err
 }
 
 // UpdateEmailStatus update email status
-func (ur *userRepo) UpdateEmailStatus(ctx context.Context, userID string, emailStatus int) error {
+func (ur *UserRepo) UpdateEmailStatus(ctx context.Context, userID string, emailStatus int) error {
 	cond := &entity.User{MailStatus: emailStatus}
 	_, err := ur.DB.Context(ctx).Where("id = ?", userID).Cols("mail_status").Update(cond)
 	if err != nil {
@@ -115,7 +115,7 @@ func (ur *userRepo) UpdateEmailStatus(ctx context.Context, userID string, emailS
 }
 
 // UpdateNoticeStatus update notice status
-func (ur *userRepo) UpdateNoticeStatus(ctx context.Context, userID string, noticeStatus int) error {
+func (ur *UserRepo) UpdateNoticeStatus(ctx context.Context, userID string, noticeStatus int) error {
 	cond := &entity.User{NoticeStatus: noticeStatus}
 	_, err := ur.DB.Context(ctx).Where("id = ?", userID).Cols("notice_status").Update(cond)
 	if err != nil {
@@ -124,7 +124,7 @@ func (ur *userRepo) UpdateNoticeStatus(ctx context.Context, userID string, notic
 	return nil
 }
 
-func (ur *userRepo) UpdatePass(ctx context.Context, userID, pass string) error {
+func (ur *UserRepo) UpdatePass(ctx context.Context, userID, pass string) error {
 	_, err := ur.DB.Context(ctx).Where("id = ?", userID).Cols("pass").Update(&entity.User{Pass: pass})
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -132,7 +132,7 @@ func (ur *userRepo) UpdatePass(ctx context.Context, userID, pass string) error {
 	return nil
 }
 
-func (ur *userRepo) UpdateEmail(ctx context.Context, userID, email string) (err error) {
+func (ur *UserRepo) UpdateEmail(ctx context.Context, userID, email string) (err error) {
 	_, err = ur.DB.Context(ctx).Where("id = ?", userID).Update(&entity.User{EMail: email})
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -140,7 +140,7 @@ func (ur *userRepo) UpdateEmail(ctx context.Context, userID, email string) (err 
 	return
 }
 
-func (ur *userRepo) UpdateLanguage(ctx context.Context, userID, language string) (err error) {
+func (ur *UserRepo) UpdateLanguage(ctx context.Context, userID, language string) (err error) {
 	_, err = ur.DB.Context(ctx).Where("id = ?", userID).Update(&entity.User{Language: language})
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -149,7 +149,7 @@ func (ur *userRepo) UpdateLanguage(ctx context.Context, userID, language string)
 }
 
 // UpdateInfo update user info
-func (ur *userRepo) UpdateInfo(ctx context.Context, userInfo *entity.User) (err error) {
+func (ur *UserRepo) UpdateInfo(ctx context.Context, userInfo *entity.User) (err error) {
 	_, err = ur.DB.Context(ctx).Where("id = ?", userInfo.ID).
 		Cols("username", "display_name", "avatar", "bio", "bio_html", "website", "location").Update(userInfo)
 	if err != nil {
@@ -159,7 +159,7 @@ func (ur *userRepo) UpdateInfo(ctx context.Context, userInfo *entity.User) (err 
 }
 
 // GetByUserID get user info by user id
-func (ur *userRepo) GetByUserID(ctx context.Context, userID string) (userInfo *entity.User, exist bool, err error) {
+func (ur *UserRepo) GetByUserID(ctx context.Context, userID string) (userInfo *entity.User, exist bool, err error) {
 	userInfo = &entity.User{}
 	exist, err = ur.DB.Context(ctx).Where("id = ?", userID).Get(userInfo)
 	if err != nil {
@@ -174,7 +174,7 @@ func (ur *userRepo) GetByUserID(ctx context.Context, userID string) (userInfo *e
 	return
 }
 
-func (ur *userRepo) BatchGetByID(ctx context.Context, ids []string) ([]*entity.User, error) {
+func (ur *UserRepo) BatchGetByID(ctx context.Context, ids []string) ([]*entity.User, error) {
 	list := make([]*entity.User, 0)
 	err := ur.DB.Context(ctx).In("id", ids).Find(&list)
 	if err != nil {
@@ -185,7 +185,7 @@ func (ur *userRepo) BatchGetByID(ctx context.Context, ids []string) ([]*entity.U
 }
 
 // GetByUsername get user by username
-func (ur *userRepo) GetByUsername(ctx context.Context, username string) (userInfo *entity.User, exist bool, err error) {
+func (ur *UserRepo) GetByUsername(ctx context.Context, username string) (userInfo *entity.User, exist bool, err error) {
 	userInfo = &entity.User{}
 	exist, err = ur.DB.Context(ctx).Where("username = ?", username).Get(userInfo)
 	if err != nil {
@@ -199,7 +199,7 @@ func (ur *userRepo) GetByUsername(ctx context.Context, username string) (userInf
 	return
 }
 
-func (ur *userRepo) GetByUsernames(ctx context.Context, usernames []string) ([]*entity.User, error) {
+func (ur *UserRepo) GetByUsernames(ctx context.Context, usernames []string) ([]*entity.User, error) {
 	list := make([]*entity.User, 0)
 	err := ur.DB.Context(ctx).Where("status =?", entity.UserStatusAvailable).In("username", usernames).Find(&list)
 	if err != nil {
@@ -211,7 +211,7 @@ func (ur *userRepo) GetByUsernames(ctx context.Context, usernames []string) ([]*
 }
 
 // GetByEmail get user by email
-func (ur *userRepo) GetByEmail(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error) {
+func (ur *UserRepo) GetByEmail(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error) {
 	userInfo = &entity.User{}
 	exist, err = ur.DB.Context(ctx).Where("e_mail = ?", email).
 		Where("status != ?", entity.UserStatusDeleted).Get(userInfo)
@@ -221,7 +221,7 @@ func (ur *userRepo) GetByEmail(ctx context.Context, email string) (userInfo *ent
 	return
 }
 
-func (ur *userRepo) GetUserCount(ctx context.Context) (count int64, err error) {
+func (ur *UserRepo) GetUserCount(ctx context.Context) (count int64, err error) {
 	session := ur.DB.Context(ctx)
 	session.Where("status = ? OR status = ?", entity.UserStatusAvailable, entity.UserStatusSuspended)
 	count, err = session.Count(&entity.User{})
@@ -231,7 +231,7 @@ func (ur *userRepo) GetUserCount(ctx context.Context) (count int64, err error) {
 	return count, nil
 }
 
-func (ur *userRepo) SearchUserListByName(ctx context.Context, name string, limit int) (userList []*entity.User, err error) {
+func (ur *UserRepo) SearchUserListByName(ctx context.Context, name string, limit int) (userList []*entity.User, err error) {
 	userList = make([]*entity.User, 0)
 	session := ur.DB.Context(ctx)
 	session.Where("status = ?", entity.UserStatusAvailable)

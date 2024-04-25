@@ -15,22 +15,22 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// reportRepo report repository
-type reportRepo struct {
+// ReportRepo report repository
+type ReportRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewReportRepo new repository
-func NewReportRepo() *reportRepo {
-	return &reportRepo{
+func NewReportRepo() *ReportRepo {
+	return &ReportRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddReport add report
-func (rr *reportRepo) AddReport(ctx context.Context, report *entity.Report) (err error) {
+func (rr *ReportRepo) AddReport(ctx context.Context, report *entity.Report) (err error) {
 	report.ID, err = utils.GenUniqueIDStr(ctx, report.TableName())
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (rr *reportRepo) AddReport(ctx context.Context, report *entity.Report) (err
 }
 
 // GetReportListPage get report list page
-func (rr *reportRepo) GetReportListPage(ctx context.Context, dto schema.GetReportListPageDTO) (reports []entity.Report, total int64, err error) {
+func (rr *ReportRepo) GetReportListPage(ctx context.Context, dto schema.GetReportListPageDTO) (reports []entity.Report, total int64, err error) {
 	var (
 		ok         bool
 		status     int
@@ -76,7 +76,7 @@ func (rr *reportRepo) GetReportListPage(ctx context.Context, dto schema.GetRepor
 }
 
 // GetByID get report by ID
-func (rr *reportRepo) GetByID(ctx context.Context, id string) (report *entity.Report, exist bool, err error) {
+func (rr *ReportRepo) GetByID(ctx context.Context, id string) (report *entity.Report, exist bool, err error) {
 	report = &entity.Report{}
 	exist, err = rr.DB.Context(ctx).ID(id).Get(report)
 	if err != nil {
@@ -86,7 +86,7 @@ func (rr *reportRepo) GetByID(ctx context.Context, id string) (report *entity.Re
 }
 
 // UpdateByID handle report by ID
-func (rr *reportRepo) UpdateByID(ctx context.Context, id string, handleData entity.Report) (err error) {
+func (rr *ReportRepo) UpdateByID(ctx context.Context, id string, handleData entity.Report) (err error) {
 	_, err = rr.DB.Context(ctx).ID(id).Update(&handleData)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -94,7 +94,7 @@ func (rr *reportRepo) UpdateByID(ctx context.Context, id string, handleData enti
 	return
 }
 
-func (rr *reportRepo) GetReportCount(ctx context.Context) (count int64, err error) {
+func (rr *ReportRepo) GetReportCount(ctx context.Context) (count int64, err error) {
 	list := make([]*entity.Report, 0)
 	count, err = rr.DB.Context(ctx).Where("status =?", entity.ReportStatusPending).FindAndCount(&list)
 	if err != nil {

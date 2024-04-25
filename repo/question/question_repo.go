@@ -26,22 +26,22 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// questionRepo question repository
-type questionRepo struct {
+// QuestionRepo question repository
+type QuestionRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewQuestionRepo new repository
-func NewQuestionRepo() *questionRepo {
-	return &questionRepo{
+func NewQuestionRepo() *QuestionRepo {
+	return &QuestionRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddQuestion add question
-func (qr *questionRepo) AddQuestion(ctx context.Context, question *entity.Question) (err error) {
+func (qr *QuestionRepo) AddQuestion(ctx context.Context, question *entity.Question) (err error) {
 	question.ID, err = utils.GenUniqueIDStr(ctx, question.TableName())
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -58,7 +58,7 @@ func (qr *questionRepo) AddQuestion(ctx context.Context, question *entity.Questi
 }
 
 // RemoveQuestion delete question
-func (qr *questionRepo) RemoveQuestion(ctx context.Context, id string) (err error) {
+func (qr *QuestionRepo) RemoveQuestion(ctx context.Context, id string) (err error) {
 	id = uid.DeShortID(id)
 	_, err = qr.DB.Context(ctx).Where("id =?", id).Delete(&entity.Question{})
 	if err != nil {
@@ -68,7 +68,7 @@ func (qr *questionRepo) RemoveQuestion(ctx context.Context, id string) (err erro
 }
 
 // UpdateQuestion update question
-func (qr *questionRepo) UpdateQuestion(ctx context.Context, question *entity.Question, Cols []string) (err error) {
+func (qr *QuestionRepo) UpdateQuestion(ctx context.Context, question *entity.Question, Cols []string) (err error) {
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols(Cols...).Update(question)
 	if err != nil {
@@ -81,7 +81,7 @@ func (qr *questionRepo) UpdateQuestion(ctx context.Context, question *entity.Que
 	return
 }
 
-func (qr *questionRepo) UpdatePvCount(ctx context.Context, questionID string) (err error) {
+func (qr *QuestionRepo) UpdatePvCount(ctx context.Context, questionID string) (err error) {
 	questionID = uid.DeShortID(questionID)
 	question := &entity.Question{}
 	_, err = qr.DB.Context(ctx).Where("id =?", questionID).Incr("view_count", 1).Update(question)
@@ -92,7 +92,7 @@ func (qr *questionRepo) UpdatePvCount(ctx context.Context, questionID string) (e
 	return nil
 }
 
-func (qr *questionRepo) UpdateAnswerCount(ctx context.Context, questionID string, num int) (err error) {
+func (qr *QuestionRepo) UpdateAnswerCount(ctx context.Context, questionID string, num int) (err error) {
 	questionID = uid.DeShortID(questionID)
 	question := &entity.Question{}
 	question.AnswerCount = num
@@ -104,7 +104,7 @@ func (qr *questionRepo) UpdateAnswerCount(ctx context.Context, questionID string
 	return nil
 }
 
-func (qr *questionRepo) UpdateCollectionCount(ctx context.Context, questionID string) (count int64, err error) {
+func (qr *QuestionRepo) UpdateCollectionCount(ctx context.Context, questionID string) (count int64, err error) {
 	questionID = uid.DeShortID(questionID)
 	_, err = qr.DB.Transaction(func(session *xorm.Session) (result any, err error) {
 		session = session.Context(ctx)
@@ -126,7 +126,7 @@ func (qr *questionRepo) UpdateCollectionCount(ctx context.Context, questionID st
 	return count, nil
 }
 
-func (qr *questionRepo) UpdateQuestionStatus(ctx context.Context, questionID string, status int) (err error) {
+func (qr *QuestionRepo) UpdateQuestionStatus(ctx context.Context, questionID string, status int) (err error) {
 	questionID = uid.DeShortID(questionID)
 	_, err = qr.DB.Context(ctx).ID(questionID).Cols("status").Update(&entity.Question{Status: status})
 	if err != nil {
@@ -136,7 +136,7 @@ func (qr *questionRepo) UpdateQuestionStatus(ctx context.Context, questionID str
 	return nil
 }
 
-func (qr *questionRepo) UpdateQuestionStatusWithOutUpdateTime(ctx context.Context, question *entity.Question) (err error) {
+func (qr *QuestionRepo) UpdateQuestionStatusWithOutUpdateTime(ctx context.Context, question *entity.Question) (err error) {
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("status").Update(question)
 	if err != nil {
@@ -146,7 +146,7 @@ func (qr *questionRepo) UpdateQuestionStatusWithOutUpdateTime(ctx context.Contex
 	return nil
 }
 
-func (qr *questionRepo) RecoverQuestion(ctx context.Context, questionID string) (err error) {
+func (qr *QuestionRepo) RecoverQuestion(ctx context.Context, questionID string) (err error) {
 	questionID = uid.DeShortID(questionID)
 	_, err = qr.DB.Context(ctx).ID(questionID).Cols("status").Update(&entity.Question{Status: entity.QuestionStatusAvailable})
 	if err != nil {
@@ -156,7 +156,7 @@ func (qr *questionRepo) RecoverQuestion(ctx context.Context, questionID string) 
 	return nil
 }
 
-func (qr *questionRepo) UpdateQuestionOperation(ctx context.Context, question *entity.Question) (err error) {
+func (qr *QuestionRepo) UpdateQuestionOperation(ctx context.Context, question *entity.Question) (err error) {
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("pin", "show").Update(question)
 	if err != nil {
@@ -165,7 +165,7 @@ func (qr *questionRepo) UpdateQuestionOperation(ctx context.Context, question *e
 	return nil
 }
 
-func (qr *questionRepo) UpdateAccepted(ctx context.Context, question *entity.Question) (err error) {
+func (qr *QuestionRepo) UpdateAccepted(ctx context.Context, question *entity.Question) (err error) {
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("accepted_answer_id").Update(question)
 	if err != nil {
@@ -175,7 +175,7 @@ func (qr *questionRepo) UpdateAccepted(ctx context.Context, question *entity.Que
 	return nil
 }
 
-func (qr *questionRepo) UpdateLastAnswer(ctx context.Context, question *entity.Question) (err error) {
+func (qr *QuestionRepo) UpdateLastAnswer(ctx context.Context, question *entity.Question) (err error) {
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("last_answer_id").Update(question)
 	if err != nil {
@@ -186,7 +186,7 @@ func (qr *questionRepo) UpdateLastAnswer(ctx context.Context, question *entity.Q
 }
 
 // GetQuestion get question one
-func (qr *questionRepo) GetQuestion(ctx context.Context, id string) (
+func (qr *QuestionRepo) GetQuestion(ctx context.Context, id string) (
 	question *entity.Question, exist bool, err error,
 ) {
 	id = uid.DeShortID(id)
@@ -203,7 +203,7 @@ func (qr *questionRepo) GetQuestion(ctx context.Context, id string) (
 }
 
 // GetQuestionsByTitle get question list by title
-func (qr *questionRepo) GetQuestionsByTitle(ctx context.Context, title string, pageSize int) (
+func (qr *QuestionRepo) GetQuestionsByTitle(ctx context.Context, title string, pageSize int) (
 	questionList []*entity.Question, err error) {
 	questionList = make([]*entity.Question, 0)
 	session := qr.DB.Context(ctx)
@@ -222,7 +222,7 @@ func (qr *questionRepo) GetQuestionsByTitle(ctx context.Context, title string, p
 	return
 }
 
-func (qr *questionRepo) FindByID(ctx context.Context, id []string) (questionList []*entity.Question, err error) {
+func (qr *QuestionRepo) FindByID(ctx context.Context, id []string) (questionList []*entity.Question, err error) {
 	for key, itemID := range id {
 		id[key] = uid.DeShortID(itemID)
 	}
@@ -240,7 +240,7 @@ func (qr *questionRepo) FindByID(ctx context.Context, id []string) (questionList
 }
 
 // GetQuestionList get question list all
-func (qr *questionRepo) GetQuestionList(ctx context.Context, question *entity.Question) (questionList []*entity.Question, err error) {
+func (qr *QuestionRepo) GetQuestionList(ctx context.Context, question *entity.Question) (questionList []*entity.Question, err error) {
 	question.ID = uid.DeShortID(question.ID)
 	questionList = make([]*entity.Question, 0)
 	err = qr.DB.Context(ctx).Find(questionList, question)
@@ -253,7 +253,7 @@ func (qr *questionRepo) GetQuestionList(ctx context.Context, question *entity.Qu
 	return
 }
 
-func (qr *questionRepo) GetQuestionCount(ctx context.Context) (count int64, err error) {
+func (qr *QuestionRepo) GetQuestionCount(ctx context.Context) (count int64, err error) {
 	session := qr.DB.Context(ctx)
 	session.In("status", []int{entity.QuestionStatusAvailable, entity.QuestionStatusClosed})
 	count, err = session.Count(&entity.Question{Show: entity.QuestionShow})
@@ -263,7 +263,7 @@ func (qr *questionRepo) GetQuestionCount(ctx context.Context) (count int64, err 
 	return count, nil
 }
 
-func (qr *questionRepo) GetUserQuestionCount(ctx context.Context, userID string) (count int64, err error) {
+func (qr *QuestionRepo) GetUserQuestionCount(ctx context.Context, userID string) (count int64, err error) {
 	session := qr.DB.Context(ctx)
 	session.In("status", []int{entity.QuestionStatusAvailable, entity.QuestionStatusClosed})
 	count, err = session.Count(&entity.Question{UserID: userID})
@@ -273,7 +273,7 @@ func (qr *questionRepo) GetUserQuestionCount(ctx context.Context, userID string)
 	return
 }
 
-func (qr *questionRepo) SitemapQuestions(ctx context.Context, page, pageSize int) (
+func (qr *QuestionRepo) SitemapQuestions(ctx context.Context, page, pageSize int) (
 	questionIDList []*schema.SiteMapQuestionInfo, err error) {
 	page = page - 1
 	questionIDList = make([]*schema.SiteMapQuestionInfo, 0)
@@ -323,7 +323,7 @@ func (qr *questionRepo) SitemapQuestions(ctx context.Context, page, pageSize int
 }
 
 // GetQuestionPage query question page
-func (qr *questionRepo) GetQuestionPage(ctx context.Context, page, pageSize int, userID, tagID, orderCond string, inDays int) (
+func (qr *QuestionRepo) GetQuestionPage(ctx context.Context, page, pageSize int, userID, tagID, orderCond string, inDays int) (
 	questionList []*entity.Question, total int64, err error) {
 	questionList = make([]*entity.Question, 0)
 
@@ -369,7 +369,7 @@ func (qr *questionRepo) GetQuestionPage(ctx context.Context, page, pageSize int,
 	return questionList, total, err
 }
 
-func (qr *questionRepo) AdminQuestionPage(ctx context.Context, search *schema.AdminQuestionPageReq) ([]*entity.Question, int64, error) {
+func (qr *QuestionRepo) AdminQuestionPage(ctx context.Context, search *schema.AdminQuestionPageReq) ([]*entity.Question, int64, error) {
 	var (
 		count   int64
 		err     error
@@ -439,7 +439,7 @@ func (qr *questionRepo) AdminQuestionPage(ctx context.Context, search *schema.Ad
 }
 
 // updateSearch update search, if search plugin not enable, do nothing
-func (qr *questionRepo) updateSearch(ctx context.Context, questionID string) (err error) {
+func (qr *QuestionRepo) updateSearch(ctx context.Context, questionID string) (err error) {
 	// check search plugin
 	var s plugin.Search
 	_ = plugin.CallSearch(func(search plugin.Search) error {
@@ -492,7 +492,7 @@ func (qr *questionRepo) updateSearch(ctx context.Context, questionID string) (er
 	return
 }
 
-func (qr *questionRepo) RemoveAllUserQuestion(ctx context.Context, userID string) (err error) {
+func (qr *QuestionRepo) RemoveAllUserQuestion(ctx context.Context, userID string) (err error) {
 	// get all question id that need to be deleted
 	questionIDs := make([]string, 0)
 	session := qr.DB.Context(ctx).Where("user_id = ?", userID)

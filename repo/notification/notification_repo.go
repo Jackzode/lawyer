@@ -15,22 +15,22 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// notificationRepo notification repository
-type notificationRepo struct {
+// NotificationRepo notification repository
+type NotificationRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewNotificationRepo new repository
-func NewNotificationRepo() *notificationRepo {
-	return &notificationRepo{
+func NewNotificationRepo() *NotificationRepo {
+	return &NotificationRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddNotification add notification
-func (nr *notificationRepo) AddNotification(ctx context.Context, notification *entity.Notification) (err error) {
+func (nr *NotificationRepo) AddNotification(ctx context.Context, notification *entity.Notification) (err error) {
 	notification.ObjectID = uid.DeShortID(notification.ObjectID)
 	_, err = nr.DB.Context(ctx).Insert(notification)
 	if err != nil {
@@ -39,7 +39,7 @@ func (nr *notificationRepo) AddNotification(ctx context.Context, notification *e
 	return
 }
 
-func (nr *notificationRepo) UpdateNotificationContent(ctx context.Context, notification *entity.Notification) (err error) {
+func (nr *NotificationRepo) UpdateNotificationContent(ctx context.Context, notification *entity.Notification) (err error) {
 	now := time.Now()
 	notification.UpdatedAt = now
 	notification.ObjectID = uid.DeShortID(notification.ObjectID)
@@ -50,7 +50,7 @@ func (nr *notificationRepo) UpdateNotificationContent(ctx context.Context, notif
 	return
 }
 
-func (nr *notificationRepo) ClearUnRead(ctx context.Context, userID string, notificationType int) (err error) {
+func (nr *NotificationRepo) ClearUnRead(ctx context.Context, userID string, notificationType int) (err error) {
 	info := &entity.Notification{}
 	info.IsRead = schema.NotificationRead
 	_, err = nr.DB.Context(ctx).Where("user_id =?", userID).And("type =?", notificationType).Cols("is_read").Update(info)
@@ -60,7 +60,7 @@ func (nr *notificationRepo) ClearUnRead(ctx context.Context, userID string, noti
 	return
 }
 
-func (nr *notificationRepo) ClearIDUnRead(ctx context.Context, userID string, id string) (err error) {
+func (nr *NotificationRepo) ClearIDUnRead(ctx context.Context, userID string, id string) (err error) {
 	info := &entity.Notification{}
 	info.IsRead = schema.NotificationRead
 	_, err = nr.DB.Context(ctx).Where("user_id =?", userID).And("id =?", id).Cols("is_read").Update(info)
@@ -70,7 +70,7 @@ func (nr *notificationRepo) ClearIDUnRead(ctx context.Context, userID string, id
 	return
 }
 
-func (nr *notificationRepo) GetById(ctx context.Context, id string) (*entity.Notification, bool, error) {
+func (nr *NotificationRepo) GetById(ctx context.Context, id string) (*entity.Notification, bool, error) {
 	info := &entity.Notification{}
 	exist, err := nr.DB.Context(ctx).Where("id = ? ", id).Get(info)
 	if err != nil {
@@ -80,7 +80,7 @@ func (nr *notificationRepo) GetById(ctx context.Context, id string) (*entity.Not
 	return info, exist, nil
 }
 
-func (nr *notificationRepo) GetByUserIdObjectIdTypeId(ctx context.Context, userID, objectID string, notificationType int) (*entity.Notification, bool, error) {
+func (nr *NotificationRepo) GetByUserIdObjectIdTypeId(ctx context.Context, userID, objectID string, notificationType int) (*entity.Notification, bool, error) {
 	info := &entity.Notification{}
 	exist, err := nr.DB.Context(ctx).Where("user_id = ? ", userID).And("object_id = ?", objectID).And("type = ?", notificationType).Get(info)
 	if err != nil {
@@ -90,7 +90,7 @@ func (nr *notificationRepo) GetByUserIdObjectIdTypeId(ctx context.Context, userI
 	return info, exist, nil
 }
 
-func (nr *notificationRepo) GetNotificationPage(ctx context.Context, searchCond *schema.NotificationSearch) (
+func (nr *NotificationRepo) GetNotificationPage(ctx context.Context, searchCond *schema.NotificationSearch) (
 	notificationList []*entity.Notification, total int64, err error) {
 	notificationList = make([]*entity.Notification, 0)
 	if searchCond.UserID == "" {

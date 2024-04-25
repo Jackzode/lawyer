@@ -13,22 +13,22 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// collectionGroupRepo collectionGroup repository
-type collectionGroupRepo struct {
+// CollectionGroupRepo collectionGroup repository
+type CollectionGroupRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewCollectionGroupRepo new repository
-func NewCollectionGroupRepo() *collectionGroupRepo {
-	return &collectionGroupRepo{
+func NewCollectionGroupRepo() *CollectionGroupRepo {
+	return &CollectionGroupRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // AddCollectionGroup add collection group
-func (cr *collectionGroupRepo) AddCollectionGroup(ctx context.Context, collectionGroup *entity.CollectionGroup) (err error) {
+func (cr *CollectionGroupRepo) AddCollectionGroup(ctx context.Context, collectionGroup *entity.CollectionGroup) (err error) {
 	_, err = cr.DB.Context(ctx).Insert(collectionGroup)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -37,7 +37,7 @@ func (cr *collectionGroupRepo) AddCollectionGroup(ctx context.Context, collectio
 }
 
 // AddCollectionDefaultGroup add collection group
-func (cr *collectionGroupRepo) AddCollectionDefaultGroup(ctx context.Context, userID string) (collectionGroup *entity.CollectionGroup, err error) {
+func (cr *CollectionGroupRepo) AddCollectionDefaultGroup(ctx context.Context, userID string) (collectionGroup *entity.CollectionGroup, err error) {
 	defaultGroup := &entity.CollectionGroup{
 		Name:         "default",
 		DefaultGroup: schema.CGDefault,
@@ -53,7 +53,7 @@ func (cr *collectionGroupRepo) AddCollectionDefaultGroup(ctx context.Context, us
 }
 
 // CreateDefaultGroupIfNotExist create default group if not exist
-func (cr *collectionGroupRepo) CreateDefaultGroupIfNotExist(ctx context.Context, userID string) (
+func (cr *CollectionGroupRepo) CreateDefaultGroupIfNotExist(ctx context.Context, userID string) (
 	collectionGroup *entity.CollectionGroup, err error) {
 	_, err = cr.DB.Transaction(func(session *xorm.Session) (result any, err error) {
 		session = session.Context(ctx)
@@ -89,7 +89,7 @@ func (cr *collectionGroupRepo) CreateDefaultGroupIfNotExist(ctx context.Context,
 }
 
 // UpdateCollectionGroup update collection group
-func (cr *collectionGroupRepo) UpdateCollectionGroup(ctx context.Context, collectionGroup *entity.CollectionGroup, cols []string) (err error) {
+func (cr *CollectionGroupRepo) UpdateCollectionGroup(ctx context.Context, collectionGroup *entity.CollectionGroup, cols []string) (err error) {
 	_, err = cr.DB.Context(ctx).ID(collectionGroup.ID).Cols(cols...).Update(collectionGroup)
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -98,7 +98,7 @@ func (cr *collectionGroupRepo) UpdateCollectionGroup(ctx context.Context, collec
 }
 
 // GetCollectionGroup get collection group one
-func (cr *collectionGroupRepo) GetCollectionGroup(ctx context.Context, id string) (
+func (cr *CollectionGroupRepo) GetCollectionGroup(ctx context.Context, id string) (
 	collectionGroup *entity.CollectionGroup, exist bool, err error,
 ) {
 	collectionGroup = &entity.CollectionGroup{}
@@ -110,7 +110,7 @@ func (cr *collectionGroupRepo) GetCollectionGroup(ctx context.Context, id string
 }
 
 // GetCollectionGroupPage get collection group page
-func (cr *collectionGroupRepo) GetCollectionGroupPage(ctx context.Context, page, pageSize int, collectionGroup *entity.CollectionGroup) (collectionGroupList []*entity.CollectionGroup, total int64, err error) {
+func (cr *CollectionGroupRepo) GetCollectionGroupPage(ctx context.Context, page, pageSize int, collectionGroup *entity.CollectionGroup) (collectionGroupList []*entity.CollectionGroup, total int64, err error) {
 	collectionGroupList = make([]*entity.CollectionGroup, 0)
 
 	session := cr.DB.Context(ctx)
@@ -124,7 +124,7 @@ func (cr *collectionGroupRepo) GetCollectionGroupPage(ctx context.Context, page,
 	return
 }
 
-func (cr *collectionGroupRepo) GetDefaultID(ctx context.Context, userID string) (collectionGroup *entity.CollectionGroup, has bool, err error) {
+func (cr *CollectionGroupRepo) GetDefaultID(ctx context.Context, userID string) (collectionGroup *entity.CollectionGroup, has bool, err error) {
 	collectionGroup = &entity.CollectionGroup{}
 	has, err = cr.DB.Context(ctx).Where("user_id =? and  default_group = ?", userID, schema.CGDefault).Get(collectionGroup)
 	if err != nil {

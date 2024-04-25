@@ -11,22 +11,22 @@ import (
 	"xorm.io/xorm"
 )
 
-// userNotificationConfigRepo notification repository
-type userNotificationConfigRepo struct {
+// UserNotificationConfigRepo notification repository
+type UserNotificationConfigRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewUserNotificationConfigRepo new repository
-func NewUserNotificationConfigRepo() *userNotificationConfigRepo {
-	return &userNotificationConfigRepo{
+func NewUserNotificationConfigRepo() *UserNotificationConfigRepo {
+	return &UserNotificationConfigRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
 // Add add notification config
-func (ur *userNotificationConfigRepo) Add(ctx context.Context, userIDs []string, source, channels string) (err error) {
+func (ur *UserNotificationConfigRepo) Add(ctx context.Context, userIDs []string, source, channels string) (err error) {
 	var configs []*entity.UserNotificationConfig
 	for _, userID := range userIDs {
 		configs = append(configs, &entity.UserNotificationConfig{
@@ -44,7 +44,7 @@ func (ur *userNotificationConfigRepo) Add(ctx context.Context, userIDs []string,
 }
 
 // Save save notification config, if existed, update, if not exist, insert
-func (ur *userNotificationConfigRepo) Save(ctx context.Context, uc *entity.UserNotificationConfig) (err error) {
+func (ur *UserNotificationConfigRepo) Save(ctx context.Context, uc *entity.UserNotificationConfig) (err error) {
 	old := &entity.UserNotificationConfig{UserID: uc.UserID, Source: uc.Source}
 	exist, err := ur.DB.Context(ctx).Get(old)
 	if err != nil {
@@ -64,7 +64,7 @@ func (ur *userNotificationConfigRepo) Save(ctx context.Context, uc *entity.UserN
 }
 
 // GetByUserID get notification config by user id
-func (ur *userNotificationConfigRepo) GetByUserID(ctx context.Context, userID string) (
+func (ur *UserNotificationConfigRepo) GetByUserID(ctx context.Context, userID string) (
 	[]*entity.UserNotificationConfig, error) {
 	var configs []*entity.UserNotificationConfig
 	err := ur.DB.Context(ctx).Where("user_id = ?", userID).Find(&configs)
@@ -75,7 +75,7 @@ func (ur *userNotificationConfigRepo) GetByUserID(ctx context.Context, userID st
 }
 
 // GetBySource get notification config by source
-func (ur *userNotificationConfigRepo) GetBySource(ctx context.Context, source constant.NotificationSource) (
+func (ur *UserNotificationConfigRepo) GetBySource(ctx context.Context, source constant.NotificationSource) (
 	[]*entity.UserNotificationConfig, error) {
 	var configs []*entity.UserNotificationConfig
 	err := ur.DB.Context(ctx).UseBool("enabled").
@@ -87,7 +87,7 @@ func (ur *userNotificationConfigRepo) GetBySource(ctx context.Context, source co
 }
 
 // GetByUserIDAndSource get notification config by user id and source
-func (ur *userNotificationConfigRepo) GetByUserIDAndSource(ctx context.Context, userID string, source constant.NotificationSource) (
+func (ur *UserNotificationConfigRepo) GetByUserIDAndSource(ctx context.Context, userID string, source constant.NotificationSource) (
 	conf *entity.UserNotificationConfig, exist bool, err error) {
 	config := &entity.UserNotificationConfig{UserID: userID, Source: string(source)}
 	exist, err = ur.DB.Context(ctx).Get(config)
@@ -98,7 +98,7 @@ func (ur *userNotificationConfigRepo) GetByUserIDAndSource(ctx context.Context, 
 }
 
 // GetByUsersAndSource get notification config by user ids and source
-func (ur *userNotificationConfigRepo) GetByUsersAndSource(
+func (ur *UserNotificationConfigRepo) GetByUsersAndSource(
 	ctx context.Context, userIDs []string, source constant.NotificationSource) (
 	[]*entity.UserNotificationConfig, error) {
 	var configs []*entity.UserNotificationConfig
