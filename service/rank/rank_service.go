@@ -3,9 +3,9 @@ package rank
 import (
 	"context"
 	"github.com/lawyer/commons/base/translator"
-	constant2 "github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/pager"
@@ -30,7 +30,7 @@ type UserRankRepo interface {
 	ChangeUserRank(ctx context.Context, session *xorm.Session,
 		userID string, userCurrentScore, deltaRank int) (err error)
 	TriggerUserRank(ctx context.Context, session *xorm.Session, userId string, rank int, activityType int) (isReachStandard bool, err error)
-	UserRankPage(ctx context.Context, userId string, page, pageSize int) (rankPage []*entity2.Activity, total int64, err error)
+	UserRankPage(ctx context.Context, userId string, page, pageSize int) (rankPage []*entity.Activity, total int64, err error)
 }
 
 // RankService rank service
@@ -154,19 +154,19 @@ func (rs *RankService) CheckVotePermission(ctx context.Context, userID, objectID
 	}
 	action := ""
 	switch objectInfo.ObjectType {
-	case constant2.QuestionObjectType:
+	case constant.QuestionObjectType:
 		if voteUp {
 			action = permission.QuestionVoteUp
 		} else {
 			action = permission.QuestionVoteDown
 		}
-	case constant2.AnswerObjectType:
+	case constant.AnswerObjectType:
 		if voteUp {
 			action = permission.AnswerVoteUp
 		} else {
 			action = permission.AnswerVoteDown
 		}
-	case constant2.CommentObjectType:
+	case constant.CommentObjectType:
 		if voteUp {
 			action = permission.CommentVoteUp
 		} else {
@@ -248,7 +248,7 @@ func (rs *RankService) GetRankPersonalPage(ctx context.Context, req *schema.GetR
 }
 
 func (rs *RankService) decorateRankPersonalPageResp(
-	ctx context.Context, userRankPage []*entity2.Activity) []*schema.GetRankPersonalPageResp {
+	ctx context.Context, userRankPage []*entity.Activity) []*schema.GetRankPersonalPageResp {
 	resp := make([]*schema.GetRankPersonalPageResp, 0)
 	lang := utils.GetLangByCtx(ctx)
 
@@ -272,13 +272,13 @@ func (rs *RankService) decorateRankPersonalPageResp(
 			log.Error(err)
 			continue
 		}
-		commentResp.RankType = translator.Tr(lang, constant2.ActivityTypeFlagMapping[cfg.Key])
+		commentResp.RankType = translator.Tr(lang, constant.ActivityTypeFlagMapping[cfg.Key])
 		commentResp.ObjectType = objInfo.ObjectType
 		commentResp.Title = objInfo.Title
 		commentResp.UrlTitle = htmltext.UrlTitle(objInfo.Title)
 		commentResp.Content = objInfo.Content
-		if objInfo.QuestionStatus == entity2.QuestionStatusDeleted {
-			commentResp.Title = translator.Tr(lang, constant2.DeletedQuestionTitleTrKey)
+		if objInfo.QuestionStatus == entity.QuestionStatusDeleted {
+			commentResp.Title = translator.Tr(lang, constant.DeletedQuestionTitleTrKey)
 		}
 		commentResp.QuestionID = objInfo.QuestionID
 		commentResp.AnswerID = objInfo.AnswerID

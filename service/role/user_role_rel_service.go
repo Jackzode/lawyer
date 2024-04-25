@@ -2,7 +2,7 @@ package role
 
 import (
 	"context"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 )
@@ -10,10 +10,10 @@ import (
 // UserRoleRelRepo userRoleRel repository
 type UserRoleRelRepo interface {
 	SaveUserRoleRel(ctx context.Context, userID string, roleID int) (err error)
-	GetUserRoleRelList(ctx context.Context, userIDs []string) (userRoleRelList []*entity2.UserRoleRel, err error)
+	GetUserRoleRelList(ctx context.Context, userIDs []string) (userRoleRelList []*entity.UserRoleRel, err error)
 	GetUserRoleRelListByRoleID(ctx context.Context, roleIDs []int) (
-		userRoleRelList []*entity2.UserRoleRel, err error)
-	GetUserRoleRel(ctx context.Context, userID string) (rolePowerRel *entity2.UserRoleRel, exist bool, err error)
+		userRoleRelList []*entity.UserRoleRel, err error)
+	GetUserRoleRel(ctx context.Context, userID string) (rolePowerRel *entity.UserRoleRel, exist bool, err error)
 }
 
 // UserRoleRelService user service
@@ -32,8 +32,8 @@ func (us *UserRoleRelService) SaveUserRole(ctx context.Context, userID string, r
 
 // GetUserRoleMapping get user role mapping
 func (us *UserRoleRelService) GetUserRoleMapping(ctx context.Context, userIDs []string) (
-	userRoleMapping map[string]*entity2.Role, err error) {
-	userRoleMapping = make(map[string]*entity2.Role, 0)
+	userRoleMapping map[string]*entity.Role, err error) {
+	userRoleMapping = make(map[string]*entity.Role, 0)
 	roleMapping, err := services.RoleService.GetRoleMapping(ctx)
 	if err != nil {
 		return userRoleMapping, err
@@ -93,7 +93,7 @@ func (us *UserRoleRelService) GetUserRole(ctx context.Context, userID string) (r
 }
 
 // GetUserByRoleID get user by role id
-func (us *UserRoleRelService) GetUserByRoleID(ctx context.Context, roleIDs []int) (rel []*entity2.UserRoleRel, err error) {
+func (us *UserRoleRelService) GetUserByRoleID(ctx context.Context, roleIDs []int) (rel []*entity.UserRoleRel, err error) {
 	rolePowerRels, err := repo.UserRoleRelRepo.GetUserRoleRelListByRoleID(ctx, roleIDs)
 	if err != nil {
 		return nil, err

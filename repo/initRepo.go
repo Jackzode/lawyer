@@ -14,7 +14,6 @@ import (
 	notification2 "github.com/lawyer/repo/notification"
 	"github.com/lawyer/repo/plugin_config"
 	"github.com/lawyer/repo/question"
-	"github.com/lawyer/repo/rank"
 	"github.com/lawyer/repo/reason"
 	"github.com/lawyer/repo/report"
 	"github.com/lawyer/repo/revision"
@@ -26,6 +25,7 @@ import (
 	"github.com/lawyer/repo/user"
 	"github.com/lawyer/repo/user_external_login"
 	"github.com/lawyer/repo/user_notification_config"
+	"github.com/lawyer/repoCommon"
 	"github.com/lawyer/service"
 	"github.com/lawyer/service/action"
 	sa "github.com/lawyer/service/activity"
@@ -102,8 +102,8 @@ func InitRepo() {
 	SiteInfoRepo = site_info.NewSiteInfo()
 	AuthRepo = auth.NewAuthRepo()
 	UserRepo = user.NewUserRepo()
-	ActivityRepo = activity_common.NewActivityRepo()
-	UserRankRepo = rank.NewUserRankRepo()
+	ActivityRepo = repoCommon.NewActivityRepo()
+	UserRankRepo = repoCommon.NewUserRankRepo()
 	UserActiveActivityRepo = activity.NewUserActiveActivityRepo()
 	EmailRepo = export.NewEmailRepo()
 	UserRoleRelRepo = role.NewUserRoleRelRepo()

@@ -3,11 +3,12 @@ package activity
 import (
 	"context"
 	"fmt"
-	constant2 "github.com/lawyer/commons/constant"
+	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
+
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentfault/pacman/log"
 	"time"
@@ -73,7 +74,7 @@ func (ar *AnswerActivityRepo) SaveCancelAcceptAnswerActivity(ctx context.Context
 	}
 	var userIDs []string
 	for _, act := range activities {
-		if act.Cancelled == entity2.ActivityCancelled {
+		if act.Cancelled == entity.ActivityCancelled {
 			continue
 		}
 		userIDs = append(userIDs, act.UserID)
@@ -111,15 +112,15 @@ func (ar *AnswerActivityRepo) SaveCancelAcceptAnswerActivity(ctx context.Context
 	return nil
 }
 
-func (ar *AnswerActivityRepo) acquireUserInfo(session *xorm.Session, userIDs []string) (map[string]*entity2.User, error) {
-	us := make([]*entity2.User, 0)
+func (ar *AnswerActivityRepo) acquireUserInfo(session *xorm.Session, userIDs []string) (map[string]*entity.User, error) {
+	us := make([]*entity.User, 0)
 	err := session.In("id", userIDs).ForUpdate().Find(&us)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 
-	users := make(map[string]*entity2.User, 0)
+	users := make(map[string]*entity.User, 0)
 	for _, u := range us {
 		users[u.ID] = u
 	}
@@ -133,7 +134,7 @@ func (ar *AnswerActivityRepo) acquireUserInfo(session *xorm.Session, userIDs []s
 func (ar *AnswerActivityRepo) saveActivitiesAvailable(session *xorm.Session, op *schema.AcceptAnswerOperationInfo) (
 	err error) {
 	for _, act := range op.Activities {
-		existsActivity := &entity2.Activity{}
+		existsActivity := &entity.Activity{}
 		exist, err := session.
 			Where(builder.Eq{"object_id": op.AnswerObjectID}).
 			And(builder.Eq{"user_id": act.ActivityUserID}).
@@ -143,13 +144,13 @@ func (ar *AnswerActivityRepo) saveActivitiesAvailable(session *xorm.Session, op 
 		if err != nil {
 			return err
 		}
-		if exist && existsActivity.Cancelled == entity2.ActivityAvailable {
+		if exist && existsActivity.Cancelled == entity.ActivityAvailable {
 			act.Rank = 0
 			continue
 		}
 		if exist {
-			bean := &entity2.Activity{
-				Cancelled: entity2.ActivityAvailable,
+			bean := &entity.Activity{
+				Cancelled: entity.ActivityAvailable,
 				Rank:      act.Rank,
 				HasRank:   act.HasRank(),
 			}
@@ -158,7 +159,7 @@ func (ar *AnswerActivityRepo) saveActivitiesAvailable(session *xorm.Session, op 
 				return err
 			}
 		} else {
-			insertActivity := entity2.Activity{
+			insertActivity := entity.Activity{
 				ObjectID:         op.AnswerObjectID,
 				OriginalObjectID: act.OriginalObjectID,
 				UserID:           act.ActivityUserID,
@@ -166,7 +167,7 @@ func (ar *AnswerActivityRepo) saveActivitiesAvailable(session *xorm.Session, op 
 				ActivityType:     act.ActivityType,
 				Rank:             act.Rank,
 				HasRank:          act.HasRank(),
-				Cancelled:        entity2.ActivityAvailable,
+				Cancelled:        entity.ActivityAvailable,
 			}
 			_, err = session.Insert(&insertActivity)
 			if err != nil {
@@ -180,9 +181,9 @@ func (ar *AnswerActivityRepo) saveActivitiesAvailable(session *xorm.Session, op 
 // cancelActivities cancel activities
 // If this activity is already cancelled, set activity rank to 0
 // So after this function, the activity rank will be correct for update user rank
-func (ar *AnswerActivityRepo) cancelActivities(session *xorm.Session, activities []*entity2.Activity) (err error) {
+func (ar *AnswerActivityRepo) cancelActivities(session *xorm.Session, activities []*entity.Activity) (err error) {
 	for _, act := range activities {
-		t := &entity2.Activity{}
+		t := &entity.Activity{}
 		exist, err := session.ID(act.ID).Get(t)
 		if err != nil {
 			log.Error(err)
@@ -193,12 +194,12 @@ func (ar *AnswerActivityRepo) cancelActivities(session *xorm.Session, activities
 			return fmt.Errorf("%s activity not exist", act.ID)
 		}
 		//  If this activity is already cancelled, set activity rank to 0
-		if t.Cancelled == entity2.ActivityCancelled {
+		if t.Cancelled == entity.ActivityCancelled {
 			act.Rank = 0
 		}
 		if _, err = session.ID(act.ID).Cols("cancelled", "cancelled_at").
-			Update(&entity2.Activity{
-				Cancelled:   entity2.ActivityCancelled,
+			Update(&entity.Activity{
+				Cancelled:   entity.ActivityCancelled,
 				CancelledAt: time.Now(),
 			}); err != nil {
 			log.Error(err)
@@ -210,7 +211,7 @@ func (ar *AnswerActivityRepo) cancelActivities(session *xorm.Session, activities
 
 func (ar *AnswerActivityRepo) changeUserRank(ctx context.Context, session *xorm.Session,
 	op *schema.AcceptAnswerOperationInfo,
-	userInfoMapping map[string]*entity2.User) (err error) {
+	userInfoMapping map[string]*entity.User) (err error) {
 	for _, act := range op.Activities {
 		if act.Rank == 0 {
 			continue
@@ -219,7 +220,7 @@ func (ar *AnswerActivityRepo) changeUserRank(ctx context.Context, session *xorm.
 		if user == nil {
 			continue
 		}
-		if err = repo.UserRankRepo.ChangeUserRank(ctx, session,
+		if err = repoCommon.NewUserRankRepo().ChangeUserRank(ctx, session,
 			act.ActivityUserID, user.Rank, act.Rank); err != nil {
 			log.Error(err)
 			return err
@@ -229,8 +230,8 @@ func (ar *AnswerActivityRepo) changeUserRank(ctx context.Context, session *xorm.
 }
 
 func (ar *AnswerActivityRepo) rollbackUserRank(ctx context.Context, session *xorm.Session,
-	activities []*entity2.Activity,
-	userInfoMapping map[string]*entity2.User) (err error) {
+	activities []*entity.Activity,
+	userInfoMapping map[string]*entity.User) (err error) {
 	for _, act := range activities {
 		if act.Rank == 0 {
 			continue
@@ -239,7 +240,7 @@ func (ar *AnswerActivityRepo) rollbackUserRank(ctx context.Context, session *xor
 		if user == nil {
 			continue
 		}
-		if err = repo.UserRankRepo.ChangeUserRank(ctx, session,
+		if err = repoCommon.NewUserRankRepo().ChangeUserRank(ctx, session,
 			act.UserID, user.Rank, -act.Rank); err != nil {
 			log.Error(err)
 			return err
@@ -248,10 +249,10 @@ func (ar *AnswerActivityRepo) rollbackUserRank(ctx context.Context, session *xor
 	return nil
 }
 
-func (ar *AnswerActivityRepo) getExistActivity(ctx context.Context, op *schema.AcceptAnswerOperationInfo) ([]*entity2.Activity, error) {
-	var activities []*entity2.Activity
+func (ar *AnswerActivityRepo) getExistActivity(ctx context.Context, op *schema.AcceptAnswerOperationInfo) ([]*entity.Activity, error) {
+	var activities []*entity.Activity
 	for _, action := range op.Activities {
-		var t []*entity2.Activity
+		var t []*entity.Activity
 		err := ar.DB.Context(ctx).
 			Where(builder.Eq{"user_id": action.ActivityUserID}).
 			And(builder.Eq{"activity_type": action.ActivityType}).
@@ -276,7 +277,7 @@ func (ar *AnswerActivityRepo) sendAcceptAnswerNotification(
 			ReceiverUserID: act.ActivityUserID,
 			TriggerUserID:  act.TriggerUserID,
 		}
-		msg.ObjectType = constant2.AnswerObjectType
+		msg.ObjectType = constant.AnswerObjectType
 		if msg.TriggerUserID != msg.ReceiverUserID {
 			//todo
 			//repo.NotificationQueueService.Send(ctx, msg)
@@ -291,8 +292,8 @@ func (ar *AnswerActivityRepo) sendAcceptAnswerNotification(
 			TriggerUserID:  op.TriggerUserID,
 		}
 		if act.ActivityUserID != op.QuestionUserID {
-			msg.ObjectType = constant2.AnswerObjectType
-			msg.NotificationAction = constant2.NotificationAcceptAnswer
+			msg.ObjectType = constant.AnswerObjectType
+			msg.NotificationAction = constant.NotificationAcceptAnswer
 			//todo
 			//ar.notificationQueueService.Send(ctx, msg)
 		}
@@ -309,9 +310,9 @@ func (ar *AnswerActivityRepo) sendCancelAcceptAnswerNotification(
 			ObjectID:       op.AnswerObjectID,
 		}
 		if act.ActivityUserID == op.QuestionObjectID {
-			msg.ObjectType = constant2.QuestionObjectType
+			msg.ObjectType = constant.QuestionObjectType
 		} else {
-			msg.ObjectType = constant2.AnswerObjectType
+			msg.ObjectType = constant.AnswerObjectType
 		}
 		if msg.TriggerUserID != msg.ReceiverUserID {
 			//todo

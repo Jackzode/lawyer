@@ -6,7 +6,7 @@ import (
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/service/activity"
@@ -85,7 +85,7 @@ func (us *UserCenterLoginService) ExternalLogin(
 		}
 		if exist {
 			// if user is deleted, do not allow login
-			if oldUserInfo.Status == entity2.UserStatusDeleted {
+			if oldUserInfo.Status == entity.UserStatusDeleted {
 				return &schema.UserExternalLoginResp{
 					ErrTitle: translator.Tr(utils.GetLangByCtx(ctx), reason.UserAccessDenied),
 					ErrMsg:   translator.Tr(utils.GetLangByCtx(ctx), reason.UserPageAccessDenied),
@@ -118,8 +118,8 @@ func (us *UserCenterLoginService) ExternalLogin(
 }
 
 func (us *UserCenterLoginService) registerNewUser(ctx context.Context, provider string,
-	basicUserInfo *plugin.UserCenterBasicUserInfo) (userInfo *entity2.User, err error) {
-	userInfo = &entity2.User{}
+	basicUserInfo *plugin.UserCenterBasicUserInfo) (userInfo *entity.User, err error) {
+	userInfo = &entity.User{}
 	userInfo.EMail = basicUserInfo.Email
 	userInfo.DisplayName = basicUserInfo.DisplayName
 
@@ -138,8 +138,8 @@ func (us *UserCenterLoginService) registerNewUser(ctx context.Context, provider 
 		userInfo.Avatar = string(avatar)
 	}
 
-	userInfo.MailStatus = entity2.EmailStatusAvailable
-	userInfo.Status = entity2.UserStatusAvailable
+	userInfo.MailStatus = entity.EmailStatusAvailable
+	userInfo.Status = entity.UserStatusAvailable
 	userInfo.LastLoginDate = time.Now()
 	userInfo.Bio = basicUserInfo.Bio
 	userInfo.BioHTML = converter.Markdown2HTML(basicUserInfo.Bio)
@@ -149,7 +149,7 @@ func (us *UserCenterLoginService) registerNewUser(ctx context.Context, provider 
 	}
 
 	metaInfo, _ := json.Marshal(basicUserInfo)
-	newExternalUserInfo := &entity2.UserExternalLogin{
+	newExternalUserInfo := &entity.UserExternalLogin{
 		UserID:     userInfo.ID,
 		Provider:   provider,
 		ExternalID: basicUserInfo.ExternalID,
@@ -162,7 +162,7 @@ func (us *UserCenterLoginService) registerNewUser(ctx context.Context, provider 
 	return userInfo, nil
 }
 
-func (us *UserCenterLoginService) activeUser(ctx context.Context, oldUserInfo *entity2.User) {
+func (us *UserCenterLoginService) activeUser(ctx context.Context, oldUserInfo *entity.User) {
 	if err := us.userActivity.UserActive(ctx, oldUserInfo.ID); err != nil {
 		log.Error(err)
 	}
@@ -182,7 +182,7 @@ func (us *UserCenterLoginService) UserCenterUserSettings(ctx context.Context, us
 	if err != nil {
 		return nil, err
 	}
-	var externalInfo *entity2.UserExternalLogin
+	var externalInfo *entity.UserExternalLogin
 	for _, t := range externalLoginList {
 		if t.Provider == userCenter.Info().SlugName {
 			externalInfo = t
@@ -261,7 +261,7 @@ func (us *UserCenterLoginService) UserCenterPersonalBranding(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	var externalInfo *entity2.UserExternalLogin
+	var externalInfo *entity.UserExternalLogin
 	for _, t := range externalLoginList {
 		if t.Provider == userCenter.Info().SlugName {
 			externalInfo = t

@@ -1,4 +1,4 @@
-package activity_common
+package repoCommon
 
 import (
 	"context"

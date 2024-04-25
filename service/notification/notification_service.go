@@ -7,7 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/base/translator"
 	constant2 "github.com/lawyer/commons/constant"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
@@ -128,7 +128,7 @@ func (ns *NotificationService) GetNotificationPage(ctx context.Context, searchCo
 	return pager.NewPageModel(total, resp), nil
 }
 
-func (ns *NotificationService) formatNotificationPage(ctx context.Context, notifications []*entity2.Notification) (
+func (ns *NotificationService) formatNotificationPage(ctx context.Context, notifications []*entity.Notification) (
 	resp []*schema.NotificationContent, err error) {
 	lang := utils.GetLangByCtx(ctx)
 	enableShortID := utils.GetEnableShortID(ctx)
@@ -182,7 +182,7 @@ func (ns *NotificationService) formatNotificationPage(ctx context.Context, notif
 		log.Error(err)
 		return resp, nil
 	}
-	userIDMapping := make(map[string]*entity2.User, len(users))
+	userIDMapping := make(map[string]*entity.User, len(users))
 	for _, user := range users {
 		userIDMapping[user.ID] = user
 	}
@@ -194,7 +194,7 @@ func (ns *NotificationService) formatNotificationPage(ctx context.Context, notif
 		if !ok {
 			continue
 		}
-		if userInfo.Status == entity2.UserStatusDeleted {
+		if userInfo.Status == entity.UserStatusDeleted {
 			item.UserInfo = &schema.UserBasicInfo{
 				DisplayName: "user" + converter.DeleteUserDisplay(userInfo.ID),
 				Status:      constant2.UserDeleted,

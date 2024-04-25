@@ -1,4 +1,4 @@
-package rank
+package repoCommon
 
 import (
 	"context"

@@ -3,7 +3,7 @@ package search_sync
 import (
 	"context"
 	"github.com/lawyer/commons/constant"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/plugin"
@@ -23,7 +23,7 @@ type PluginSyncer struct {
 
 func (p *PluginSyncer) GetAnswersPage(ctx context.Context, page, pageSize int) (
 	answerList []*plugin.SearchContent, err error) {
-	answers := make([]*entity2.Answer, 0)
+	answers := make([]*entity.Answer, 0)
 	startNum := (page - 1) * pageSize
 	err = p.DB.Context(ctx).Limit(pageSize, startNum).Find(&answers)
 	if err != nil {
@@ -34,7 +34,7 @@ func (p *PluginSyncer) GetAnswersPage(ctx context.Context, page, pageSize int) (
 
 func (p *PluginSyncer) GetQuestionsPage(ctx context.Context, page, pageSize int) (
 	questionList []*plugin.SearchContent, err error) {
-	questions := make([]*entity2.Question, 0)
+	questions := make([]*entity.Question, 0)
 	startNum := (page - 1) * pageSize
 	err = p.DB.Context(ctx).Limit(pageSize, startNum).Find(&questions)
 	if err != nil {
@@ -43,10 +43,10 @@ func (p *PluginSyncer) GetQuestionsPage(ctx context.Context, page, pageSize int)
 	return p.convertQuestions(ctx, questions)
 }
 
-func (p *PluginSyncer) convertAnswers(ctx context.Context, answers []*entity2.Answer) (
+func (p *PluginSyncer) convertAnswers(ctx context.Context, answers []*entity.Answer) (
 	answerList []*plugin.SearchContent, err error) {
 	for _, answer := range answers {
-		question := &entity2.Question{}
+		question := &entity.Question{}
 		exist, err := p.DB.Context(ctx).Where("id = ?", answer.QuestionID).Get(question)
 		if err != nil {
 			log.Errorf("get question failed %s", err)
@@ -56,10 +56,10 @@ func (p *PluginSyncer) convertAnswers(ctx context.Context, answers []*entity2.An
 			continue
 		}
 
-		tagListList := make([]*entity2.TagRel, 0)
+		tagListList := make([]*entity.TagRel, 0)
 		tags := make([]string, 0)
 		err = p.DB.Context(ctx).Where("object_id = ?", uid.DeShortID(question.ID)).
-			Where("status = ?", entity2.TagRelStatusAvailable).Find(&tagListList)
+			Where("status = ?", entity.TagRelStatusAvailable).Find(&tagListList)
 		if err != nil {
 			log.Errorf("get tag list failed %s", err)
 		}
@@ -88,13 +88,13 @@ func (p *PluginSyncer) convertAnswers(ctx context.Context, answers []*entity2.An
 	return answerList, nil
 }
 
-func (p *PluginSyncer) convertQuestions(ctx context.Context, questions []*entity2.Question) (
+func (p *PluginSyncer) convertQuestions(ctx context.Context, questions []*entity.Question) (
 	questionList []*plugin.SearchContent, err error) {
 	for _, question := range questions {
-		tagListList := make([]*entity2.TagRel, 0)
+		tagListList := make([]*entity.TagRel, 0)
 		tags := make([]string, 0)
 		err := p.DB.Context(ctx).Where("object_id = ?", question.ID).
-			Where("status = ?", entity2.TagRelStatusAvailable).Find(&tagListList)
+			Where("status = ?", entity.TagRelStatusAvailable).Find(&tagListList)
 		if err != nil {
 			log.Errorf("get tag list failed %s", err)
 		}

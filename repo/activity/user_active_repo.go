@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
 
 	"github.com/redis/go-redis/v9"
 	"xorm.io/builder"
@@ -73,7 +73,7 @@ func (ar *UserActiveActivityRepo) UserActive(ctx context.Context, userID string)
 			return nil, nil
 		}
 
-		err = repo.UserRankRepo.ChangeUserRank(ctx, session, addActivity.UserID, user.Rank, addActivity.Rank)
+		err = repoCommon.NewUserRankRepo().ChangeUserRank(ctx, session, addActivity.UserID, user.Rank, addActivity.Rank)
 		if err != nil {
 			return nil, err
 		}

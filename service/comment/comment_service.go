@@ -4,7 +4,7 @@ import (
 	"context"
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/token"
@@ -23,12 +23,12 @@ import (
 
 // CommentRepo comment repository
 type CommentRepo interface {
-	AddComment(ctx context.Context, comment *entity2.Comment) (err error)
+	AddComment(ctx context.Context, comment *entity.Comment) (err error)
 	RemoveComment(ctx context.Context, commentID string) (err error)
 	UpdateCommentContent(ctx context.Context, commentID string, original string, parsedText string) (err error)
-	GetComment(ctx context.Context, commentID string) (comment *entity2.Comment, exist bool, err error)
+	GetComment(ctx context.Context, commentID string) (comment *entity.Comment, exist bool, err error)
 	GetCommentPage(ctx context.Context, commentQuery *utils.CommentQuery) (
-		comments []*entity2.Comment, total int64, err error)
+		comments []*entity.Comment, total int64, err error)
 }
 
 // CommentService user service
@@ -43,9 +43,9 @@ func NewCommentService() *CommentService {
 // AddComment add comment
 func (cs *CommentService) AddComment(ctx context.Context, req *schema.AddCommentReq) (
 	resp *schema.GetCommentResp, err error) {
-	comment := &entity2.Comment{}
+	comment := &entity.Comment{}
 	_ = copier.Copy(comment, req)
-	comment.Status = entity2.CommentStatusAvailable
+	comment.Status = entity.CommentStatusAvailable
 
 	// add question id
 	objInfo, err := services.ObjService.GetInfo(ctx, req.ObjectID)
@@ -119,7 +119,7 @@ func (cs *CommentService) AddComment(ctx context.Context, req *schema.AddComment
 
 func (cs *CommentService) addCommentNotification(
 	ctx context.Context, req *schema.AddCommentReq, resp *schema.GetCommentResp,
-	comment *entity2.Comment, objInfo *schema.SimpleObjectInfo) (*schema.GetCommentResp, error) {
+	comment *entity.Comment, objInfo *schema.SimpleObjectInfo) (*schema.GetCommentResp, error) {
 	// The priority of the notification
 	// 1. reply to user
 	// 2. comment mention to user
@@ -303,7 +303,7 @@ func (cs *CommentService) GetCommentWithPage(ctx context.Context, req *schema.Ge
 }
 
 func (cs *CommentService) convertCommentEntity2Resp(ctx context.Context, req *schema.GetCommentWithPageReq,
-	comment *entity2.Comment) (commentResp *schema.GetCommentResp, err error) {
+	comment *entity.Comment) (commentResp *schema.GetCommentResp, err error) {
 	commentResp = &schema.GetCommentResp{
 		CommentID:      comment.ID,
 		CreatedAt:      comment.CreatedAt.Unix(),
@@ -400,7 +400,7 @@ func (cs *CommentService) GetCommentPersonalWithPage(ctx context.Context, req *s
 				commentResp.UrlTitle = htmltext.UrlTitle(objInfo.Title)
 				commentResp.QuestionID = objInfo.QuestionID
 				commentResp.AnswerID = objInfo.AnswerID
-				if objInfo.QuestionStatus == entity2.QuestionStatusDeleted {
+				if objInfo.QuestionStatus == entity.QuestionStatusDeleted {
 					commentResp.Title = "Deleted question"
 				}
 			}

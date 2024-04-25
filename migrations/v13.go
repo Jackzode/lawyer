@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	constant2 "github.com/lawyer/commons/constant"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"time"
 
 	"github.com/lawyer/commons/schema"
@@ -34,7 +34,7 @@ func updateCount(ctx context.Context, x *xorm.Engine) error {
 }
 
 func addGravatarBaseURL(ctx context.Context, x *xorm.Engine) error {
-	usersSiteInfo := &entity2.SiteInfo{
+	usersSiteInfo := &entity.SiteInfo{
 		Type: constant2.SiteTypeUsers,
 	}
 	exist, err := x.Context(ctx).Get(usersSiteInfo)
@@ -58,11 +58,11 @@ func addGravatarBaseURL(ctx context.Context, x *xorm.Engine) error {
 
 func addPrivilegeForInviteSomeoneToAnswer(ctx context.Context, x *xorm.Engine) error {
 	// add rank for invite to answer
-	powers := []*entity2.Power{
+	powers := []*entity.Power{
 		{ID: 38, Name: "invite someone to answer", PowerType: permission.AnswerInviteSomeoneToAnswer, Description: "invite someone to answer"},
 	}
 	for _, power := range powers {
-		exist, err := x.Context(ctx).Get(&entity2.Power{PowerType: power.PowerType})
+		exist, err := x.Context(ctx).Get(&entity.Power{PowerType: power.PowerType})
 		if err != nil {
 			return err
 		}
@@ -75,12 +75,12 @@ func addPrivilegeForInviteSomeoneToAnswer(ctx context.Context, x *xorm.Engine) e
 			return err
 		}
 	}
-	rolePowerRels := []*entity2.RolePowerRel{
+	rolePowerRels := []*entity.RolePowerRel{
 		{RoleID: 2, PowerType: permission.AnswerInviteSomeoneToAnswer},
 		{RoleID: 3, PowerType: permission.AnswerInviteSomeoneToAnswer},
 	}
 	for _, rel := range rolePowerRels {
-		exist, err := x.Context(ctx).Get(&entity2.RolePowerRel{RoleID: rel.RoleID, PowerType: rel.PowerType})
+		exist, err := x.Context(ctx).Get(&entity.RolePowerRel{RoleID: rel.RoleID, PowerType: rel.PowerType})
 		if err != nil {
 			return err
 		}
@@ -93,21 +93,21 @@ func addPrivilegeForInviteSomeoneToAnswer(ctx context.Context, x *xorm.Engine) e
 		}
 	}
 
-	defaultConfigTable := []*entity2.Config{
+	defaultConfigTable := []*entity.Config{
 		{ID: 127, Key: "rank.answer.invite_someone_to_answer", Value: `1000`},
 	}
 	for _, c := range defaultConfigTable {
-		exist, err := x.Context(ctx).Get(&entity2.Config{ID: c.ID})
+		exist, err := x.Context(ctx).Get(&entity.Config{ID: c.ID})
 		if err != nil {
 			return fmt.Errorf("get config failed: %w", err)
 		}
 		if exist {
-			if _, err = x.Context(ctx).Update(c, &entity2.Config{ID: c.ID}); err != nil {
+			if _, err = x.Context(ctx).Update(c, &entity.Config{ID: c.ID}); err != nil {
 				return fmt.Errorf("update config failed: %w", err)
 			}
 			continue
 		}
-		if _, err = x.Context(ctx).Insert(&entity2.Config{ID: c.ID, Key: c.Key, Value: c.Value}); err != nil {
+		if _, err = x.Context(ctx).Insert(&entity.Config{ID: c.ID, Key: c.Key, Value: c.Value}); err != nil {
 			return fmt.Errorf("add config failed: %w", err)
 		}
 	}
@@ -117,7 +117,7 @@ func addPrivilegeForInviteSomeoneToAnswer(ctx context.Context, x *xorm.Engine) e
 func updateQuestionCount(ctx context.Context, x *xorm.Engine) error {
 	//question answer count
 	answers := make([]AnswerV13, 0)
-	err := x.Context(ctx).Find(&answers, &AnswerV13{Status: entity2.AnswerStatusAvailable})
+	err := x.Context(ctx).Find(&answers, &AnswerV13{Status: entity.AnswerStatusAvailable})
 	if err != nil {
 		return fmt.Errorf("get answers failed: %w", err)
 	}
@@ -151,8 +151,8 @@ func updateQuestionCount(ctx context.Context, x *xorm.Engine) error {
 
 // updateTagCount update tag count
 func updateTagCount(ctx context.Context, x *xorm.Engine) error {
-	tagRelList := make([]entity2.TagRel, 0)
-	err := x.Context(ctx).Find(&tagRelList, &entity2.TagRel{})
+	tagRelList := make([]entity.TagRel, 0)
+	err := x.Context(ctx).Find(&tagRelList, &entity.TagRel{})
 	if err != nil {
 		return fmt.Errorf("get tag rel failed: %w", err)
 	}
@@ -165,7 +165,7 @@ func updateTagCount(ctx context.Context, x *xorm.Engine) error {
 		questionsHideMap[item.ObjectID] = false
 	}
 	questionList := make([]QuestionV13, 0)
-	err = x.Context(ctx).In("id", questionIDs).In("question.status", []int{entity2.QuestionStatusAvailable, entity2.QuestionStatusClosed}).Find(&questionList, &QuestionV13{})
+	err = x.Context(ctx).In("id", questionIDs).In("question.status", []int{entity.QuestionStatusAvailable, entity.QuestionStatusClosed}).Find(&questionList, &QuestionV13{})
 	if err != nil {
 		return fmt.Errorf("get questions failed: %w", err)
 	}
@@ -173,7 +173,7 @@ func updateTagCount(ctx context.Context, x *xorm.Engine) error {
 		_, ok := questionsAvailableMap[question.ID]
 		if ok {
 			questionsAvailableMap[question.ID] = true
-			if question.Show == entity2.QuestionHide {
+			if question.Show == entity.QuestionHide {
 				questionsHideMap[question.ID] = true
 			}
 		}
@@ -181,7 +181,7 @@ func updateTagCount(ctx context.Context, x *xorm.Engine) error {
 
 	for id, ok := range questionsHideMap {
 		if ok {
-			if _, err = x.Context(ctx).Cols("status").Update(&entity2.TagRel{Status: entity2.TagRelStatusHide}, &entity2.TagRel{ObjectID: id}); err != nil {
+			if _, err = x.Context(ctx).Cols("status").Update(&entity.TagRel{Status: entity.TagRelStatusHide}, &entity.TagRel{ObjectID: id}); err != nil {
 				log.Errorf("update %+v config failed: %s", id, err)
 			}
 		}
@@ -189,15 +189,15 @@ func updateTagCount(ctx context.Context, x *xorm.Engine) error {
 
 	for id, ok := range questionsAvailableMap {
 		if !ok {
-			if _, err = x.Context(ctx).Cols("status").Update(&entity2.TagRel{Status: entity2.TagRelStatusDeleted}, &entity2.TagRel{ObjectID: id}); err != nil {
+			if _, err = x.Context(ctx).Cols("status").Update(&entity.TagRel{Status: entity.TagRelStatusDeleted}, &entity.TagRel{ObjectID: id}); err != nil {
 				log.Errorf("update %+v config failed: %s", id, err)
 			}
 		}
 	}
 
 	//select tag count
-	newTagRelList := make([]entity2.TagRel, 0)
-	err = x.Context(ctx).Find(&newTagRelList, &entity2.TagRel{Status: entity2.TagRelStatusAvailable})
+	newTagRelList := make([]entity.TagRel, 0)
+	err = x.Context(ctx).Find(&newTagRelList, &entity.TagRel{Status: entity.TagRelStatusAvailable})
 	if err != nil {
 		return fmt.Errorf("get tag rel failed: %w", err)
 	}
@@ -210,8 +210,8 @@ func updateTagCount(ctx context.Context, x *xorm.Engine) error {
 			tagCountMap[v.TagID]++
 		}
 	}
-	TagList := make([]entity2.Tag, 0)
-	err = x.Context(ctx).Find(&TagList, &entity2.Tag{})
+	TagList := make([]entity.Tag, 0)
+	err = x.Context(ctx).Find(&TagList, &entity.Tag{})
 	if err != nil {
 		return fmt.Errorf("get tag  failed: %w", err)
 	}
@@ -219,13 +219,13 @@ func updateTagCount(ctx context.Context, x *xorm.Engine) error {
 		_, ok := tagCountMap[tag.ID]
 		if ok {
 			tag.QuestionCount = tagCountMap[tag.ID]
-			if _, err = x.Context(ctx).Update(tag, &entity2.Tag{ID: tag.ID}); err != nil {
+			if _, err = x.Context(ctx).Update(tag, &entity.Tag{ID: tag.ID}); err != nil {
 				log.Errorf("update %+v tag failed: %s", tag.ID, err)
 				return fmt.Errorf("update tag failed: %w", err)
 			}
 		} else {
 			tag.QuestionCount = 0
-			if _, err = x.Context(ctx).Cols("question_count").Update(tag, &entity2.Tag{ID: tag.ID}); err != nil {
+			if _, err = x.Context(ctx).Cols("question_count").Update(tag, &entity.Tag{ID: tag.ID}); err != nil {
 				log.Errorf("update %+v tag failed: %s", tag.ID, err)
 				return fmt.Errorf("update tag failed: %w", err)
 			}
@@ -237,7 +237,7 @@ func updateTagCount(ctx context.Context, x *xorm.Engine) error {
 // updateUserQuestionCount update user question count
 func updateUserQuestionCount(ctx context.Context, x *xorm.Engine) error {
 	questionList := make([]QuestionV13, 0)
-	err := x.Context(ctx).In("status", []int{entity2.QuestionStatusAvailable, entity2.QuestionStatusClosed}).Find(&questionList, &QuestionV13{})
+	err := x.Context(ctx).In("status", []int{entity.QuestionStatusAvailable, entity.QuestionStatusClosed}).Find(&questionList, &QuestionV13{})
 	if err != nil {
 		return fmt.Errorf("get question  failed: %w", err)
 	}
@@ -250,8 +250,8 @@ func updateUserQuestionCount(ctx context.Context, x *xorm.Engine) error {
 			userQuestionCountMap[question.UserID]++
 		}
 	}
-	userList := make([]entity2.User, 0)
-	err = x.Context(ctx).Find(&userList, &entity2.User{})
+	userList := make([]entity.User, 0)
+	err = x.Context(ctx).Find(&userList, &entity.User{})
 	if err != nil {
 		return fmt.Errorf("get user  failed: %w", err)
 	}
@@ -259,13 +259,13 @@ func updateUserQuestionCount(ctx context.Context, x *xorm.Engine) error {
 		_, ok := userQuestionCountMap[user.ID]
 		if ok {
 			user.QuestionCount = userQuestionCountMap[user.ID]
-			if _, err = x.Context(ctx).Cols("question_count").Update(user, &entity2.User{ID: user.ID}); err != nil {
+			if _, err = x.Context(ctx).Cols("question_count").Update(user, &entity.User{ID: user.ID}); err != nil {
 				log.Errorf("update %+v user failed: %s", user.ID, err)
 				return fmt.Errorf("update user failed: %w", err)
 			}
 		} else {
 			user.QuestionCount = 0
-			if _, err = x.Context(ctx).Cols("question_count").Update(user, &entity2.User{ID: user.ID}); err != nil {
+			if _, err = x.Context(ctx).Cols("question_count").Update(user, &entity.User{ID: user.ID}); err != nil {
 				log.Errorf("update %+v user failed: %s", user.ID, err)
 				return fmt.Errorf("update user failed: %w", err)
 			}
@@ -289,7 +289,7 @@ func (AnswerV13) TableName() string {
 // updateUserAnswerCount update user answer count
 func updateUserAnswerCount(ctx context.Context, x *xorm.Engine) error {
 	answers := make([]AnswerV13, 0)
-	err := x.Context(ctx).Find(&answers, &AnswerV13{Status: entity2.AnswerStatusAvailable})
+	err := x.Context(ctx).Find(&answers, &AnswerV13{Status: entity.AnswerStatusAvailable})
 	if err != nil {
 		return fmt.Errorf("get answers failed: %w", err)
 	}
@@ -302,8 +302,8 @@ func updateUserAnswerCount(ctx context.Context, x *xorm.Engine) error {
 			userAnswerCount[answer.UserID]++
 		}
 	}
-	userList := make([]entity2.User, 0)
-	err = x.Context(ctx).Find(&userList, &entity2.User{})
+	userList := make([]entity.User, 0)
+	err = x.Context(ctx).Find(&userList, &entity.User{})
 	if err != nil {
 		return fmt.Errorf("get user failed: %w", err)
 	}
@@ -311,13 +311,13 @@ func updateUserAnswerCount(ctx context.Context, x *xorm.Engine) error {
 		_, ok := userAnswerCount[user.ID]
 		if ok {
 			user.AnswerCount = userAnswerCount[user.ID]
-			if _, err = x.Context(ctx).Cols("answer_count").Update(user, &entity2.User{ID: user.ID}); err != nil {
+			if _, err = x.Context(ctx).Cols("answer_count").Update(user, &entity.User{ID: user.ID}); err != nil {
 				log.Errorf("update %+v user failed: %s", user.ID, err)
 				return fmt.Errorf("update user failed: %w", err)
 			}
 		} else {
 			user.AnswerCount = 0
-			if _, err = x.Context(ctx).Cols("answer_count").Update(user, &entity2.User{ID: user.ID}); err != nil {
+			if _, err = x.Context(ctx).Cols("answer_count").Update(user, &entity.User{ID: user.ID}); err != nil {
 				log.Errorf("update %+v user failed: %s", user.ID, err)
 				return fmt.Errorf("update user failed: %w", err)
 			}
@@ -381,8 +381,8 @@ func inBoxData(ctx context.Context, x *xorm.Engine) error {
 	if err != nil {
 		return err
 	}
-	msglist := make([]entity2.Notification, 0)
-	err = x.Context(ctx).Find(&msglist, &entity2.Notification{})
+	msglist := make([]entity.Notification, 0)
+	err = x.Context(ctx).Find(&msglist, &entity.Notification{})
 	if err != nil {
 		return fmt.Errorf("get Notification failed: %w", err)
 	}
@@ -395,7 +395,7 @@ func inBoxData(ctx context.Context, x *xorm.Engine) error {
 		_, ok := constant2.NotificationMsgTypeMapping[Content.NotificationAction]
 		if ok {
 			v.MsgType = constant2.NotificationMsgTypeMapping[Content.NotificationAction]
-			if _, err = x.Context(ctx).Update(v, &entity2.Notification{ID: v.ID}); err != nil {
+			if _, err = x.Context(ctx).Update(v, &entity.Notification{ID: v.ID}); err != nil {
 				log.Errorf("update %+v Notification failed: %s", v.ID, err)
 			}
 		}

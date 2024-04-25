@@ -5,7 +5,7 @@ import (
 	"github.com/lawyer/commons/base/translator"
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
@@ -26,7 +26,7 @@ type VoteRepo interface {
 	CancelVote(ctx context.Context, op *schema.VoteOperationInfo) (err error)
 	GetAndSaveVoteResult(ctx context.Context, objectID, objectType string) (up, down int64, err error)
 	ListUserVotes(ctx context.Context, userID string, page int, pageSize int, activityTypes []int) (
-		voteList []*entity2.Activity, total int64, err error)
+		voteList []*entity.Activity, total int64, err error)
 }
 
 // VoteService user service
@@ -173,7 +173,7 @@ func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWith
 		}
 		item.VoteType = translator.Tr(lang,
 			constant2.ActivityTypeFlagMapping[activityTypeMapping[voteInfo.ActivityType]])
-		if objInfo.QuestionStatus == entity2.QuestionStatusDeleted {
+		if objInfo.QuestionStatus == entity.QuestionStatusDeleted {
 			item.Title = translator.Tr(lang, constant2.DeletedQuestionTitleTrKey)
 		}
 		votes = append(votes, item)

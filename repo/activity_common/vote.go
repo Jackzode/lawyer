@@ -6,7 +6,7 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
@@ -32,7 +32,7 @@ func (vr *VoteRepo) GetVoteStatus(ctx context.Context, objectID, userID string) 
 
 	objectID = uid.DeShortID(objectID)
 	for _, action := range []string{"vote_up", "vote_down"} {
-		activityType, _, _, err := repo.ActivityRepo.GetActivityTypeByObjID(ctx, objectID, action)
+		activityType, _, _, err := repoCommon.NewActivityRepo().GetActivityTypeByObjID(ctx, objectID, action)
 		if err != nil {
 			return ""
 		}

@@ -3,7 +3,7 @@ package migrations
 import (
 	"context"
 	"fmt"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 
 	"github.com/lawyer/service/permission"
 	"github.com/segmentfault/pacman/log"
@@ -11,12 +11,12 @@ import (
 )
 
 func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
-	err := x.Context(ctx).Sync(new(entity2.Role), new(entity2.RolePowerRel), new(entity2.Power), new(entity2.UserRoleRel))
+	err := x.Context(ctx).Sync(new(entity.Role), new(entity.RolePowerRel), new(entity.Power), new(entity.UserRoleRel))
 	if err != nil {
 		return err
 	}
 
-	roles := []*entity2.Role{
+	roles := []*entity.Role{
 		{ID: 1, Name: "User", Description: "Default with no special access."},
 		{ID: 2, Name: "Admin", Description: "Have the full power to access the site."},
 		{ID: 3, Name: "Moderator", Description: "Has access to all posts except admin settings."},
@@ -24,7 +24,7 @@ func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
 
 	// insert default roles
 	for _, role := range roles {
-		exist, err := x.Context(ctx).Get(&entity2.Role{ID: role.ID, Name: role.Name})
+		exist, err := x.Context(ctx).Get(&entity.Role{ID: role.ID, Name: role.Name})
 		if err != nil {
 			return err
 		}
@@ -37,7 +37,7 @@ func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
 		}
 	}
 
-	powers := []*entity2.Power{
+	powers := []*entity.Power{
 		{ID: 1, Name: "admin access", PowerType: permission.AdminAccess, Description: "admin access"},
 		{ID: 2, Name: "question add", PowerType: permission.QuestionAdd, Description: "question add"},
 		{ID: 3, Name: "question edit", PowerType: permission.QuestionEdit, Description: "question edit"},
@@ -74,7 +74,7 @@ func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
 	}
 	// insert default powers
 	for _, power := range powers {
-		exist, err := x.Context(ctx).Get(&entity2.Power{ID: power.ID})
+		exist, err := x.Context(ctx).Get(&entity.Power{ID: power.ID})
 		if err != nil {
 			return err
 		}
@@ -88,7 +88,7 @@ func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
 		}
 	}
 
-	rolePowerRels := []*entity2.RolePowerRel{
+	rolePowerRels := []*entity.RolePowerRel{
 		{RoleID: 2, PowerType: permission.AdminAccess},
 		{RoleID: 2, PowerType: permission.QuestionAdd},
 		{RoleID: 2, PowerType: permission.QuestionEdit},
@@ -161,7 +161,7 @@ func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
 
 	// insert default powers
 	for _, rel := range rolePowerRels {
-		exist, err := x.Context(ctx).Get(&entity2.RolePowerRel{RoleID: rel.RoleID, PowerType: rel.PowerType})
+		exist, err := x.Context(ctx).Get(&entity.RolePowerRel{RoleID: rel.RoleID, PowerType: rel.PowerType})
 		if err != nil {
 			return err
 		}
@@ -174,7 +174,7 @@ func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
 		}
 	}
 
-	adminUserRoleRel := &entity2.UserRoleRel{
+	adminUserRoleRel := &entity.UserRoleRel{
 		UserID: "1",
 		RoleID: 2,
 	}
@@ -190,24 +190,24 @@ func addRoleFeatures(ctx context.Context, x *xorm.Engine) error {
 		}
 	}
 
-	defaultConfigTable := []*entity2.Config{
+	defaultConfigTable := []*entity.Config{
 		{ID: 115, Key: "rank.question.close", Value: `-1`},
 		{ID: 116, Key: "rank.question.reopen", Value: `-1`},
 		{ID: 117, Key: "rank.tag.use_reserved_tag", Value: `-1`},
 	}
 	for _, c := range defaultConfigTable {
-		exist, err := x.Context(ctx).Get(&entity2.Config{ID: c.ID, Key: c.Key})
+		exist, err := x.Context(ctx).Get(&entity.Config{ID: c.ID, Key: c.Key})
 		if err != nil {
 			return fmt.Errorf("get config failed: %w", err)
 		}
 		if exist {
-			if _, err = x.Context(ctx).Update(c, &entity2.Config{ID: c.ID, Key: c.Key}); err != nil {
+			if _, err = x.Context(ctx).Update(c, &entity.Config{ID: c.ID, Key: c.Key}); err != nil {
 				log.Errorf("update %+v config failed: %s", c, err)
 				return fmt.Errorf("update config failed: %w", err)
 			}
 			continue
 		}
-		if _, err = x.Context(ctx).Insert(&entity2.Config{ID: c.ID, Key: c.Key, Value: c.Value}); err != nil {
+		if _, err = x.Context(ctx).Insert(&entity.Config{ID: c.ID, Key: c.Key, Value: c.Value}); err != nil {
 			log.Errorf("insert %+v config failed: %s", c, err)
 			return fmt.Errorf("add config failed: %w", err)
 		}

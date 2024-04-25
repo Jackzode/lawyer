@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/segmentfault/pacman/log"
 
@@ -68,7 +68,7 @@ func (m *Mentor) do(taskName string, fn func()) {
 }
 
 func (m *Mentor) checkTableExist() {
-	m.Done, m.err = m.engine.Context(m.ctx).IsTableExist(&entity2.Version{})
+	m.Done, m.err = m.engine.Context(m.ctx).IsTableExist(&entity.Version{})
 	if m.Done {
 		fmt.Println("[database] already exists")
 	}
@@ -79,12 +79,12 @@ func (m *Mentor) syncTable() {
 }
 
 func (m *Mentor) initVersionTable() {
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.Version{ID: 1, VersionNumber: ExpectedVersion()})
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.Version{ID: 1, VersionNumber: ExpectedVersion()})
 }
 
 func (m *Mentor) initAdminUser() {
 	generateFromPassword, _ := bcrypt.GenerateFromPassword([]byte(m.userData.AdminPassword), bcrypt.DefaultCost)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.User{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.User{
 		ID:           "1",
 		Username:     m.userData.AdminName,
 		Pass:         string(generateFromPassword),
@@ -105,8 +105,8 @@ func (m *Mentor) initDefaultRankPrivileges() {
 	chooseOption := schema.DefaultPrivilegeOptions.Choose(schema.PrivilegeLevel2)
 	for _, privilege := range chooseOption.Privileges {
 		_, err := m.engine.Context(m.ctx).Update(
-			&entity2.Config{Value: fmt.Sprintf("%d", privilege.Value)},
-			&entity2.Config{Key: privilege.Key},
+			&entity.Config{Value: fmt.Sprintf("%d", privilege.Value)},
+			&entity.Config{Key: privilege.Key},
 		)
 		if err != nil {
 			log.Error(err)
@@ -136,7 +136,7 @@ func (m *Mentor) initSiteInfoInterface() {
 		"time_zone": "UTC",
 	}
 	interfaceDataBytes, _ := json.Marshal(interfaceData)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "interface",
 		Content: string(interfaceDataBytes),
 		Status:  1,
@@ -150,7 +150,7 @@ func (m *Mentor) initSiteInfoGeneralData() {
 		"contact_email": m.userData.ContactEmail,
 	}
 	generalDataBytes, _ := json.Marshal(generalData)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "general",
 		Content: string(generalDataBytes),
 		Status:  1,
@@ -165,7 +165,7 @@ func (m *Mentor) initSiteInfoLoginConfig() {
 		"login_required":            m.userData.LoginRequired,
 	}
 	loginConfigDataBytes, _ := json.Marshal(loginConfig)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "login",
 		Content: string(loginConfigDataBytes),
 		Status:  1,
@@ -174,7 +174,7 @@ func (m *Mentor) initSiteInfoLoginConfig() {
 
 func (m *Mentor) initSiteInfoThemeConfig() {
 	themeConfig := `{"theme":"default","theme_config":{"default":{"navbar_style":"colored","primary_color":"#0033ff"}}}`
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "theme",
 		Content: themeConfig,
 		Status:  1,
@@ -187,7 +187,7 @@ func (m *Mentor) initSiteInfoSEOConfig() {
 		"robots":    defaultSEORobotTxt + m.userData.SiteURL + "/sitemap.xml",
 	}
 	seoDataBytes, _ := json.Marshal(seoData)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "seo",
 		Content: string(seoDataBytes),
 		Status:  1,
@@ -206,7 +206,7 @@ func (m *Mentor) initSiteInfoUsersConfig() {
 		"allow_update_location":     true,
 	}
 	usersDataBytes, _ := json.Marshal(usersData)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "users",
 		Content: string(usersDataBytes),
 		Status:  1,
@@ -218,7 +218,7 @@ func (m *Mentor) initSiteInfoPrivilegeRank() {
 		"level": schema.PrivilegeLevel2,
 	}
 	privilegeRankDataBytes, _ := json.Marshal(privilegeRankData)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "privileges",
 		Content: string(privilegeRankDataBytes),
 		Status:  1,
@@ -230,7 +230,7 @@ func (m *Mentor) initSiteInfoWrite() {
 		"restrict_answer": true,
 	}
 	writeDataBytes, _ := json.Marshal(writeData)
-	_, m.err = m.engine.Context(m.ctx).Insert(&entity2.SiteInfo{
+	_, m.err = m.engine.Context(m.ctx).Insert(&entity.SiteInfo{
 		Type:    "write",
 		Content: string(writeDataBytes),
 		Status:  1,

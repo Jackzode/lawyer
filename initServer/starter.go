@@ -6,7 +6,6 @@ import (
 	"github.com/lawyer/commons/config"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/initServer/initServices"
-	"github.com/lawyer/repo"
 )
 
 func checkErr(err error) {
@@ -26,8 +25,8 @@ func Init(filename string) *gin.Engine {
 	// init i18n
 	err = services.InitTranslator(c.I18n)
 	checkErr(err)
-	repo.InitRepo()
-	//services.InitServices()
+	//repo.InitRepo()
+	services.InitServices()
 	application, err := initApplication(c.Debug)
 	checkErr(err)
 	return application

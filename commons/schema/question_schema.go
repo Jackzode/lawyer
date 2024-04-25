@@ -2,7 +2,7 @@ package schema
 
 import (
 	"github.com/lawyer/commons/base/validator"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"strings"
 	"time"
 
@@ -391,7 +391,7 @@ type AdminQuestionPageReq struct {
 }
 
 func (req *AdminQuestionPageReq) Check() (errField []*validator.FormErrorField, err error) {
-	status, ok := entity2.AdminQuestionSearchStatus[req.StatusCond]
+	status, ok := entity.AdminQuestionSearchStatus[req.StatusCond]
 	if ok {
 		req.Status = status
 	}
@@ -420,7 +420,7 @@ func (req *AdminAnswerPageReq) Check() (errField []*validator.FormErrorField, er
 		req.QuestionID = ""
 	}
 
-	if status, ok := entity2.AdminAnswerSearchStatus[req.StatusCond]; ok {
+	if status, ok := entity.AdminAnswerSearchStatus[req.StatusCond]; ok {
 		req.Status = status
 	}
 	if req.Status == 0 {

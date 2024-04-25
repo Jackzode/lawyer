@@ -3,7 +3,7 @@ package permission
 import (
 	"context"
 	"github.com/lawyer/commons/base/translator"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 )
@@ -21,7 +21,7 @@ func GetTagPermission(ctx context.Context, status int, canEdit, canDelete, canRe
 		})
 	}
 
-	if canDelete && status != entity2.TagStatusDeleted {
+	if canDelete && status != entity.TagStatusDeleted {
 		actions = append(actions, &schema.PermissionMemberAction{
 			Action: "delete",
 			Name:   translator.Tr(lang, deleteActionName),
@@ -29,7 +29,7 @@ func GetTagPermission(ctx context.Context, status int, canEdit, canDelete, canRe
 		})
 	}
 
-	if canRecover && status == entity2.QuestionStatusDeleted {
+	if canRecover && status == entity.QuestionStatusDeleted {
 		actions = append(actions, &schema.PermissionMemberAction{
 			Action: "undelete",
 			Name:   translator.Tr(lang, undeleteActionName),

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"time"
@@ -35,11 +35,11 @@ func (rs *RevisionService) RevisionAudit(ctx context.Context, req *schema.Revisi
 	if !exist {
 		return
 	}
-	if revisioninfo.Status != entity2.RevisionUnreviewedStatus {
+	if revisioninfo.Status != entity.RevisionUnreviewedStatus {
 		return
 	}
 	if req.Operation == schema.RevisionAuditReject {
-		err = repo.RevisionRepo.UpdateStatus(ctx, req.ID, entity2.RevisionReviewRejectStatus, req.UserID)
+		err = repo.RevisionRepo.UpdateStatus(ctx, req.ID, entity.RevisionReviewRejectStatus, req.UserID)
 		return
 	}
 	if req.Operation == schema.RevisionAuditApprove {
@@ -74,7 +74,7 @@ func (rs *RevisionService) RevisionAudit(ctx context.Context, req *schema.Revisi
 		if saveErr != nil {
 			return saveErr
 		}
-		err = repo.RevisionRepo.UpdateStatus(ctx, req.ID, entity2.RevisionReviewPassStatus, req.UserID)
+		err = repo.RevisionRepo.UpdateStatus(ctx, req.ID, entity.RevisionReviewPassStatus, req.UserID)
 		return
 	}
 
@@ -94,7 +94,7 @@ func (rs *RevisionService) revisionAuditQuestion(ctx context.Context, revisionit
 		if dbquestion.PostUpdateTime.Unix() > PostUpdateTime.Unix() {
 			PostUpdateTime = dbquestion.PostUpdateTime
 		}
-		question := &entity2.Question{}
+		question := &entity.Question{}
 		question.ID = questioninfo.ID
 		question.Title = questioninfo.Title
 		question.OriginalText = questioninfo.Content
@@ -145,7 +145,7 @@ func (rs *RevisionService) revisionAuditAnswer(ctx context.Context, revisionitem
 			PostUpdateTime = dbquestion.PostUpdateTime
 		}
 
-		insertData := new(entity2.Answer)
+		insertData := new(entity.Answer)
 		insertData.ID = answerinfo.ID
 		insertData.OriginalText = answerinfo.Content
 		insertData.ParsedText = answerinfo.HTML
@@ -190,7 +190,7 @@ func (rs *RevisionService) revisionAuditAnswer(ctx context.Context, revisionitem
 func (rs *RevisionService) revisionAuditTag(ctx context.Context, revisionitem *schema.GetRevisionResp) (err error) {
 	taginfo, ok := revisionitem.ContentParsed.(*schema.GetTagResp)
 	if ok {
-		tag := &entity2.Tag{}
+		tag := &entity.Tag{}
 		tag.ID = taginfo.TagID
 		tag.OriginalText = taginfo.OriginalText
 		tag.ParsedText = taginfo.ParsedText
@@ -208,7 +208,7 @@ func (rs *RevisionService) revisionAuditTag(ctx context.Context, revisionitem *s
 		}
 		if tagInfo.MainTagID == 0 && len(tagInfo.SlugName) > 0 {
 			log.Debugf("tag %s update slug_name", tagInfo.SlugName)
-			tagList, err := repo.TagRepo.GetTagList(ctx, &entity2.Tag{MainTagID: converter.StringToInt64(tagInfo.ID)})
+			tagList, err := repo.TagRepo.GetTagList(ctx, &entity.Tag{MainTagID: converter.StringToInt64(tagInfo.ID)})
 			if err != nil {
 				return err
 			}
@@ -280,8 +280,8 @@ func (rs *RevisionService) GetUnreviewedRevisionPage(ctx context.Context, req *s
 // GetRevisionList get revision list all
 func (rs *RevisionService) GetRevisionList(ctx context.Context, req *schema.GetRevisionListReq) (resp []schema.GetRevisionResp, err error) {
 	var (
-		rev  entity2.Revision
-		revs []entity2.Revision
+		rev  entity.Revision
+		revs []entity.Revision
 	)
 
 	resp = []schema.GetRevisionResp{}
@@ -318,11 +318,11 @@ func (rs *RevisionService) GetRevisionList(ctx context.Context, req *schema.GetR
 func (rs *RevisionService) parseItem(ctx context.Context, item *schema.GetRevisionResp) {
 	var (
 		err          error
-		question     entity2.QuestionWithTagsRevision
+		question     entity.QuestionWithTagsRevision
 		questionInfo *schema.QuestionInfo
-		answer       entity2.Answer
+		answer       entity.Answer
 		answerInfo   *schema.AnswerInfo
-		tag          entity2.Tag
+		tag          entity.Tag
 		tagInfo      *schema.GetTagResp
 	)
 

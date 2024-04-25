@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	constant2 "github.com/lawyer/commons/constant"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
@@ -20,7 +20,7 @@ import (
 
 // ActivityRepo activity repository
 type ActivityRepo interface {
-	GetObjectAllActivity(ctx context.Context, objectID string, showVote bool) (activityList []*entity2.Activity, err error)
+	GetObjectAllActivity(ctx context.Context, objectID string, showVote bool) (activityList []*entity.Activity, err error)
 }
 
 // ActivityService activity service
@@ -54,7 +54,7 @@ func (as *ActivityService) GetObjectTimeline(ctx context.Context, req *schema.Ge
 			ActivityID: act.ID,
 			RevisionID: converter.IntToString(act.RevisionID),
 			CreatedAt:  act.CreatedAt.Unix(),
-			Cancelled:  act.Cancelled == entity2.ActivityCancelled,
+			Cancelled:  act.Cancelled == entity.ActivityCancelled,
 			ObjectID:   act.ObjectID,
 			UserInfo:   &schema.UserBasicInfo{},
 		}
@@ -158,7 +158,7 @@ func (as *ActivityService) getTimelineActivityComment(ctx context.Context, objec
 	}
 	if activityType == constant2.ActClosed {
 		// only question can be closed
-		metaInfo, err := services.MetaService.GetMetaByObjectIdAndKey(ctx, objectID, entity2.QuestionCloseReasonKey)
+		metaInfo, err := services.MetaService.GetMetaByObjectIdAndKey(ctx, objectID, entity.QuestionCloseReasonKey)
 		if err != nil {
 			log.Error(err)
 		} else {
@@ -227,7 +227,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 
 	switch objInfo.ObjectType {
 	case constant2.QuestionObjectType:
-		data := &entity2.QuestionWithTagsRevision{}
+		data := &entity.QuestionWithTagsRevision{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
 			log.Errorf("revision parsing error %s", err)
 			return resp, nil
@@ -244,7 +244,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 		resp.Title = data.Title
 		resp.OriginalText = data.OriginalText
 	case constant2.AnswerObjectType:
-		data := &entity2.Answer{}
+		data := &entity.Answer{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
 			log.Errorf("revision parsing error %s", err)
 			return resp, nil
@@ -252,7 +252,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 		resp.Title = objInfo.Title // answer show question title
 		resp.OriginalText = data.OriginalText
 	case constant2.TagObjectType:
-		data := &entity2.Tag{}
+		data := &entity.Tag{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
 			log.Errorf("revision parsing error %s", err)
 			return resp, nil

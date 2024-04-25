@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
@@ -24,25 +24,25 @@ import (
 
 // QuestionRepo question repository
 type QuestionRepo interface {
-	AddQuestion(ctx context.Context, question *entity2.Question) (err error)
+	AddQuestion(ctx context.Context, question *entity.Question) (err error)
 	RemoveQuestion(ctx context.Context, id string) (err error)
-	UpdateQuestion(ctx context.Context, question *entity2.Question, Cols []string) (err error)
-	GetQuestion(ctx context.Context, id string) (question *entity2.Question, exist bool, err error)
-	GetQuestionList(ctx context.Context, question *entity2.Question) (questions []*entity2.Question, err error)
+	UpdateQuestion(ctx context.Context, question *entity.Question, Cols []string) (err error)
+	GetQuestion(ctx context.Context, id string) (question *entity.Question, exist bool, err error)
+	GetQuestionList(ctx context.Context, question *entity.Question) (questions []*entity.Question, err error)
 	GetQuestionPage(ctx context.Context, page, pageSize int, userID, tagID, orderCond string, inDays int) (
-		questionList []*entity2.Question, total int64, err error)
+		questionList []*entity.Question, total int64, err error)
 	UpdateQuestionStatus(ctx context.Context, questionID string, status int) (err error)
-	UpdateQuestionStatusWithOutUpdateTime(ctx context.Context, question *entity2.Question) (err error)
+	UpdateQuestionStatusWithOutUpdateTime(ctx context.Context, question *entity.Question) (err error)
 	RecoverQuestion(ctx context.Context, questionID string) (err error)
-	UpdateQuestionOperation(ctx context.Context, question *entity2.Question) (err error)
-	GetQuestionsByTitle(ctx context.Context, title string, pageSize int) (questionList []*entity2.Question, err error)
+	UpdateQuestionOperation(ctx context.Context, question *entity.Question) (err error)
+	GetQuestionsByTitle(ctx context.Context, title string, pageSize int) (questionList []*entity.Question, err error)
 	UpdatePvCount(ctx context.Context, questionID string) (err error)
 	UpdateAnswerCount(ctx context.Context, questionID string, num int) (err error)
 	UpdateCollectionCount(ctx context.Context, questionID string) (count int64, err error)
-	UpdateAccepted(ctx context.Context, question *entity2.Question) (err error)
-	UpdateLastAnswer(ctx context.Context, question *entity2.Question) (err error)
-	FindByID(ctx context.Context, id []string) (questionList []*entity2.Question, err error)
-	AdminQuestionPage(ctx context.Context, search *schema.AdminQuestionPageReq) ([]*entity2.Question, int64, error)
+	UpdateAccepted(ctx context.Context, question *entity.Question) (err error)
+	UpdateLastAnswer(ctx context.Context, question *entity.Question) (err error)
+	FindByID(ctx context.Context, id []string) (questionList []*entity.Question, err error)
+	AdminQuestionPage(ctx context.Context, search *schema.AdminQuestionPageReq) ([]*entity.Question, int64, error)
 	GetQuestionCount(ctx context.Context) (count int64, err error)
 	GetUserQuestionCount(ctx context.Context, userID string) (count int64, err error)
 	SitemapQuestions(ctx context.Context, page, pageSize int) (questionIDList []*schema.SiteMapQuestionInfo, err error)
@@ -78,28 +78,28 @@ func (qs *QuestionCommon) UpdateCollectionCount(ctx context.Context, questionID 
 }
 
 func (qs *QuestionCommon) UpdateAccepted(ctx context.Context, questionID, AnswerID string) error {
-	question := &entity2.Question{}
+	question := &entity.Question{}
 	question.ID = questionID
 	question.AcceptedAnswerID = AnswerID
 	return repo.QuestionRepo.UpdateAccepted(ctx, question)
 }
 
 func (qs *QuestionCommon) UpdateLastAnswer(ctx context.Context, questionID, AnswerID string) error {
-	question := &entity2.Question{}
+	question := &entity.Question{}
 	question.ID = questionID
 	question.LastAnswerID = AnswerID
 	return repo.QuestionRepo.UpdateLastAnswer(ctx, question)
 }
 
 func (qs *QuestionCommon) UpdatePostTime(ctx context.Context, questionID string) error {
-	questioninfo := &entity2.Question{}
+	questioninfo := &entity.Question{}
 	now := time.Now()
 	questioninfo.ID = questionID
 	questioninfo.PostUpdateTime = now
 	return repo.QuestionRepo.UpdateQuestion(ctx, questioninfo, []string{"post_update_time"})
 }
 func (qs *QuestionCommon) UpdatePostSetTime(ctx context.Context, questionID string, setTime time.Time) error {
-	questioninfo := &entity2.Question{}
+	questioninfo := &entity.Question{}
 	questioninfo.ID = questionID
 	questioninfo.PostUpdateTime = setTime
 	return repo.QuestionRepo.UpdateQuestion(ctx, questioninfo, []string{"post_update_time"})
@@ -163,8 +163,8 @@ func (qs *QuestionCommon) Info(ctx context.Context, questionID string, loginUser
 
 	//
 	if showinfo.Status == 2 {
-		var metainfo *entity2.Meta
-		metainfo, err = services.MetaService.GetMetaByObjectIdAndKey(ctx, dbinfo.ID, entity2.QuestionCloseReasonKey)
+		var metainfo *entity.Meta
+		metainfo, err = services.MetaService.GetMetaByObjectIdAndKey(ctx, dbinfo.ID, entity.QuestionCloseReasonKey)
 		if err != nil {
 			log.Error(err)
 		} else {
@@ -257,7 +257,7 @@ func (qs *QuestionCommon) Info(ctx context.Context, questionID string, loginUser
 }
 
 func (qs *QuestionCommon) FormatQuestionsPage(
-	ctx context.Context, questionList []*entity2.Question, loginUserID string, orderCond string) (
+	ctx context.Context, questionList []*entity.Question, loginUserID string, orderCond string) (
 	formattedQuestions []*schema.QuestionPageResp, err error) {
 	formattedQuestions = make([]*schema.QuestionPageResp, 0)
 	questionIDs := make([]string, 0)
@@ -358,7 +358,7 @@ func (qs *QuestionCommon) FormatQuestionsPage(
 	return formattedQuestions, nil
 }
 
-func (qs *QuestionCommon) FormatQuestions(ctx context.Context, questionList []*entity2.Question, loginUserID string) ([]*schema.QuestionInfo, error) {
+func (qs *QuestionCommon) FormatQuestions(ctx context.Context, questionList []*entity.Question, loginUserID string) ([]*schema.QuestionInfo, error) {
 	list := make([]*schema.QuestionInfo, 0)
 	objectIds := make([]string, 0)
 	userIds := make([]string, 0)
@@ -409,11 +409,11 @@ func (qs *QuestionCommon) RemoveQuestion(ctx context.Context, req *schema.Remove
 		return nil
 	}
 
-	if questionInfo.Status == entity2.QuestionStatusDeleted {
+	if questionInfo.Status == entity.QuestionStatusDeleted {
 		return nil
 	}
 
-	questionInfo.Status = entity2.QuestionStatusDeleted
+	questionInfo.Status = entity.QuestionStatusDeleted
 	err = repo.QuestionRepo.UpdateQuestionStatus(ctx, questionInfo.ID, questionInfo.Status)
 	if err != nil {
 		return err
@@ -440,7 +440,7 @@ func (qs *QuestionCommon) CloseQuestion(ctx context.Context, req *schema.CloseQu
 	if !has {
 		return nil
 	}
-	questionInfo.Status = entity2.QuestionStatusClosed
+	questionInfo.Status = entity.QuestionStatusClosed
 	err = repo.QuestionRepo.UpdateQuestionStatus(ctx, questionInfo.ID, questionInfo.Status)
 	if err != nil {
 		return err
@@ -450,7 +450,7 @@ func (qs *QuestionCommon) CloseQuestion(ctx context.Context, req *schema.CloseQu
 		CloseType: req.CloseType,
 		CloseMsg:  req.CloseMsg,
 	})
-	err = services.MetaService.AddMeta(ctx, req.ID, entity2.QuestionCloseReasonKey, string(closeMeta))
+	err = services.MetaService.AddMeta(ctx, req.ID, entity.QuestionCloseReasonKey, string(closeMeta))
 	if err != nil {
 		return err
 	}
@@ -529,11 +529,11 @@ func (qs *QuestionCommon) SetCache(ctx context.Context, cachekey string, info in
 	return nil
 }
 
-func (qs *QuestionCommon) ShowListFormat(ctx context.Context, data *entity2.Question) *schema.QuestionInfo {
+func (qs *QuestionCommon) ShowListFormat(ctx context.Context, data *entity.Question) *schema.QuestionInfo {
 	return qs.ShowFormat(ctx, data)
 }
 
-func (qs *QuestionCommon) ShowFormat(ctx context.Context, data *entity2.Question) *schema.QuestionInfo {
+func (qs *QuestionCommon) ShowFormat(ctx context.Context, data *entity.Question) *schema.QuestionInfo {
 	info := schema.QuestionInfo{}
 	info.ID = data.ID
 	if utils.GetEnableShortID(ctx) {
@@ -580,7 +580,7 @@ func (qs *QuestionCommon) ShowFormat(ctx context.Context, data *entity2.Question
 	info.Tags = make([]*schema.TagResp, 0)
 	return &info
 }
-func (qs *QuestionCommon) ShowFormatWithTag(ctx context.Context, data *entity2.QuestionWithTagsRevision) *schema.QuestionInfo {
+func (qs *QuestionCommon) ShowFormatWithTag(ctx context.Context, data *entity.QuestionWithTagsRevision) *schema.QuestionInfo {
 	info := qs.ShowFormat(ctx, &data.Question)
 	Tags := make([]*schema.TagResp, 0)
 	for _, tag := range data.Tags {

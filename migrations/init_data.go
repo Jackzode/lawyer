@@ -1,7 +1,7 @@
 package migrations
 
 import (
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/service/permission"
 )
 
@@ -24,39 +24,39 @@ Sitemap: `
 
 var (
 	tables = []interface{}{
-		&entity2.Activity{},
-		&entity2.Answer{},
-		&entity2.Collection{},
-		&entity2.CollectionGroup{},
-		&entity2.Comment{},
-		&entity2.Config{},
-		&entity2.Meta{},
-		&entity2.Notification{},
-		&entity2.Question{},
-		&entity2.Report{},
-		&entity2.Revision{},
-		&entity2.SiteInfo{},
-		&entity2.Tag{},
-		&entity2.TagRel{},
-		&entity2.Uniqid{},
-		&entity2.User{},
-		&entity2.Version{},
-		&entity2.Role{},
-		&entity2.RolePowerRel{},
-		&entity2.Power{},
-		&entity2.UserRoleRel{},
-		&entity2.PluginConfig{},
-		&entity2.UserExternalLogin{},
-		&entity2.UserNotificationConfig{},
+		&entity.Activity{},
+		&entity.Answer{},
+		&entity.Collection{},
+		&entity.CollectionGroup{},
+		&entity.Comment{},
+		&entity.Config{},
+		&entity.Meta{},
+		&entity.Notification{},
+		&entity.Question{},
+		&entity.Report{},
+		&entity.Revision{},
+		&entity.SiteInfo{},
+		&entity.Tag{},
+		&entity.TagRel{},
+		&entity.Uniqid{},
+		&entity.User{},
+		&entity.Version{},
+		&entity.Role{},
+		&entity.RolePowerRel{},
+		&entity.Power{},
+		&entity.UserRoleRel{},
+		&entity.PluginConfig{},
+		&entity.UserExternalLogin{},
+		&entity.UserNotificationConfig{},
 	}
 
-	roles = []*entity2.Role{
+	roles = []*entity.Role{
 		{ID: 1, Name: "User", Description: "Default with no special access."},
 		{ID: 2, Name: "Admin", Description: "Have the full power to access the site."},
 		{ID: 3, Name: "Moderator", Description: "Has access to all posts except admin settings."},
 	}
 
-	powers = []*entity2.Power{
+	powers = []*entity.Power{
 		{ID: 1, Name: "admin access", PowerType: permission.AdminAccess, Description: "admin access"},
 		{ID: 2, Name: "question add", PowerType: permission.QuestionAdd, Description: "question add"},
 		{ID: 3, Name: "question edit", PowerType: permission.QuestionEdit, Description: "question edit"},
@@ -100,7 +100,7 @@ var (
 		{ID: 41, Name: "recover tag", PowerType: permission.TagUnDelete, Description: "recover deleted tag"},
 	}
 
-	rolePowerRels = []*entity2.RolePowerRel{
+	rolePowerRels = []*entity.RolePowerRel{
 		{RoleID: 2, PowerType: permission.AdminAccess},
 		{RoleID: 2, PowerType: permission.QuestionAdd},
 		{RoleID: 2, PowerType: permission.QuestionEdit},
@@ -187,12 +187,12 @@ var (
 		{RoleID: 3, PowerType: permission.TagUnDelete},
 	}
 
-	adminUserRoleRel = &entity2.UserRoleRel{
+	adminUserRoleRel = &entity.UserRoleRel{
 		UserID: "1",
 		RoleID: 2,
 	}
 
-	defaultConfigTable = []*entity2.Config{
+	defaultConfigTable = []*entity.Config{
 		{ID: 1, Key: "answer.accepted", Value: `15`},
 		{ID: 2, Key: "answer.voted_up", Value: `10`},
 		{ID: 3, Key: "question.voted_up", Value: `10`},

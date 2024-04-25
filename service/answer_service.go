@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	constant2 "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
@@ -38,7 +38,7 @@ func (as *AnswerService) RemoveAnswer(ctx context.Context, req *schema.RemoveAns
 		return nil
 	}
 	// if the status is deleted, return directly
-	if answerInfo.Status == entity2.AnswerStatusDeleted {
+	if answerInfo.Status == entity.AnswerStatusDeleted {
 		return nil
 	}
 	roleID, err := services.UserRoleRelService.GetUserRole(ctx, req.UserID)
@@ -107,7 +107,7 @@ func (as *AnswerService) RecoverAnswer(ctx context.Context, req *schema.RecoverA
 	if !exist {
 		return errors.BadRequest(reason.AnswerNotFound)
 	}
-	if answerInfo.Status != entity2.AnswerStatusDeleted {
+	if answerInfo.Status != entity.AnswerStatusDeleted {
 		return nil
 	}
 	if err = repo.AnswerRepo.RecoverAnswer(ctx, req.AnswerID); err != nil {
@@ -144,11 +144,11 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	if !exist {
 		return "", errors.BadRequest(reason.QuestionNotFound)
 	}
-	if questionInfo.Status == entity2.QuestionStatusClosed || questionInfo.Status == entity2.QuestionStatusDeleted {
+	if questionInfo.Status == entity.QuestionStatusClosed || questionInfo.Status == entity.QuestionStatusDeleted {
 		err = errors.BadRequest(reason.AnswerCannotAddByClosedQuestion)
 		return "", err
 	}
-	insertData := new(entity2.Answer)
+	insertData := new(entity.Answer)
 	insertData.UserID = req.UserID
 	insertData.OriginalText = req.Content
 	insertData.ParsedText = req.HTML
@@ -156,7 +156,7 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	insertData.QuestionID = req.QuestionID
 	insertData.RevisionID = "0"
 	insertData.LastEditUserID = "0"
-	insertData.Status = entity2.AnswerStatusAvailable
+	insertData.Status = entity.AnswerStatusAvailable
 	//insertData.UpdatedAt = now
 	if err = repo.AnswerRepo.AddAnswer(ctx, insertData); err != nil {
 		return "", err
@@ -238,7 +238,7 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 		return "", errors.BadRequest(reason.AnswerNotFound)
 	}
 
-	if answerInfo.Status == entity2.AnswerStatusDeleted {
+	if answerInfo.Status == entity.AnswerStatusDeleted {
 		return "", errors.BadRequest(reason.AnswerCannotUpdate)
 	}
 
@@ -247,7 +247,7 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 		return "", nil
 	}
 
-	insertData := &entity2.Answer{}
+	insertData := &entity.Answer{}
 	insertData.ID = req.ID
 	insertData.UserID = answerInfo.UserID
 	insertData.QuestionID = req.QuestionID
@@ -270,7 +270,7 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 	}
 
 	if !canUpdate {
-		revisionDTO.Status = entity2.RevisionUnreviewedStatus
+		revisionDTO.Status = entity.RevisionUnreviewedStatus
 	} else {
 		if err = repo.AnswerRepo.UpdateAnswer(ctx, insertData, []string{"original_text", "parsed_text", "updated_at", "last_edit_user_id"}); err != nil {
 			return "", err
@@ -280,7 +280,7 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 			return insertData.ID, err
 		}
 		as.notificationUpdateAnswer(ctx, questionInfo.UserID, insertData.ID, req.UserID)
-		revisionDTO.Status = entity2.RevisionReviewPassStatus
+		revisionDTO.Status = entity.RevisionReviewPassStatus
 	}
 
 	infoJSON, _ := json.Marshal(insertData)
@@ -318,7 +318,7 @@ func (as *AnswerService) AcceptAnswer(ctx context.Context, req *schema.AcceptAns
 	}
 
 	// find answer
-	var acceptedAnswerInfo *entity2.Answer
+	var acceptedAnswerInfo *entity.Answer
 	if len(req.AnswerID) > 1 {
 		acceptedAnswerInfo, exist, err = repo.AnswerRepo.GetByID(ctx, req.AnswerID)
 		if err != nil {
@@ -341,7 +341,7 @@ func (as *AnswerService) AcceptAnswer(ctx context.Context, req *schema.AcceptAns
 		log.Error("UpdateLastAnswer error", err.Error())
 	}
 
-	var oldAnswerInfo *entity2.Answer
+	var oldAnswerInfo *entity.Answer
 	if len(questionInfo.AcceptedAnswerID) > 1 {
 		oldAnswerInfo, _, err = repo.AnswerRepo.GetByID(ctx, questionInfo.AcceptedAnswerID)
 		if err != nil {
@@ -355,7 +355,7 @@ func (as *AnswerService) AcceptAnswer(ctx context.Context, req *schema.AcceptAns
 }
 
 func (as *AnswerService) updateAnswerRank(ctx context.Context, userID string,
-	questionInfo *entity2.Question, newAnswerInfo *entity2.Answer, oldAnswerInfo *entity2.Answer,
+	questionInfo *entity.Question, newAnswerInfo *entity.Answer, oldAnswerInfo *entity.Answer,
 ) {
 	// if this question is already been answered, should cancel old answer rank
 	if oldAnswerInfo != nil {
@@ -426,7 +426,7 @@ func (as *AnswerService) GetCountByUserIDQuestionID(ctx context.Context, userId 
 }
 
 func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.AdminUpdateAnswerStatusReq) error {
-	setStatus, ok := entity2.AdminAnswerSearchStatus[req.Status]
+	setStatus, ok := entity.AdminAnswerSearchStatus[req.Status]
 	if !ok {
 		return errors.BadRequest(reason.RequestFormatError)
 	}
@@ -442,7 +442,7 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 		return err
 	}
 
-	if setStatus == entity2.AnswerStatusDeleted {
+	if setStatus == entity.AnswerStatusDeleted {
 		// #2372 In order to simplify the process and complexity, as well as to consider if it is in-house,
 		// facing the problem of recovery.
 		//err = initServer.AnswerActivityService.DeleteAnswer(ctx, answerInfo.ID, answerInfo.CreatedAt, answerInfo.VoteCount)
@@ -468,7 +468,7 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 	}
 
 	// recover
-	if setStatus == entity2.QuestionStatusAvailable && answerInfo.Status == entity2.QuestionStatusDeleted {
+	if setStatus == entity.QuestionStatusAvailable && answerInfo.Status == entity.QuestionStatusDeleted {
 		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			TriggerUserID:    converter.StringToInt64(req.UserID),
@@ -482,7 +482,7 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 
 func (as *AnswerService) SearchList(ctx context.Context, req *schema.AnswerListReq) ([]*schema.AnswerInfo, int64, error) {
 	list := make([]*schema.AnswerInfo, 0)
-	dbSearch := entity2.AnswerSearch{}
+	dbSearch := entity.AnswerSearch{}
 	dbSearch.QuestionID = req.QuestionID
 	dbSearch.Page = req.Page
 	dbSearch.PageSize = req.PageSize
@@ -500,7 +500,7 @@ func (as *AnswerService) SearchList(ctx context.Context, req *schema.AnswerListR
 	return answerList, count, nil
 }
 
-func (as *AnswerService) SearchFormatInfo(ctx context.Context, answers []*entity2.Answer, req *schema.AnswerListReq) (
+func (as *AnswerService) SearchFormatInfo(ctx context.Context, answers []*entity.Answer, req *schema.AnswerListReq) (
 	[]*schema.AnswerInfo, error) {
 	list := make([]*schema.AnswerInfo, 0)
 	objectIDs := make([]string, 0)
@@ -542,7 +542,7 @@ func (as *AnswerService) SearchFormatInfo(ctx context.Context, answers []*entity
 	return list, nil
 }
 
-func (as *AnswerService) ShowFormat(ctx context.Context, data *entity2.Answer) *schema.AnswerInfo {
+func (as *AnswerService) ShowFormat(ctx context.Context, data *entity.Answer) *schema.AnswerInfo {
 	return services.AnswerCommon.ShowFormat(ctx, data)
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/repo/auth"
 	"github.com/redis/go-redis/v9"
 	"time"
 	"xorm.io/xorm"
@@ -55,7 +55,7 @@ func (ur *userAdminRepo) UpdateUserStatus(ctx context.Context, userID string, us
 	}
 	t, _ := json.Marshal(userCacheInfo)
 	log.Infof("user change status: %s", string(t))
-	err = repo.AuthRepo.SetUserStatus(ctx, userID, userCacheInfo)
+	err = auth.NewAuthRepo().SetUserStatus(ctx, userID, userCacheInfo)
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}

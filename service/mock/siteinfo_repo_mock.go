@@ -8,7 +8,7 @@ package mock
 
 import (
 	context "context"
-	entity2 "github.com/lawyer/commons/entity"
+	entity "github.com/lawyer/commons/entity"
 	reflect "reflect"
 
 	schema "github.com/lawyer/commons/schema"
@@ -39,10 +39,10 @@ func (m *MockSiteInfoRepo) EXPECT() *MockSiteInfoRepoMockRecorder {
 }
 
 // GetByType mocks base method.
-func (m *MockSiteInfoRepo) GetByType(ctx context.Context, siteType string) (*entity2.SiteInfo, bool, error) {
+func (m *MockSiteInfoRepo) GetByType(ctx context.Context, siteType string) (*entity.SiteInfo, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByType", ctx, siteType)
-	ret0, _ := ret[0].(*entity2.SiteInfo)
+	ret0, _ := ret[0].(*entity.SiteInfo)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -55,7 +55,7 @@ func (mr *MockSiteInfoRepoMockRecorder) GetByType(ctx, siteType interface{}) *go
 }
 
 // SaveByType mocks base method.
-func (m *MockSiteInfoRepo) SaveByType(ctx context.Context, siteType string, data *entity2.SiteInfo) error {
+func (m *MockSiteInfoRepo) SaveByType(ctx context.Context, siteType string, data *entity.SiteInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveByType", ctx, siteType, data)
 	ret0, _ := ret[0].(error)
@@ -106,7 +106,7 @@ func (mr *MockSiteInfoCommonServiceMockRecorder) FormatAvatar(ctx, originalAvata
 }
 
 // FormatListAvatar mocks base method.
-func (m *MockSiteInfoCommonService) FormatListAvatar(ctx context.Context, userList []*entity2.User) map[string]*schema.AvatarInfo {
+func (m *MockSiteInfoCommonService) FormatListAvatar(ctx context.Context, userList []*entity.User) map[string]*schema.AvatarInfo {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FormatListAvatar", ctx, userList)
 	ret0, _ := ret[0].(map[string]*schema.AvatarInfo)

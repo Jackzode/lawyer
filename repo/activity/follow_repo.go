@@ -3,9 +3,10 @@ package activity
 import (
 	"context"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
+
 	"github.com/redis/go-redis/v9"
 	"time"
 
@@ -36,7 +37,7 @@ func (ar *FollowRepo) Follow(ctx context.Context, objectID, userID string) error
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
-	activityType, err := repo.ActivityRepo.GetActivityTypeByObjectType(ctx, objectTypeStr, "follow")
+	activityType, err := repoCommon.NewActivityRepo().GetActivityTypeByObjectType(ctx, objectTypeStr, "follow")
 	if err != nil {
 		return err
 	}
@@ -44,7 +45,7 @@ func (ar *FollowRepo) Follow(ctx context.Context, objectID, userID string) error
 	_, err = ar.DB.Transaction(func(session *xorm.Session) (result any, err error) {
 		session = session.Context(ctx)
 		var (
-			existsActivity entity2.Activity
+			existsActivity entity.Activity
 			has            bool
 		)
 		result = nil
@@ -58,24 +59,24 @@ func (ar *FollowRepo) Follow(ctx context.Context, objectID, userID string) error
 			return
 		}
 
-		if has && existsActivity.Cancelled == entity2.ActivityAvailable {
+		if has && existsActivity.Cancelled == entity.ActivityAvailable {
 			return
 		}
 
 		if has {
 			_, err = session.Where(builder.Eq{"id": existsActivity.ID}).
 				Cols(`cancelled`).
-				Update(&entity2.Activity{
-					Cancelled: entity2.ActivityAvailable,
+				Update(&entity.Activity{
+					Cancelled: entity.ActivityAvailable,
 				})
 		} else {
 			// update existing activity with new user id and u object id
-			_, err = session.Insert(&entity2.Activity{
+			_, err = session.Insert(&entity.Activity{
 				UserID:           userID,
 				ObjectID:         objectID,
 				OriginalObjectID: objectID,
 				ActivityType:     activityType,
-				Cancelled:        entity2.ActivityAvailable,
+				Cancelled:        entity.ActivityAvailable,
 				Rank:             0,
 				HasRank:          0,
 			})
@@ -103,7 +104,7 @@ func (ar *FollowRepo) FollowCancel(ctx context.Context, objectID, userID string)
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
-	activityType, err := repo.ActivityRepo.GetActivityTypeByObjectType(ctx, objectTypeStr, "follow")
+	activityType, err := repoCommon.NewActivityRepo().GetActivityTypeByObjectType(ctx, objectTypeStr, "follow")
 	if err != nil {
 		return err
 	}
@@ -111,7 +112,7 @@ func (ar *FollowRepo) FollowCancel(ctx context.Context, objectID, userID string)
 	_, err = ar.DB.Transaction(func(session *xorm.Session) (result any, err error) {
 		session = session.Context(ctx)
 		var (
-			existsActivity entity2.Activity
+			existsActivity entity.Activity
 			has            bool
 		)
 		result = nil
@@ -125,13 +126,13 @@ func (ar *FollowRepo) FollowCancel(ctx context.Context, objectID, userID string)
 			return
 		}
 
-		if has && existsActivity.Cancelled == entity2.ActivityCancelled {
+		if has && existsActivity.Cancelled == entity.ActivityCancelled {
 			return
 		}
 		if _, err = session.Where("id = ?", existsActivity.ID).
 			Cols("cancelled").
-			Update(&entity2.Activity{
-				Cancelled:   entity2.ActivityCancelled,
+			Update(&entity.Activity{
+				Cancelled:   entity.ActivityCancelled,
 				CancelledAt: time.Now(),
 			}); err != nil {
 			return
@@ -149,11 +150,11 @@ func (ar *FollowRepo) updateFollows(ctx context.Context, session *xorm.Session, 
 	}
 	switch objectType {
 	case "question":
-		_, err = session.Where("id = ?", objectID).Incr("follow_count", follows).Update(&entity2.Question{})
+		_, err = session.Where("id = ?", objectID).Incr("follow_count", follows).Update(&entity.Question{})
 	case "user":
-		_, err = session.Where("id = ?", objectID).Incr("follow_count", follows).Update(&entity2.User{})
+		_, err = session.Where("id = ?", objectID).Incr("follow_count", follows).Update(&entity.User{})
 	case "tag":
-		_, err = session.Where("id = ?", objectID).Incr("follow_count", follows).Update(&entity2.Tag{})
+		_, err = session.Where("id = ?", objectID).Incr("follow_count", follows).Update(&entity.Tag{})
 	default:
 		err = errors.InternalServer(reason.DisallowFollow).WithMsg("this object can't be followed")
 	}

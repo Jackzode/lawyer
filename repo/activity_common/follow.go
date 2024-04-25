@@ -3,9 +3,9 @@ package activity_common
 import (
 	"context"
 	"github.com/lawyer/commons/constant/reason"
-	entity2 "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/lawyer/repo"
+	"github.com/lawyer/repoCommon"
 	"github.com/redis/go-redis/v9"
 	"xorm.io/xorm"
 
@@ -36,19 +36,19 @@ func (ar *FollowRepo) GetFollowAmount(ctx context.Context, objectID string) (fol
 	}
 	switch objectType {
 	case "question":
-		model := &entity2.Question{}
+		model := &entity.Question{}
 		_, err = ar.DB.Context(ctx).Where("id = ?", objectID).Cols("`follow_count`").Get(model)
 		if err == nil {
 			follows = int(model.FollowCount)
 		}
 	case "user":
-		model := &entity2.User{}
+		model := &entity.User{}
 		_, err = ar.DB.Context(ctx).Where("id = ?", objectID).Cols("`follow_count`").Get(model)
 		if err == nil {
 			follows = int(model.FollowCount)
 		}
 	case "tag":
-		model := &entity2.Tag{}
+		model := &entity.Tag{}
 		_, err = ar.DB.Context(ctx).Where("id = ?", objectID).Cols("`follow_count`").Get(model)
 		if err == nil {
 			follows = int(model.FollowCount)
@@ -69,7 +69,7 @@ func (ar *FollowRepo) GetFollowUserIDs(ctx context.Context, objectID string) (us
 	if err != nil {
 		return nil, err
 	}
-	activityType, err := repo.ActivityRepo.GetActivityTypeByObjectType(ctx, objectTypeStr, "follow")
+	activityType, err := repoCommon.NewActivityRepo().GetActivityTypeByObjectType(ctx, objectTypeStr, "follow")
 	if err != nil {
 		log.Errorf("can't get activity type by object key: %s", objectTypeStr)
 		return nil, err
@@ -77,7 +77,7 @@ func (ar *FollowRepo) GetFollowUserIDs(ctx context.Context, objectID string) (us
 
 	userIDs = make([]string, 0)
 	session := ar.DB.Context(ctx).Select("user_id")
-	session.Table(entity2.Activity{}.TableName())
+	session.Table(entity.Activity{}.TableName())
 	session.Where("object_id = ?", objectID)
 	session.Where("activity_type = ?", activityType)
 	session.Where("cancelled = 0")
@@ -91,12 +91,12 @@ func (ar *FollowRepo) GetFollowUserIDs(ctx context.Context, objectID string) (us
 // GetFollowIDs get all follow id list
 func (ar *FollowRepo) GetFollowIDs(ctx context.Context, userID, objectKey string) (followIDs []string, err error) {
 	followIDs = make([]string, 0)
-	activityType, err := repo.ActivityRepo.GetActivityTypeByObjectType(ctx, objectKey, "follow")
+	activityType, err := repoCommon.NewActivityRepo().GetActivityTypeByObjectType(ctx, objectKey, "follow")
 	if err != nil {
 		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
 	session := ar.DB.Context(ctx).Select("object_id")
-	session.Table(entity2.Activity{}.TableName())
+	session.Table(entity.Activity{}.TableName())
 	session.Where("user_id = ? AND activity_type = ?", userID, activityType)
 	session.Where("cancelled = 0")
 	err = session.Find(&followIDs)
@@ -113,12 +113,12 @@ func (ar *FollowRepo) IsFollowed(ctx context.Context, userID, objectID string) (
 		return false, err
 	}
 
-	activityType, err := repo.ActivityRepo.GetActivityTypeByObjectType(ctx, objectKey, "follow")
+	activityType, err := repoCommon.NewActivityRepo().GetActivityTypeByObjectType(ctx, objectKey, "follow")
 	if err != nil {
 		return false, err
 	}
 
-	at := &entity2.Activity{}
+	at := &entity.Activity{}
 	has, err := ar.DB.Context(ctx).Where("user_id = ? AND object_id = ? AND activity_type = ?", userID, objectID, activityType).Get(at)
 	if err != nil {
 		return false, err
@@ -126,7 +126,7 @@ func (ar *FollowRepo) IsFollowed(ctx context.Context, userID, objectID string) (
 	if !has {
 		return false, nil
 	}
-	if at.Cancelled == entity2.ActivityCancelled {
+	if at.Cancelled == entity.ActivityCancelled {
 		return false, nil
 	} else {
 		return true, nil
