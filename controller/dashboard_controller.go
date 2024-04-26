@@ -3,22 +3,21 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
-	"github.com/lawyer/service/dashboard"
+	"github.com/lawyer/service"
 )
 
 type DashboardController struct {
-	dashboardService dashboard.DashboardService
+	dashboardService service.DashboardService
 }
 
 // NewDashboardController new controller
 func NewDashboardController(
-	dashboardService dashboard.DashboardService,
+	dashboardService service.DashboardService,
 ) *DashboardController {
 	return &DashboardController{
 		dashboardService: dashboardService,
 	}
 }
-
 
 func (ac *DashboardController) DashboardInfo(ctx *gin.Context) {
 	info, err := ac.dashboardService.Statistical(ctx)

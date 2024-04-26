@@ -10,32 +10,28 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	services "github.com/lawyer/initServer/initServices"
 	middleware "github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/service"
-	"github.com/lawyer/service/action"
 	"github.com/lawyer/service/permission"
-	"github.com/lawyer/service/rank"
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // AnswerController answer controller
 type AnswerController struct {
 	answerService         *service.AnswerService
-	rankService           *rank.RankService
-	actionService         *action.CaptchaService
-	siteInfoCommonService siteinfo_common.SiteInfoCommonService
+	rankService           *service.RankService
+	actionService         *service.CaptchaService
+	siteInfoCommonService service.SiteInfoCommonService
 	rateLimitMiddleware   *middleware.RateLimitMiddleware
 }
 
 // NewAnswerController new controller
 func NewAnswerController(
 	answerService *service.AnswerService,
-	rankService *rank.RankService,
-	actionService *action.CaptchaService,
-	siteInfoCommonService siteinfo_common.SiteInfoCommonService,
+	rankService *service.RankService,
+	actionService *service.CaptchaService,
+	siteInfoCommonService service.SiteInfoCommonService,
 	rateLimitMiddleware *middleware.RateLimitMiddleware,
 ) *AnswerController {
 	return &AnswerController{
@@ -128,7 +124,7 @@ func (ac *AnswerController) RecoverAnswer(ctx *gin.Context) {
 		return
 	}
 
-	err = services.AnswerService.RecoverAnswer(ctx, req)
+	err = service.AnswerServicer.RecoverAnswer(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -146,7 +142,7 @@ func (ac *AnswerController) Get(ctx *gin.Context) {
 	id = uid.DeShortID(id)
 	userID := middleware.GetLoginUserIDFromContext(ctx)
 
-	info, questionInfo, has, err := services.AnswerService.Get(ctx, id, userID)
+	info, questionInfo, has, err := service.AnswerServicer.Get(ctx, id, userID)
 	if err != nil {
 		handler.HandleResponse(ctx, err, gin.H{})
 		return
@@ -190,7 +186,7 @@ func (ac *AnswerController) Add(ctx *gin.Context) {
 	req.QuestionID = uid.DeShortID(req.QuestionID)
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := service.RankServicer.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.AnswerEdit,
 		permission.AnswerDelete,
 		permission.LinkUrlLimit,
@@ -203,7 +199,7 @@ func (ac *AnswerController) Add(ctx *gin.Context) {
 	linkUrlLimitUser := canList[2]
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin || !linkUrlLimitUser {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionAnswer, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionAnswer, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -214,7 +210,7 @@ func (ac *AnswerController) Add(ctx *gin.Context) {
 		}
 	}
 
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, permission.AnswerAdd, "")
+	can, err := service.RankServicer.CheckOperationPermission(ctx, req.UserID, permission.AnswerAdd, "")
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -224,14 +220,14 @@ func (ac *AnswerController) Add(ctx *gin.Context) {
 		return
 	}
 
-	write, err := services.SiteInfoCommonService.GetSiteWrite(ctx)
+	write, err := service.SiteInfoCommonServicer.GetSiteWrite(ctx)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
 	}
 	if write.RestrictAnswer {
 		// check if there's already an answer by this user
-		ids, err := services.AnswerService.GetCountByUserIDQuestionID(ctx, req.UserID, req.QuestionID)
+		ids, err := service.AnswerServicer.GetCountByUserIDQuestionID(ctx, req.UserID, req.QuestionID)
 		if err != nil {
 			handler.HandleResponse(ctx, err, nil)
 			return
@@ -242,15 +238,15 @@ func (ac *AnswerController) Add(ctx *gin.Context) {
 		}
 	}
 
-	answerID, err := services.AnswerService.Insert(ctx, req)
+	answerID, err := service.AnswerServicer.Insert(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
 	}
 	if !isAdmin || !linkUrlLimitUser {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionAnswer, req.UserID)
+		service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionAnswer, req.UserID)
 	}
-	info, questionInfo, has, err := services.AnswerService.Get(ctx, answerID, req.UserID)
+	info, questionInfo, has, err := service.AnswerServicer.Get(ctx, answerID, req.UserID)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -260,7 +256,7 @@ func (ac *AnswerController) Add(ctx *gin.Context) {
 		return
 	}
 
-	objectOwner := services.RankService.CheckOperationObjectOwner(ctx, req.UserID, info.ID)
+	objectOwner := service.RankServicer.CheckOperationObjectOwner(ctx, req.UserID, info.ID)
 	req.CanEdit = canList[0] || objectOwner
 	req.CanDelete = canList[1] || objectOwner
 	if !can {
@@ -292,7 +288,7 @@ func (ac *AnswerController) Update(ctx *gin.Context) {
 	}
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := service.RankServicer.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.AnswerEdit,
 		permission.AnswerEditWithoutReview,
 		permission.LinkUrlLimit,
@@ -305,7 +301,7 @@ func (ac *AnswerController) Update(ctx *gin.Context) {
 	linkUrlLimitUser := canList[2]
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin || !linkUrlLimitUser {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEdit, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEdit, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -316,7 +312,7 @@ func (ac *AnswerController) Update(ctx *gin.Context) {
 		}
 	}
 
-	objectOwner := services.RankService.CheckOperationObjectOwner(ctx, req.UserID, req.ID)
+	objectOwner := service.RankServicer.CheckOperationObjectOwner(ctx, req.UserID, req.ID)
 	req.CanEdit = canList[0] || objectOwner
 	req.NoNeedReview = canList[1] || objectOwner
 	if !req.CanEdit {
@@ -324,15 +320,15 @@ func (ac *AnswerController) Update(ctx *gin.Context) {
 		return
 	}
 
-	_, err = services.AnswerService.Update(ctx, req)
+	_, err = service.AnswerServicer.Update(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
 	}
 	if !isAdmin || !linkUrlLimitUser {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionEdit, req.UserID)
+		service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionEdit, req.UserID)
 	}
-	_, _, _, err = services.AnswerService.Get(ctx, req.ID, req.UserID)
+	_, _, _, err = service.AnswerServicer.Get(ctx, req.ID, req.UserID)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -362,7 +358,7 @@ func (ac *AnswerController) AnswerList(ctx *gin.Context) {
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	req.QuestionID = uid.DeShortID(req.QuestionID)
 
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := service.RankServicer.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.AnswerEdit,
 		permission.AnswerDelete,
 		permission.AnswerUnDelete,
@@ -375,7 +371,7 @@ func (ac *AnswerController) AnswerList(ctx *gin.Context) {
 	req.CanDelete = canList[1]
 	req.CanRecover = canList[2]
 
-	list, count, err := services.AnswerService.SearchList(ctx, req)
+	list, count, err := service.AnswerServicer.SearchList(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -405,7 +401,7 @@ func (ac *AnswerController) Accepted(ctx *gin.Context) {
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	req.AnswerID = uid.DeShortID(req.AnswerID)
 	req.QuestionID = uid.DeShortID(req.QuestionID)
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, permission.AnswerAccept, req.QuestionID)
+	can, err := service.RankServicer.CheckOperationPermission(ctx, req.UserID, permission.AnswerAccept, req.QuestionID)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -415,7 +411,7 @@ func (ac *AnswerController) Accepted(ctx *gin.Context) {
 		return
 	}
 
-	err = services.AnswerService.AcceptAnswer(ctx, req)
+	err = service.AnswerServicer.AcceptAnswer(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -437,6 +433,6 @@ func (ac *AnswerController) AdminUpdateAnswerStatus(ctx *gin.Context) {
 	req.AnswerID = uid.DeShortID(req.AnswerID)
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := services.AnswerService.AdminSetAnswerStatus(ctx, req)
+	err := service.AnswerServicer.AdminSetAnswerStatus(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

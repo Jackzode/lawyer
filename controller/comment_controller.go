@@ -9,31 +9,28 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	services "github.com/lawyer/initServer/initServices"
 	middleware2 "github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/service/action"
-	"github.com/lawyer/service/comment"
+	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
-	"github.com/lawyer/service/rank"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // CommentController comment controller
 type CommentController struct {
-	commentService      *comment.CommentService
-	rankService         *rank.RankService
-	actionService       *action.CaptchaService
+	commentService      *service.CommentService
+	rankService         *service.RankService
+	actionService       *service.CaptchaService
 	rateLimitMiddleware *middleware2.RateLimitMiddleware
 }
 
-// services.CommentService, services.RankService,
-// services.CaptchaService, rateLimitMiddleware
+// service.CommentServicer, service.RankServicer,
+// service.CaptchaServicer, rateLimitMiddleware
 // NewCommentController new controller
 func NewCommentController(
-	commentService *comment.CommentService,
-	rankService *rank.RankService,
-	actionService *action.CaptchaService,
+	commentService *service.CommentService,
+	rankService *service.RankService,
+	actionService *service.CaptchaService,
 	rateLimitMiddleware *middleware2.RateLimitMiddleware,
 ) *CommentController {
 	return &CommentController{
@@ -105,9 +102,9 @@ func (cc *CommentController) AddComment(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := services.CommentService.AddComment(ctx, req)
+	resp, err := service.CommentServicer.AddComment(ctx, req)
 	if !isAdmin || !linkUrlLimitUser {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionComment, req.UserID)
+		service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionComment, req.UserID)
 	}
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -131,7 +128,7 @@ func (cc *CommentController) RemoveComment(ctx *gin.Context) {
 	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
 	isAdmin := middleware2.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionDelete, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionDelete, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -141,7 +138,7 @@ func (cc *CommentController) RemoveComment(ctx *gin.Context) {
 			return
 		}
 	}
-	can, err := services.RankService.CheckOperationPermission(ctx, req.UserID, permission.CommentDelete, req.CommentID)
+	can, err := service.RankServicer.CheckOperationPermission(ctx, req.UserID, permission.CommentDelete, req.CommentID)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -151,9 +148,9 @@ func (cc *CommentController) RemoveComment(ctx *gin.Context) {
 		return
 	}
 
-	err = services.CommentService.RemoveComment(ctx, req)
+	err = service.CommentServicer.RemoveComment(ctx, req)
 	if !isAdmin {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionDelete, req.UserID)
+		service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionDelete, req.UserID)
 	}
 	handler.HandleResponse(ctx, err, nil)
 }
@@ -176,7 +173,7 @@ func (cc *CommentController) UpdateComment(ctx *gin.Context) {
 
 	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
 	req.IsAdmin = middleware2.GetIsAdminFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := service.RankServicer.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.CommentEdit,
 		permission.LinkUrlLimit,
 	})
@@ -184,7 +181,7 @@ func (cc *CommentController) UpdateComment(ctx *gin.Context) {
 		handler.HandleResponse(ctx, err, nil)
 		return
 	}
-	req.CanEdit = canList[0] || services.RankService.CheckOperationObjectOwner(ctx, req.UserID, req.CommentID)
+	req.CanEdit = canList[0] || service.RankServicer.CheckOperationObjectOwner(ctx, req.UserID, req.CommentID)
 	linkUrlLimitUser := canList[1]
 	if !req.CanEdit {
 		handler.HandleResponse(ctx, errors.Forbidden(reason.RankFailToMeetTheCondition), nil)
@@ -192,7 +189,7 @@ func (cc *CommentController) UpdateComment(ctx *gin.Context) {
 	}
 
 	if !req.IsAdmin || !linkUrlLimitUser {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEdit, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEdit, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -203,9 +200,9 @@ func (cc *CommentController) UpdateComment(ctx *gin.Context) {
 		}
 	}
 
-	resp, err := services.CommentService.UpdateComment(ctx, req)
+	resp, err := service.CommentServicer.UpdateComment(ctx, req)
 	if !req.IsAdmin || !linkUrlLimitUser {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionEdit, req.UserID)
+		service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionEdit, req.UserID)
 	}
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -228,7 +225,7 @@ func (cc *CommentController) GetCommentWithPage(ctx *gin.Context) {
 	}
 	req.ObjectID = uid.DeShortID(req.ObjectID)
 	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := service.RankServicer.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.CommentEdit,
 		permission.CommentDelete,
 	})
@@ -239,7 +236,7 @@ func (cc *CommentController) GetCommentWithPage(ctx *gin.Context) {
 	req.CanEdit = canList[0]
 	req.CanDelete = canList[1]
 
-	resp, err := services.CommentService.GetCommentWithPage(ctx, req)
+	resp, err := service.CommentServicer.GetCommentWithPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -261,7 +258,7 @@ func (cc *CommentController) GetCommentPersonalWithPage(ctx *gin.Context) {
 
 	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
 
-	resp, err := services.CommentService.GetCommentPersonalWithPage(ctx, req)
+	resp, err := service.CommentServicer.GetCommentPersonalWithPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -280,7 +277,7 @@ func (cc *CommentController) GetComment(ctx *gin.Context) {
 	}
 
 	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
-	canList, err := services.RankService.CheckOperationPermissions(ctx, req.UserID, []string{
+	canList, err := service.RankServicer.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.CommentEdit,
 		permission.CommentDelete,
 	})
@@ -291,6 +288,6 @@ func (cc *CommentController) GetComment(ctx *gin.Context) {
 	req.CanEdit = canList[0]
 	req.CanDelete = canList[1]
 
-	resp, err := services.CommentService.GetComment(ctx, req)
+	resp, err := service.CommentServicer.GetComment(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }

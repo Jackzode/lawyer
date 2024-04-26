@@ -6,7 +6,6 @@ import (
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
-	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-// RevisionService user service
+// RevisionComServicer user service
 type RevisionService struct {
 }
 
@@ -115,11 +114,11 @@ func (rs *RevisionService) revisionAuditQuestion(ctx context.Context, revisionit
 		objectTagData := schema.TagChange{}
 		objectTagData.ObjectID = question.ID
 		objectTagData.Tags = objectTagTags
-		saveerr = services.TagCommonService.ObjectChangeTag(ctx, &objectTagData)
+		saveerr = TagCommonServicer.ObjectChangeTag(ctx, &objectTagData)
 		if saveerr != nil {
 			return saveerr
 		}
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           revisionitem.UserID,
 			ObjectID:         revisionitem.ObjectID,
 			ActivityTypeKey:  constant.ActQuestionEdited,
@@ -155,7 +154,7 @@ func (rs *RevisionService) revisionAuditAnswer(ctx context.Context, revisionitem
 		if saveerr != nil {
 			return saveerr
 		}
-		saveerr = services.QuestionCommon.UpdatePostSetTime(ctx, answerinfo.QuestionID, PostUpdateTime)
+		saveerr = QuestionCommonServicer.UpdatePostSetTime(ctx, answerinfo.QuestionID, PostUpdateTime)
 		if saveerr != nil {
 			return saveerr
 		}
@@ -174,9 +173,9 @@ func (rs *RevisionService) revisionAuditAnswer(ctx context.Context, revisionitem
 		}
 		msg.ObjectType = constant.AnswerObjectType
 		msg.NotificationAction = constant.NotificationUpdateAnswer
-		services.NotificationQueueService.Send(ctx, msg)
+		NotificationQueueService.Send(ctx, msg)
 
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           revisionitem.UserID,
 			ObjectID:         insertData.ID,
 			OriginalObjectID: insertData.ID,
@@ -199,7 +198,7 @@ func (rs *RevisionService) revisionAuditTag(ctx context.Context, revisionitem *s
 			return saveerr
 		}
 
-		tagInfo, exist, err := services.TagCommonService.GetTagByID(ctx, taginfo.TagID)
+		tagInfo, exist, err := TagCommonServicer.GetTagByID(ctx, taginfo.TagID)
 		if err != nil {
 			return err
 		}
@@ -222,7 +221,7 @@ func (rs *RevisionService) revisionAuditTag(ctx context.Context, revisionitem *s
 			}
 		}
 
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           revisionitem.UserID,
 			ObjectID:         taginfo.TagID,
 			OriginalObjectID: taginfo.TagID,
@@ -252,7 +251,7 @@ func (rs *RevisionService) GetUnreviewedRevisionPage(ctx context.Context, req *s
 			continue
 		}
 		item.Type = constant.ObjectTypeNumberMapping[rev.ObjectType]
-		info, err := services.ObjService.GetUnreviewedRevisionInfo(ctx, rev.ObjectID)
+		info, err := ObjServicer.GetUnreviewedRevisionInfo(ctx, rev.ObjectID)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +262,7 @@ func (rs *RevisionService) GetUnreviewedRevisionPage(ctx context.Context, req *s
 		item.UnreviewedInfo = revisionitem
 
 		// get user info
-		userInfo, exists, e := services.UserCommon.GetUserBasicInfoByID(ctx, revisionitem.UserID)
+		userInfo, exists, e := UserCommonServicer.GetUserBasicInfoByID(ctx, revisionitem.UserID)
 		if e != nil {
 			return nil, e
 		}
@@ -302,7 +301,7 @@ func (rs *RevisionService) GetRevisionList(ctx context.Context, req *schema.GetR
 		rs.parseItem(ctx, &item)
 
 		// get user info
-		userInfo, exists, e := services.UserCommon.GetUserBasicInfoByID(ctx, item.UserID)
+		userInfo, exists, e := UserCommonServicer.GetUserBasicInfoByID(ctx, item.UserID)
 		if e != nil {
 			return nil, e
 		}
@@ -332,14 +331,14 @@ func (rs *RevisionService) parseItem(ctx context.Context, item *schema.GetRevisi
 		if err != nil {
 			break
 		}
-		questionInfo = services.QuestionCommon.ShowFormatWithTag(ctx, &question)
+		questionInfo = QuestionCommonServicer.ShowFormatWithTag(ctx, &question)
 		item.ContentParsed = questionInfo
 	case constant.ObjectTypeStrMapping["answer"]:
 		err = json.Unmarshal([]byte(item.Content), &answer)
 		if err != nil {
 			break
 		}
-		answerInfo = services.AnswerService.ShowFormat(ctx, &answer)
+		answerInfo = AnswerServicer.ShowFormat(ctx, &answer)
 		item.ContentParsed = answerInfo
 	case constant.ObjectTypeStrMapping["tag"]:
 		err = json.Unmarshal([]byte(item.Content), &tag)

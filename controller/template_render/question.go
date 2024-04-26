@@ -2,8 +2,8 @@ package templaterender
 
 import (
 	constant "github.com/lawyer/commons/constant"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
+	services "github.com/lawyer/service"
 	"html/template"
 	"math"
 	"net/http"
@@ -14,20 +14,20 @@ import (
 )
 
 func (t *TemplateRenderController) Index(ctx *gin.Context, req *schema.QuestionPageReq) ([]*schema.QuestionPageResp, int64, error) {
-	return services.QuestionService.GetQuestionPage(ctx, req)
+	return services.QuestionServicer.GetQuestionPage(ctx, req)
 }
 
 func (t *TemplateRenderController) QuestionDetail(ctx *gin.Context, id string) (resp *schema.QuestionInfo, err error) {
-	return services.QuestionService.GetQuestion(ctx, id, "", schema.QuestionPermission{})
+	return services.QuestionServicer.GetQuestion(ctx, id, "", schema.QuestionPermission{})
 }
 
 func (t *TemplateRenderController) Sitemap(ctx *gin.Context) {
-	general, err := services.SiteInfoService.GetSiteGeneral(ctx)
+	general, err := services.SiteInfoServicer.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Error("get site general failed:", err)
 		return
 	}
-	siteInfo, err := services.SiteInfoCommonService.GetSiteSeo(ctx)
+	siteInfo, err := services.SiteInfoCommonServicer.GetSiteSeo(ctx)
 	if err != nil {
 		log.Error("get site GetSiteSeo failed:", err)
 		return
@@ -73,12 +73,12 @@ func (t *TemplateRenderController) Sitemap(ctx *gin.Context) {
 }
 
 func (t *TemplateRenderController) SitemapPage(ctx *gin.Context, page int) error {
-	general, err := services.SiteInfoService.GetSiteGeneral(ctx)
+	general, err := services.SiteInfoServicer.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Error("get site general failed:", err)
 		return err
 	}
-	siteInfo, err := services.SiteInfoCommonService.GetSiteSeo(ctx)
+	siteInfo, err := services.SiteInfoCommonServicer.GetSiteSeo(ctx)
 	if err != nil {
 		log.Error("get site GetSiteSeo failed:", err)
 		return err

@@ -3,7 +3,7 @@ package controller_admin
 import (
 	"encoding/json"
 	"github.com/lawyer/commons/base/handler"
-	services "github.com/lawyer/initServer/initServices"
+	services "github.com/lawyer/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/schema"

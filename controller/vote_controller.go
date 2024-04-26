@@ -9,9 +9,9 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
+	"github.com/lawyer/service"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -42,7 +42,7 @@ func (vc *VoteController) VoteUp(ctx *gin.Context) {
 	req.ObjectID = uid.DeShortID(req.ObjectID)
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	can, needRank, err := services.RankService.CheckVotePermission(ctx, req.UserID, req.ObjectID, true)
+	can, needRank, err := service.RankServicer.CheckVotePermission(ctx, req.UserID, req.ObjectID, true)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -56,7 +56,7 @@ func (vc *VoteController) VoteUp(ctx *gin.Context) {
 
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionVote, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionVote, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -68,9 +68,9 @@ func (vc *VoteController) VoteUp(ctx *gin.Context) {
 	}
 
 	if !isAdmin {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionVote, req.UserID)
+		service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionVote, req.UserID)
 	}
-	resp, err := services.VoteService.VoteUp(ctx, req)
+	resp, err := service.VoteServicer.VoteUp(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, schema.ErrTypeToast)
 	} else {
@@ -97,7 +97,7 @@ func (vc *VoteController) VoteDown(ctx *gin.Context) {
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 
-	can, needRank, err := services.RankService.CheckVotePermission(ctx, req.UserID, req.ObjectID, false)
+	can, needRank, err := service.RankServicer.CheckVotePermission(ctx, req.UserID, req.ObjectID, false)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
 		return
@@ -110,7 +110,7 @@ func (vc *VoteController) VoteDown(ctx *gin.Context) {
 	}
 
 	if !isAdmin {
-		captchaPass := services.CaptchaService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionVote, req.UserID, req.CaptchaID, req.CaptchaCode)
+		captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionVote, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
 			errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "captcha_code",
@@ -121,9 +121,9 @@ func (vc *VoteController) VoteDown(ctx *gin.Context) {
 		}
 	}
 	if !isAdmin {
-		services.CaptchaService.ActionRecordAdd(ctx, entity.CaptchaActionVote, req.UserID)
+		service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionVote, req.UserID)
 	}
-	resp, err := services.VoteService.VoteDown(ctx, req)
+	resp, err := service.VoteServicer.VoteDown(ctx, req)
 	if err != nil {
 		handler.HandleResponse(ctx, err, schema.ErrTypeToast)
 	} else {
@@ -150,6 +150,6 @@ func (vc *VoteController) UserVotes(ctx *gin.Context) {
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	resp, err := services.VoteService.ListUserVotes(ctx, req)
+	resp, err := service.VoteServicer.ListUserVotes(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }

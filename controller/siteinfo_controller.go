@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant"
-	"github.com/lawyer/service/siteinfo_common"
+	"github.com/lawyer/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,11 +12,11 @@ import (
 )
 
 type SiteInfoController struct {
-	siteInfoService siteinfo_common.SiteInfoCommonService
+	siteInfoService service.SiteInfoCommonService
 }
 
 // NewSiteInfoController new site info controller.
-func NewSiteInfoController(siteInfoService siteinfo_common.SiteInfoCommonService) *SiteInfoController {
+func NewSiteInfoController(siteInfoService service.SiteInfoCommonService) *SiteInfoController {
 	return &SiteInfoController{
 		siteInfoService: siteInfoService,
 	}

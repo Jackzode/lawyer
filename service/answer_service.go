@@ -6,10 +6,8 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
-	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
-	role2 "github.com/lawyer/service/role"
 	"time"
 
 	"github.com/lawyer/commons/schema"
@@ -20,7 +18,7 @@ import (
 	"github.com/segmentfault/pacman/log"
 )
 
-// AnswerService user service
+// AnswerServicer user service
 type AnswerService struct {
 }
 
@@ -41,11 +39,11 @@ func (as *AnswerService) RemoveAnswer(ctx context.Context, req *schema.RemoveAns
 	if answerInfo.Status == entity.AnswerStatusDeleted {
 		return nil
 	}
-	roleID, err := services.UserRoleRelService.GetUserRole(ctx, req.UserID)
+	roleID, err := UserRoleRelServicer.GetUserRole(ctx, req.UserID)
 	if err != nil {
 		return err
 	}
-	if roleID != role2.RoleAdminID && roleID != role2.RoleModeratorID {
+	if roleID != RoleAdminID && roleID != RoleModeratorID {
 		if answerInfo.UserID != req.UserID {
 			return errors.BadRequest(reason.AnswerCannotDeleted)
 		}
@@ -71,7 +69,7 @@ func (as *AnswerService) RemoveAnswer(ctx context.Context, req *schema.RemoveAns
 	}
 
 	// user add question count
-	err = services.QuestionCommon.UpdateAnswerCount(ctx, answerInfo.QuestionID)
+	err = QuestionCommonServicer.UpdateAnswerCount(ctx, answerInfo.QuestionID)
 	if err != nil {
 		log.Error("IncreaseAnswerCount error", err.Error())
 	}
@@ -79,17 +77,17 @@ func (as *AnswerService) RemoveAnswer(ctx context.Context, req *schema.RemoveAns
 	if err != nil {
 		log.Error("GetCountByUserID error", err.Error())
 	}
-	err = services.UserCommon.UpdateAnswerCount(ctx, answerInfo.UserID, int(userAnswerCount))
+	err = UserCommonServicer.UpdateAnswerCount(ctx, answerInfo.UserID, int(userAnswerCount))
 	if err != nil {
 		log.Error("user IncreaseAnswerCount error", err.Error())
 	}
 	// #2372 In order to simplify the process and complexity, as well as to consider if it is in-house,
 	// facing the problem of recovery.
-	//err = initServer.AnswerActivityService.DeleteAnswer(ctx, answerInfo.ID, answerInfo.CreatedAt, answerInfo.VoteCount)
+	//err = initServer.AnswerActivityServicer.DeleteAnswer(ctx, answerInfo.ID, answerInfo.CreatedAt, answerInfo.VoteCount)
 	//if err != nil {
 	//	log.Errorf("delete answer activity change failed: %s", err.Error())
 	//}
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
 		ObjectID:         answerInfo.ID,
 		OriginalObjectID: answerInfo.ID,
@@ -114,19 +112,19 @@ func (as *AnswerService) RecoverAnswer(ctx context.Context, req *schema.RecoverA
 		return err
 	}
 
-	if err = services.QuestionCommon.UpdateAnswerCount(ctx, answerInfo.QuestionID); err != nil {
+	if err = QuestionCommonServicer.UpdateAnswerCount(ctx, answerInfo.QuestionID); err != nil {
 		log.Errorf("update answer count failed: %s", err.Error())
 	}
 	userAnswerCount, err := repo.AnswerRepo.GetCountByUserID(ctx, answerInfo.UserID)
 	if err != nil {
 		log.Errorf("get user answer count failed: %s", err.Error())
 	} else {
-		err = services.UserCommon.UpdateAnswerCount(ctx, answerInfo.UserID, int(userAnswerCount))
+		err = UserCommonServicer.UpdateAnswerCount(ctx, answerInfo.UserID, int(userAnswerCount))
 		if err != nil {
 			log.Errorf("update user answer count failed: %s", err.Error())
 		}
 	}
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
 		TriggerUserID:    converter.StringToInt64(req.UserID),
 		ObjectID:         answerInfo.ID,
@@ -161,15 +159,15 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	if err = repo.AnswerRepo.AddAnswer(ctx, insertData); err != nil {
 		return "", err
 	}
-	err = services.QuestionCommon.UpdateAnswerCount(ctx, req.QuestionID)
+	err = QuestionCommonServicer.UpdateAnswerCount(ctx, req.QuestionID)
 	if err != nil {
 		log.Error("IncreaseAnswerCount error", err.Error())
 	}
-	err = services.QuestionCommon.UpdateLastAnswer(ctx, req.QuestionID, uid.DeShortID(insertData.ID))
+	err = QuestionCommonServicer.UpdateLastAnswer(ctx, req.QuestionID, uid.DeShortID(insertData.ID))
 	if err != nil {
 		log.Error("UpdateLastAnswer error", err.Error())
 	}
-	err = services.QuestionCommon.UpdatePostTime(ctx, req.QuestionID)
+	err = QuestionCommonServicer.UpdatePostTime(ctx, req.QuestionID)
 	if err != nil {
 		return insertData.ID, err
 	}
@@ -177,7 +175,7 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	if err != nil {
 		log.Error("GetCountByUserID error", err.Error())
 	}
-	err = services.UserCommon.UpdateAnswerCount(ctx, req.UserID, int(userAnswerCount))
+	err = UserCommonServicer.UpdateAnswerCount(ctx, req.UserID, int(userAnswerCount))
 	if err != nil {
 		log.Error("user IncreaseAnswerCount error", err.Error())
 	}
@@ -189,21 +187,21 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	}
 	infoJSON, _ := json.Marshal(insertData)
 	revisionDTO.Content = string(infoJSON)
-	revisionID, err := services.RevisionService.AddRevision(ctx, revisionDTO, true)
+	revisionID, err := RevisionComServicer.AddRevision(ctx, revisionDTO, true)
 	if err != nil {
 		return insertData.ID, err
 	}
 	as.notificationAnswerTheQuestion(ctx, questionInfo.UserID, questionInfo.ID, insertData.ID, req.UserID, questionInfo.Title,
 		insertData.OriginalText)
 
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           insertData.UserID,
 		ObjectID:         insertData.ID,
 		OriginalObjectID: insertData.ID,
 		ActivityTypeKey:  constant.ActAnswerAnswered,
 		RevisionID:       revisionID,
 	})
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           insertData.UserID,
 		ObjectID:         insertData.ID,
 		OriginalObjectID: questionInfo.ID,
@@ -214,7 +212,7 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 
 func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq) (string, error) {
 	var canUpdate bool
-	_, existUnreviewed, err := services.RevisionService.ExistUnreviewedByObjectID(ctx, req.ID)
+	_, existUnreviewed, err := RevisionComServicer.ExistUnreviewedByObjectID(ctx, req.ID)
 	if err != nil {
 		return "", err
 	}
@@ -275,7 +273,7 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 		if err = repo.AnswerRepo.UpdateAnswer(ctx, insertData, []string{"original_text", "parsed_text", "updated_at", "last_edit_user_id"}); err != nil {
 			return "", err
 		}
-		err = services.QuestionCommon.UpdatePostTime(ctx, req.QuestionID)
+		err = QuestionCommonServicer.UpdatePostTime(ctx, req.QuestionID)
 		if err != nil {
 			return insertData.ID, err
 		}
@@ -285,12 +283,12 @@ func (as *AnswerService) Update(ctx context.Context, req *schema.AnswerUpdateReq
 
 	infoJSON, _ := json.Marshal(insertData)
 	revisionDTO.Content = string(infoJSON)
-	revisionID, err := services.RevisionService.AddRevision(ctx, revisionDTO, true)
+	revisionID, err := RevisionComServicer.AddRevision(ctx, revisionDTO, true)
 	if err != nil {
 		return insertData.ID, err
 	}
 	if canUpdate {
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			ObjectID:         insertData.ID,
 			OriginalObjectID: insertData.ID,
@@ -336,7 +334,7 @@ func (as *AnswerService) AcceptAnswer(ctx context.Context, req *schema.AcceptAns
 	}
 
 	// update question status
-	err = services.QuestionCommon.UpdateAccepted(ctx, req.QuestionID, req.AnswerID)
+	err = QuestionCommonServicer.UpdateAccepted(ctx, req.QuestionID, req.AnswerID)
 	if err != nil {
 		log.Error("UpdateLastAnswer error", err.Error())
 	}
@@ -359,14 +357,14 @@ func (as *AnswerService) updateAnswerRank(ctx context.Context, userID string,
 ) {
 	// if this question is already been answered, should cancel old answer rank
 	if oldAnswerInfo != nil {
-		err := services.AnswerActivityService.CancelAcceptAnswer(ctx, userID,
+		err := AnswerActivityServicer.CancelAcceptAnswer(ctx, userID,
 			questionInfo.AcceptedAnswerID, questionInfo.ID, questionInfo.UserID, oldAnswerInfo.UserID)
 		if err != nil {
 			log.Error(err)
 		}
 	}
 	if newAnswerInfo != nil {
-		err := services.AnswerActivityService.AcceptAnswer(ctx, userID, newAnswerInfo.ID,
+		err := AnswerActivityServicer.AcceptAnswer(ctx, userID, newAnswerInfo.ID,
 			questionInfo.ID, questionInfo.UserID, newAnswerInfo.UserID, newAnswerInfo.UserID == questionInfo.UserID)
 		if err != nil {
 			log.Error(err)
@@ -381,7 +379,7 @@ func (as *AnswerService) Get(ctx context.Context, answerID, loginUserID string) 
 	}
 	info := as.ShowFormat(ctx, answerInfo)
 	// todo questionFunc
-	questionInfo, err := services.QuestionCommon.Info(ctx, answerInfo.QuestionID, loginUserID)
+	questionInfo, err := QuestionCommonServicer.Info(ctx, answerInfo.QuestionID, loginUserID)
 	if err != nil {
 		return nil, nil, has, err
 	}
@@ -390,7 +388,7 @@ func (as *AnswerService) Get(ctx context.Context, answerID, loginUserID string) 
 	userIds := make([]string, 0)
 	userIds = append(userIds, answerInfo.UserID)
 	userIds = append(userIds, answerInfo.LastEditUserID)
-	userInfoMap, err := services.UserCommon.BatchUserBasicInfoByID(ctx, userIds)
+	userInfoMap, err := UserCommonServicer.BatchUserBasicInfoByID(ctx, userIds)
 	if err != nil {
 		return nil, nil, has, err
 	}
@@ -410,7 +408,7 @@ func (as *AnswerService) Get(ctx context.Context, answerID, loginUserID string) 
 
 	info.VoteStatus = repo.VoteRepo.GetVoteStatus(ctx, answerID, loginUserID)
 
-	collectedMap, err := services.CollectionCommon.SearchObjectCollected(ctx, loginUserID, []string{answerInfo.ID})
+	collectedMap, err := CollectionCommon.SearchObjectCollected(ctx, loginUserID, []string{answerInfo.ID})
 	if err != nil {
 		return nil, nil, has, err
 	}
@@ -445,11 +443,11 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 	if setStatus == entity.AnswerStatusDeleted {
 		// #2372 In order to simplify the process and complexity, as well as to consider if it is in-house,
 		// facing the problem of recovery.
-		//err = initServer.AnswerActivityService.DeleteAnswer(ctx, answerInfo.ID, answerInfo.CreatedAt, answerInfo.VoteCount)
+		//err = initServer.AnswerActivityServicer.DeleteAnswer(ctx, answerInfo.ID, answerInfo.CreatedAt, answerInfo.VoteCount)
 		//if err != nil {
 		//	log.Errorf("admin delete question then rank rollback error %s", err.Error())
 		//}
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         answerInfo.ID,
@@ -464,12 +462,12 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 		msg.TriggerUserID = answerInfo.UserID
 		msg.ObjectType = constant.AnswerObjectType
 		msg.NotificationAction = constant.NotificationYourAnswerWasDeleted
-		services.NotificationQueueService.Send(ctx, msg)
+		NotificationQueueService.Send(ctx, msg)
 	}
 
 	// recover
 	if setStatus == entity.QuestionStatusAvailable && answerInfo.Status == entity.QuestionStatusDeleted {
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         answerInfo.ID,
@@ -512,7 +510,7 @@ func (as *AnswerService) SearchFormatInfo(ctx context.Context, answers []*entity
 		userIDs = append(userIDs, info.UserID, info.LastEditUserID)
 	}
 
-	userInfoMap, err := services.UserCommon.BatchUserBasicInfoByID(ctx, userIDs)
+	userInfoMap, err := UserCommonServicer.BatchUserBasicInfoByID(ctx, userIDs)
 	if err != nil {
 		return list, err
 	}
@@ -524,7 +522,7 @@ func (as *AnswerService) SearchFormatInfo(ctx context.Context, answers []*entity
 		return list, nil
 	}
 
-	collectedMap, err := services.CollectionCommon.SearchObjectCollected(ctx, req.UserID, objectIDs)
+	collectedMap, err := CollectionCommon.SearchObjectCollected(ctx, req.UserID, objectIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -543,7 +541,7 @@ func (as *AnswerService) SearchFormatInfo(ctx context.Context, answers []*entity
 }
 
 func (as *AnswerService) ShowFormat(ctx context.Context, data *entity.Answer) *schema.AnswerInfo {
-	return services.AnswerCommon.ShowFormat(ctx, data)
+	return AnswerCommonServicer.ShowFormat(ctx, data)
 }
 
 func (as *AnswerService) notificationUpdateAnswer(ctx context.Context, questionUserID, answerID, answerUserID string) {
@@ -555,7 +553,7 @@ func (as *AnswerService) notificationUpdateAnswer(ctx context.Context, questionU
 	}
 	msg.ObjectType = constant.AnswerObjectType
 	msg.NotificationAction = constant.NotificationUpdateAnswer
-	services.NotificationQueueService.Send(ctx, msg)
+	NotificationQueueService.Send(ctx, msg)
 }
 
 func (as *AnswerService) notificationAnswerTheQuestion(ctx context.Context,
@@ -572,7 +570,7 @@ func (as *AnswerService) notificationAnswerTheQuestion(ctx context.Context,
 	}
 	msg.ObjectType = constant.AnswerObjectType
 	msg.NotificationAction = constant.NotificationAnswerTheQuestion
-	services.NotificationQueueService.Send(ctx, msg)
+	NotificationQueueService.Send(ctx, msg)
 
 	receiverUserInfo, exist, err := repo.UserRepo.GetByUserID(ctx, questionUserID)
 	if err != nil {
@@ -596,10 +594,10 @@ func (as *AnswerService) notificationAnswerTheQuestion(ctx context.Context,
 		AnswerSummary:   answerSummary,
 		UnsubscribeCode: token.GenerateToken(),
 	}
-	answerUser, _, _ := services.UserCommon.GetUserBasicInfoByID(ctx, answerUserID)
+	answerUser, _, _ := UserCommonServicer.GetUserBasicInfoByID(ctx, answerUserID)
 	if answerUser != nil {
 		rawData.AnswerUserDisplayName = answerUser.DisplayName
 	}
 	externalNotificationMsg.NewAnswerTemplateRawData = rawData
-	services.ExternalNotificationQueueService.Send(ctx, externalNotificationMsg)
+	ExternalNotificationQueueService.Send(ctx, externalNotificationMsg)
 }

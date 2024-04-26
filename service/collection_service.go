@@ -4,11 +4,10 @@ import (
 	"context"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
-	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 )
 
-// CollectionService user service
+// CollectionServicer user service
 type CollectionService struct {
 }
 
@@ -47,7 +46,7 @@ func (cs *CollectionService) CollectionSwitch(ctx context.Context, req *schema.C
 
 	// For now, we only support bookmark for question, so we just update question collection count
 	resp = &schema.CollectionSwitchResp{}
-	resp.ObjectCollectionCount, err = services.QuestionCommon.UpdateCollectionCount(ctx, req.ObjectID)
+	resp.ObjectCollectionCount, err = QuestionCommonServicer.UpdateCollectionCount(ctx, req.ObjectID)
 	if err != nil {
 		return nil, err
 	}

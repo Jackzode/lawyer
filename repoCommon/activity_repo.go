@@ -18,21 +18,21 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// ActivityRepo activity repository
-type ActivityRepo struct {
+// ActivityComRepo activity repository
+type ActivityComRepo struct {
 	DB    *xorm.Engine
 	Cache *redis.Client
 }
 
 // NewActivityRepo new repository
-func NewActivityRepo() *ActivityRepo {
-	return &ActivityRepo{
+func NewActivityRepo() *ActivityComRepo {
+	return &ActivityComRepo{
 		DB:    handler.Engine,
 		Cache: handler.RedisClient,
 	}
 }
 
-func (ar *ActivityRepo) GetActivityTypeByObjID(ctx context.Context, objectID string, action string) (
+func (ar *ActivityComRepo) GetActivityTypeByObjID(ctx context.Context, objectID string, action string) (
 	activityType, rank, hasRank int, err error) {
 
 	objectType, err := obj.GetObjectTypeStrByObjectID(objectID)
@@ -53,7 +53,7 @@ func (ar *ActivityRepo) GetActivityTypeByObjID(ctx context.Context, objectID str
 	return
 }
 
-func (ar *ActivityRepo) GetActivityTypeByObjectType(ctx context.Context, objectType, action string) (activityType int, err error) {
+func (ar *ActivityComRepo) GetActivityTypeByObjectType(ctx context.Context, objectType, action string) (activityType int, err error) {
 	configKey := fmt.Sprintf("%s.%s", objectType, action)
 	cfg, err := utils.GetConfigByKey(ctx, configKey)
 	if err != nil {
@@ -62,7 +62,7 @@ func (ar *ActivityRepo) GetActivityTypeByObjectType(ctx context.Context, objectT
 	return cfg.ID, nil
 }
 
-func (ar *ActivityRepo) GetActivityTypeByConfigKey(ctx context.Context, configKey string) (activityType int, err error) {
+func (ar *ActivityComRepo) GetActivityTypeByConfigKey(ctx context.Context, configKey string) (activityType int, err error) {
 	cfg, err := utils.GetConfigByKey(ctx, configKey)
 	if err != nil {
 		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -70,7 +70,7 @@ func (ar *ActivityRepo) GetActivityTypeByConfigKey(ctx context.Context, configKe
 	return cfg.ID, nil
 }
 
-func (ar *ActivityRepo) GetActivity(ctx context.Context, session *xorm.Session,
+func (ar *ActivityComRepo) GetActivity(ctx context.Context, session *xorm.Session,
 	objectID, userID string, activityType int,
 ) (existsActivity *entity.Activity, exist bool, err error) {
 	existsActivity = &entity.Activity{}
@@ -82,7 +82,7 @@ func (ar *ActivityRepo) GetActivity(ctx context.Context, session *xorm.Session,
 	return
 }
 
-func (ar *ActivityRepo) GetUserIDObjectIDActivitySum(ctx context.Context, userID, objectID string) (int, error) {
+func (ar *ActivityComRepo) GetUserIDObjectIDActivitySum(ctx context.Context, userID, objectID string) (int, error) {
 	sum := &entity.ActivityRankSum{}
 	_, err := ar.DB.Context(ctx).Table(entity.Activity{}.TableName()).
 		Select("sum(`rank`) as `rank`").
@@ -98,7 +98,7 @@ func (ar *ActivityRepo) GetUserIDObjectIDActivitySum(ctx context.Context, userID
 }
 
 // AddActivity add activity
-func (ar *ActivityRepo) AddActivity(ctx context.Context, activity *entity.Activity) (err error) {
+func (ar *ActivityComRepo) AddActivity(ctx context.Context, activity *entity.Activity) (err error) {
 	_, err = ar.DB.Context(ctx).Insert(activity)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
@@ -107,7 +107,7 @@ func (ar *ActivityRepo) AddActivity(ctx context.Context, activity *entity.Activi
 }
 
 // GetUsersWhoHasGainedTheMostReputation get users who has gained the most reputation over a period of time
-func (ar *ActivityRepo) GetUsersWhoHasGainedTheMostReputation(
+func (ar *ActivityComRepo) GetUsersWhoHasGainedTheMostReputation(
 	ctx context.Context, startTime, endTime time.Time, limit int) (rankStat []*entity.ActivityUserRankStat, err error) {
 	rankStat = make([]*entity.ActivityUserRankStat, 0)
 	session := ar.DB.Context(ctx).Select("user_id, SUM(`rank`) AS rank_amount").Table("activity")
@@ -125,7 +125,7 @@ func (ar *ActivityRepo) GetUsersWhoHasGainedTheMostReputation(
 }
 
 // GetUsersWhoHasVoteMost get users who has vote most
-func (ar *ActivityRepo) GetUsersWhoHasVoteMost(
+func (ar *ActivityComRepo) GetUsersWhoHasVoteMost(
 	ctx context.Context, startTime, endTime time.Time, limit int) (voteStat []*entity.ActivityUserVoteStat, err error) {
 	voteStat = make([]*entity.ActivityUserVoteStat, 0)
 

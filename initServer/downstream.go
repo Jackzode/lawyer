@@ -61,5 +61,6 @@ func initApplication(debug bool) (*gin.Engine, error) {
 	//todo
 	//application := newApplication(serverConf, ginEngine, scheduledTaskManager)
 	//application := newApplication(ginEngine)
+
 	return ginEngine, nil
 }

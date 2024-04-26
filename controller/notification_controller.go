@@ -5,21 +5,20 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service/notification"
+	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
-	"github.com/lawyer/service/rank"
 )
 
 // NotificationController notification controller
 type NotificationController struct {
-	notificationService *notification.NotificationService
-	rankService         *rank.RankService
+	notificationService *service.NotificationService
+	rankService         *service.RankService
 }
 
 // NewNotificationController new controller
 func NewNotificationController(
-	notificationService *notification.NotificationService,
-	rankService *rank.RankService,
+	notificationService *service.NotificationService,
+	rankService *service.RankService,
 ) *NotificationController {
 	return &NotificationController{
 		notificationService: notificationService,

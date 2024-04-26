@@ -1,23 +1,21 @@
 package controller
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
-	"github.com/lawyer/service/siteinfo_common"
-
-	"github.com/gin-gonic/gin"
+	"github.com/lawyer/service"
 )
 
 type LangController struct {
 	//translator      i18n.Translator
-	siteInfoService siteinfo_common.SiteInfoCommonService
+	siteInfoService service.SiteInfoCommonService
 }
 
 // NewLangController new language controller.
-func NewLangController( siteInfoService siteinfo_common.SiteInfoCommonService) *LangController {
+func NewLangController(siteInfoService service.SiteInfoCommonService) *LangController {
 	return &LangController{siteInfoService: siteInfoService}
 }
-
 
 func (u *LangController) GetLangMapping(ctx *gin.Context) {
 	//data, _ := u.translator.Dump(utils.GetLang(ctx))

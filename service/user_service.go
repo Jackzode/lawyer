@@ -12,10 +12,8 @@ import (
 	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	checker2 "github.com/lawyer/commons/utils/checker"
-	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/repoCommon"
-	role2 "github.com/lawyer/service/role"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,7 +24,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// UserService user service
+// UserServicer user service
 type UserService struct {
 }
 
@@ -63,13 +61,13 @@ func (us *UserService) GetOtherUserInfoByUsername(ctx context.Context, username 
 	}
 	resp = &schema.GetOtherUserInfoByUsernameResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = services.SiteInfoCommonService.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	return resp, nil
 }
 
 // EmailLogin email login
 func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLoginReq) (resp *schema.UserLoginResp, err error) {
-	siteLogin, err := services.SiteInfoCommonService.GetSiteLogin(ctx)
+	siteLogin, err := SiteInfoCommonServicer.GetSiteLogin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +84,7 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 	if !us.verifyPassword(ctx, req.Pass, userInfo.Pass) {
 		return nil, errors.BadRequest(reason.EmailOrPasswordWrong)
 	}
-	ok, externalID, err := services.UserExternalLoginService.CheckUserStatusInUserCenter(ctx, userInfo.ID)
+	ok, externalID, err := UserExternalLoginServicer.CheckUserStatusInUserCenter(ctx, userInfo.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -99,14 +97,14 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 		log.Errorf("update last login data failed, err: %v", err)
 	}
 
-	roleID, err := services.UserRoleRelService.GetUserRole(ctx, userInfo.ID)
+	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
 	if err != nil {
 		log.Error(err)
 	}
 
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = services.SiteInfoCommonService.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	userCacheInfo := &entity.UserCacheInfo{
 		UserID:      userInfo.ID,
 		EmailStatus: userInfo.MailStatus,
@@ -114,13 +112,13 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 		RoleID:      roleID,
 		ExternalID:  externalID,
 	}
-	resp.AccessToken, resp.VisitToken, err = services.AuthService.SetUserCacheInfo(ctx, userCacheInfo)
+	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
 	resp.RoleID = userCacheInfo.RoleID
-	if resp.RoleID == role2.RoleAdminID {
-		err = services.AuthService.SetAdminUserCacheInfo(ctx, resp.AccessToken, userCacheInfo)
+	if resp.RoleID == RoleAdminID {
+		err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, userCacheInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -146,11 +144,11 @@ func (us *UserService) RetrievePassWord(ctx context.Context, req *schema.UserRet
 	}
 	code := uuid.NewString()
 	verifyEmailURL := fmt.Sprintf("%s/users/password-reset?code=%s", us.getSiteUrl(ctx), code)
-	title, body, err := services.EmailService.PassResetTemplate(ctx, verifyEmailURL)
+	title, body, err := EmailServicer.PassResetTemplate(ctx, verifyEmailURL)
 	if err != nil {
 		return err
 	}
-	go services.EmailService.SendAndSaveCode(ctx, req.Email, title, body, code, data.ToJSONString())
+	go EmailServicer.SendAndSaveCode(ctx, req.Email, title, body, code, data.ToJSONString())
 	return nil
 }
 
@@ -178,7 +176,7 @@ func (us *UserService) UpdatePasswordWhenForgot(ctx context.Context, req *schema
 		return err
 	}
 	// When the user changes the password, all the current user's tokens are invalid.
-	services.AuthService.RemoveUserAllTokens(ctx, userInfo.ID)
+	AuthServicer.RemoveUserAllTokens(ctx, userInfo.ID)
 	return nil
 }
 
@@ -221,14 +219,14 @@ func (us *UserService) UserModifyPassword(ctx context.Context, req *schema.UserM
 		return err
 	}
 
-	services.AuthService.RemoveTokensExceptCurrentUser(ctx, userInfo.ID, req.AccessToken)
+	AuthServicer.RemoveTokensExceptCurrentUser(ctx, userInfo.ID, req.AccessToken)
 	return nil
 }
 
 // UpdateInfo update user info
 func (us *UserService) UpdateInfo(ctx context.Context, req *schema.UpdateInfoRequest) (
 	errFields []*validator.FormErrorField, err error) {
-	siteUsers, err := services.SiteInfoCommonService.GetSiteUsers(ctx)
+	siteUsers, err := SiteInfoCommonServicer.GetSiteUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +343,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	if err != nil {
 		return nil, err
 	}
-	userInfo.Username, err = services.UserCommon.MakeUsername(ctx, registerUserInfo.Name)
+	userInfo.Username, err = UserCommonServicer.MakeUsername(ctx, registerUserInfo.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +357,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 		return nil, err
 	}
 	//todo  userInfo.ID这里
-	if err = services.UserNotificationConfigService.SetDefaultUserNotificationConfig(ctx, []string{userInfo.ID}); err != nil {
+	if err = UserNotificationConfigService.SetDefaultUserNotificationConfig(ctx, []string{userInfo.ID}); err != nil {
 		glog.Logger.Error("set default user notification config failed, err: " + err.Error())
 	}
 
@@ -370,13 +368,13 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	}
 	code := uuid.NewString()
 	verifyEmailURL := fmt.Sprintf("%s/users/account-activation?code=%s", us.getSiteUrl(ctx), code)
-	title, body, err := services.EmailService.RegisterTemplate(ctx, verifyEmailURL)
+	title, body, err := EmailServicer.RegisterTemplate(ctx, verifyEmailURL)
 	if err != nil {
 		return nil, err
 	}
-	go services.EmailService.SendAndSaveCode(ctx, userInfo.EMail, title, body, code, data.ToJSONString())
+	go EmailServicer.SendAndSaveCode(ctx, userInfo.EMail, title, body, code, data.ToJSONString())
 
-	roleID, err := services.UserRoleRelService.GetUserRole(ctx, userInfo.ID)
+	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
 	if err != nil {
 		glog.Logger.Error(err.Error())
 	}
@@ -384,20 +382,20 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	// return user info and token
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = services.SiteInfoCommonService.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	userCacheInfo := &entity.UserCacheInfo{
 		UserID:      userInfo.ID,
 		EmailStatus: userInfo.MailStatus,
 		UserStatus:  userInfo.Status,
 		RoleID:      roleID,
 	}
-	resp.AccessToken, resp.VisitToken, err = services.AuthService.SetUserCacheInfo(ctx, userCacheInfo)
+	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
 	resp.RoleID = userCacheInfo.RoleID
-	if resp.RoleID == role2.RoleAdminID {
-		err = services.AuthService.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
+	if resp.RoleID == RoleAdminID {
+		err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
 		if err != nil {
 			return nil, err
 		}
@@ -420,11 +418,11 @@ func (us *UserService) UserVerifyEmailSend(ctx context.Context, userID string) e
 	}
 	code := uuid.NewString()
 	verifyEmailURL := fmt.Sprintf("%s/users/account-activation?code=%s", us.getSiteUrl(ctx), code)
-	title, body, err := services.EmailService.RegisterTemplate(ctx, verifyEmailURL)
+	title, body, err := EmailServicer.RegisterTemplate(ctx, verifyEmailURL)
 	if err != nil {
 		return err
 	}
-	go services.EmailService.SendAndSaveCode(ctx, userInfo.EMail, title, body, code, data.ToJSONString())
+	go EmailServicer.SendAndSaveCode(ctx, userInfo.EMail, title, body, code, data.ToJSONString())
 	return nil
 }
 
@@ -455,13 +453,13 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 
 	// In the case of three-party login, the associated users are bound
 	if len(data.BindingKey) > 0 {
-		err = services.UserExternalLoginService.ExternalLoginBindingUser(ctx, data.BindingKey, userInfo)
+		err = UserExternalLoginServicer.ExternalLoginBindingUser(ctx, data.BindingKey, userInfo)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	accessToken, userCacheInfo, err := services.UserCommon.CacheLoginUserInfo(
+	accessToken, userCacheInfo, err := UserCommonServicer.CacheLoginUserInfo(
 		ctx, userInfo.ID, userInfo.MailStatus, userInfo.Status, "")
 	if err != nil {
 		return nil, err
@@ -469,10 +467,10 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = services.SiteInfoCommonService.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	resp.AccessToken = accessToken
 	// User verified email will update user email status. So user status cache should be updated.
-	if err = services.AuthService.SetUserStatus(ctx, userCacheInfo); err != nil {
+	if err = AuthServicer.SetUserStatus(ctx, userCacheInfo); err != nil {
 		return nil, err
 	}
 	return resp, nil
@@ -536,16 +534,16 @@ func (us *UserService) UserChangeEmailSendCode(ctx context.Context, req *schema.
 	var title, body string
 	verifyEmailURL := fmt.Sprintf("%s/users/confirm-new-email?code=%s", us.getSiteUrl(ctx), code)
 	if userInfo.MailStatus == entity.EmailStatusToBeVerified {
-		title, body, err = services.EmailService.RegisterTemplate(ctx, verifyEmailURL)
+		title, body, err = EmailServicer.RegisterTemplate(ctx, verifyEmailURL)
 	} else {
-		title, body, err = services.EmailService.ChangeEmailTemplate(ctx, verifyEmailURL)
+		title, body, err = EmailServicer.ChangeEmailTemplate(ctx, verifyEmailURL)
 	}
 	if err != nil {
 		return nil, err
 	}
 	log.Infof("send email confirmation %s", verifyEmailURL)
 
-	go services.EmailService.SendAndSaveCode(ctx, req.Email, title, body, code, data.ToJSONString())
+	go EmailServicer.SendAndSaveCode(ctx, req.Email, title, body, code, data.ToJSONString())
 	return nil, nil
 }
 
@@ -581,31 +579,31 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 		return nil, err
 	}
 
-	roleID, err := services.UserRoleRelService.GetUserRole(ctx, userInfo.ID)
+	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
 	if err != nil {
 		log.Error(err)
 	}
 
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = services.SiteInfoCommonService.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	userCacheInfo := &entity.UserCacheInfo{
 		UserID:      userInfo.ID,
 		EmailStatus: entity.EmailStatusAvailable,
 		UserStatus:  userInfo.Status,
 		RoleID:      roleID,
 	}
-	resp.AccessToken, resp.VisitToken, err = services.AuthService.SetUserCacheInfo(ctx, userCacheInfo)
+	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
 	// User verified email will update user email status. So user status cache should be updated.
-	if err = services.AuthService.SetUserStatus(ctx, userCacheInfo); err != nil {
+	if err = AuthServicer.SetUserStatus(ctx, userCacheInfo); err != nil {
 		return nil, err
 	}
 	resp.RoleID = userCacheInfo.RoleID
-	if resp.RoleID == role2.RoleAdminID {
-		err = services.AuthService.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
+	if resp.RoleID == RoleAdminID {
+		err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
 		if err != nil {
 			return nil, err
 		}
@@ -615,7 +613,7 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 
 // getSiteUrl get site url
 func (us *UserService) getSiteUrl(ctx context.Context) string {
-	siteGeneral, err := services.SiteInfoCommonService.GetSiteGeneral(ctx)
+	siteGeneral, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
 	if err != nil {
 		log.Errorf("get site general failed: %s", err)
 		return ""
@@ -738,7 +736,7 @@ func (us *UserService) getActivityUserVoteStat(ctx context.Context, startTime, e
 
 func (us *UserService) getStaff(ctx context.Context, userIDExist map[string]bool) (
 	userRoleRels []*entity.UserRoleRel, userIDs []string, err error) {
-	userRoleRels, err = services.UserRoleRelService.GetUserByRoleID(ctx, []int{role2.RoleAdminID, role2.RoleModeratorID})
+	userRoleRels, err = UserRoleRelServicer.GetUserByRoleID(ctx, []int{RoleAdminID, RoleModeratorID})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -762,7 +760,7 @@ func (us *UserService) getUserInfoMapping(ctx context.Context, userIDs []string)
 	if err != nil {
 		return nil, err
 	}
-	avatarMapping := services.SiteInfoCommonService.FormatListAvatar(ctx, userInfoList)
+	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, userInfoList)
 	for _, user := range userInfoList {
 		user.Avatar = avatarMapping[user.ID].GetURL()
 		userInfoMapping[user.ID] = user
@@ -780,12 +778,12 @@ func (us *UserService) SearchUserListByName(ctx context.Context, req *schema.Get
 	if err != nil {
 		return resp, err
 	}
-	avatarMapping := services.SiteInfoCommonService.FormatListAvatar(ctx, userList)
+	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, userList)
 	for _, u := range userList {
 		if req.UserID == u.ID {
 			continue
 		}
-		basicInfo := services.UserCommon.FormatUserBasicInfo(ctx, u)
+		basicInfo := UserCommonServicer.FormatUserBasicInfo(ctx, u)
 		basicInfo.Avatar = avatarMapping[u.ID].GetURL()
 		resp = append(resp, basicInfo)
 	}

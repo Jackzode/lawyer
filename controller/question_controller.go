@@ -14,10 +14,7 @@ import (
 	middleware2 "github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/service"
-	"github.com/lawyer/service/action"
 	"github.com/lawyer/service/permission"
-	"github.com/lawyer/service/rank"
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -25,9 +22,9 @@ import (
 type QuestionController struct {
 	questionService     *service.QuestionService
 	answerService       *service.AnswerService
-	rankService         *rank.RankService
-	siteInfoService     siteinfo_common.SiteInfoCommonService
-	actionService       *action.CaptchaService
+	rankService         *service.RankService
+	siteInfoService     service.SiteInfoCommonService
+	actionService       *service.CaptchaService
 	rateLimitMiddleware *middleware2.RateLimitMiddleware
 }
 
@@ -35,9 +32,9 @@ type QuestionController struct {
 func NewQuestionController(
 	questionService *service.QuestionService,
 	answerService *service.AnswerService,
-	rankService *rank.RankService,
-	siteInfoService siteinfo_common.SiteInfoCommonService,
-	actionService *action.CaptchaService,
+	rankService *service.RankService,
+	siteInfoService service.SiteInfoCommonService,
+	actionService *service.CaptchaService,
 	rateLimitMiddleware *middleware2.RateLimitMiddleware,
 ) *QuestionController {
 	return &QuestionController{

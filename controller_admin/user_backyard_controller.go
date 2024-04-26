@@ -5,9 +5,9 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/schema"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/plugin"
+	services "github.com/lawyer/service"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -42,7 +42,7 @@ func (uc *UserAdminController) UpdateUserStatus(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := services.UserAdminService.UpdateUserStatus(ctx, req)
+	err := services.UserAdminServicer.UpdateUserStatus(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -64,7 +64,7 @@ func (uc *UserAdminController) UpdateUserRole(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := services.UserAdminService.UpdateUserRole(ctx, req)
+	err := services.UserAdminServicer.UpdateUserRole(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -86,7 +86,7 @@ func (uc *UserAdminController) AddUser(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := services.UserAdminService.AddUser(ctx, req)
+	err := services.UserAdminServicer.AddUser(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -106,7 +106,7 @@ func (uc *UserAdminController) AddUsers(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := services.UserAdminService.AddUsers(ctx, req)
+	resp, err := services.UserAdminServicer.AddUsers(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -128,7 +128,7 @@ func (uc *UserAdminController) UpdateUserPassword(ctx *gin.Context) {
 
 	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	err := services.UserAdminService.UpdateUserPassword(ctx, req)
+	err := services.UserAdminServicer.UpdateUserPassword(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -151,7 +151,7 @@ func (uc *UserAdminController) GetUserPage(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := services.UserAdminService.GetUserPage(ctx, req)
+	resp, err := services.UserAdminServicer.GetUserPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -170,7 +170,7 @@ func (uc *UserAdminController) GetUserActivation(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := services.UserAdminService.GetUserActivation(ctx, req)
+	resp, err := services.UserAdminServicer.GetUserActivation(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -189,6 +189,6 @@ func (uc *UserAdminController) SendUserActivation(ctx *gin.Context) {
 		return
 	}
 
-	err := services.UserAdminService.SendUserActivation(ctx, req)
+	err := services.UserAdminServicer.SendUserActivation(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

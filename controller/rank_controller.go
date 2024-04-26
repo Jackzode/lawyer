@@ -5,17 +5,17 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service/rank"
+	"github.com/lawyer/service"
 )
 
 // RankController rank controller
 type RankController struct {
-	rankService *rank.RankService
+	rankService *service.RankService
 }
 
 // NewRankController new controller
 func NewRankController(
-	rankService *rank.RankService) *RankController {
+	rankService *service.RankService) *RankController {
 	return &RankController{rankService: rankService}
 }
 

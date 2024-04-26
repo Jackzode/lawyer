@@ -2,8 +2,8 @@ package controller_admin
 
 import (
 	"github.com/lawyer/commons/base/handler"
-	services "github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/middleware"
+	services "github.com/lawyer/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,7 @@ import (
 
 // SiteInfoController site info controller
 type SiteInfoController struct {
-	//siteInfoService *siteinfo.SiteInfoService
+	//siteInfoService *siteinfo.SiteInfoServicer
 }
 
 // NewSiteInfoController new site info controller
@@ -29,7 +29,7 @@ func NewSiteInfoController() *SiteInfoController {
 // @Success 200 {object} handler.RespBody{data=schema.SiteGeneralResp}
 // @Router /answer/admin/api/siteinfo/general [get]
 func (sc *SiteInfoController) GetGeneral(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteGeneral(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteGeneral(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -42,7 +42,7 @@ func (sc *SiteInfoController) GetGeneral(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteInterfaceResp}
 // @Router /answer/admin/api/siteinfo/interface [get]
 func (sc *SiteInfoController) GetInterface(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteInterface(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteInterface(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -55,7 +55,7 @@ func (sc *SiteInfoController) GetInterface(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteBrandingResp}
 // @Router /answer/admin/api/siteinfo/branding [get]
 func (sc *SiteInfoController) GetSiteBranding(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteBranding(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteBranding(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -68,7 +68,7 @@ func (sc *SiteInfoController) GetSiteBranding(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteWriteResp}
 // @Router /answer/admin/api/siteinfo/write [get]
 func (sc *SiteInfoController) GetSiteWrite(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteWrite(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteWrite(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -81,7 +81,7 @@ func (sc *SiteInfoController) GetSiteWrite(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteLegalResp}
 // @Router /answer/admin/api/siteinfo/legal [get]
 func (sc *SiteInfoController) GetSiteLegal(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteLegal(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteLegal(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -94,7 +94,7 @@ func (sc *SiteInfoController) GetSiteLegal(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteSeoResp}
 // @Router /answer/admin/api/siteinfo/seo [get]
 func (sc *SiteInfoController) GetSeo(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSeo(ctx)
+	resp, err := services.SiteInfoServicer.GetSeo(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -107,7 +107,7 @@ func (sc *SiteInfoController) GetSeo(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteLoginResp}
 // @Router /answer/admin/api/siteinfo/login [get]
 func (sc *SiteInfoController) GetSiteLogin(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteLogin(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteLogin(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -120,7 +120,7 @@ func (sc *SiteInfoController) GetSiteLogin(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteCustomCssHTMLResp}
 // @Router /answer/admin/api/siteinfo/custom-css-html [get]
 func (sc *SiteInfoController) GetSiteCustomCssHTML(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteCustomCssHTML(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteCustomCssHTML(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -133,7 +133,7 @@ func (sc *SiteInfoController) GetSiteCustomCssHTML(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteThemeResp}
 // @Router /answer/admin/api/siteinfo/theme [get]
 func (sc *SiteInfoController) GetSiteTheme(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteTheme(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteTheme(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -146,7 +146,7 @@ func (sc *SiteInfoController) GetSiteTheme(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.SiteUsersResp}
 // @Router /answer/admin/api/siteinfo/users [get]
 func (sc *SiteInfoController) GetSiteUsers(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteUsers(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteUsers(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -158,7 +158,7 @@ func (sc *SiteInfoController) GetSiteUsers(ctx *gin.Context) {
 // @Success 200 {string} txt ""
 // @Router /robots.txt [get]
 func (sc *SiteInfoController) GetRobots(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSeo(ctx)
+	resp, err := services.SiteInfoServicer.GetSeo(ctx)
 	if err != nil {
 		ctx.String(http.StatusOK, "")
 		return
@@ -174,7 +174,7 @@ func (sc *SiteInfoController) GetRobots(ctx *gin.Context) {
 // @Success 200 {string} txt ""
 // @Router /custom.css [get]
 func (sc *SiteInfoController) GetCss(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSiteCustomCssHTML(ctx)
+	resp, err := services.SiteInfoServicer.GetSiteCustomCssHTML(ctx)
 	if err != nil {
 		ctx.String(http.StatusOK, "")
 		return
@@ -197,7 +197,7 @@ func (sc *SiteInfoController) UpdateSeo(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, &req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSeo(ctx, req)
+	err := services.SiteInfoServicer.SaveSeo(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -215,7 +215,7 @@ func (sc *SiteInfoController) UpdateGeneral(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, &req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteGeneral(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteGeneral(ctx, req)
 	handler.HandleResponse(ctx, err, req)
 }
 
@@ -233,7 +233,7 @@ func (sc *SiteInfoController) UpdateInterface(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, &req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteInterface(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteInterface(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -251,7 +251,7 @@ func (sc *SiteInfoController) UpdateBranding(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteBranding(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteBranding(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -271,7 +271,7 @@ func (sc *SiteInfoController) UpdateSiteWrite(ctx *gin.Context) {
 	}
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
-	resp, err := services.SiteInfoService.SaveSiteWrite(ctx, req)
+	resp, err := services.SiteInfoServicer.SaveSiteWrite(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -289,7 +289,7 @@ func (sc *SiteInfoController) UpdateSiteLegal(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteLegal(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteLegal(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -307,7 +307,7 @@ func (sc *SiteInfoController) UpdateSiteLogin(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteLogin(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteLogin(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -325,7 +325,7 @@ func (sc *SiteInfoController) UpdateSiteCustomCssHTML(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteCustomCssHTML(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteCustomCssHTML(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -343,7 +343,7 @@ func (sc *SiteInfoController) SaveSiteTheme(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteTheme(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteTheme(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -361,7 +361,7 @@ func (sc *SiteInfoController) UpdateSiteUsers(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.SaveSiteUsers(ctx, req)
+	err := services.SiteInfoServicer.SaveSiteUsers(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -374,7 +374,7 @@ func (sc *SiteInfoController) UpdateSiteUsers(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.GetSMTPConfigResp}
 // @Router /answer/admin/api/setting/smtp [get]
 func (sc *SiteInfoController) GetSMTPConfig(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetSMTPConfig(ctx)
+	resp, err := services.SiteInfoServicer.GetSMTPConfig(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -392,7 +392,7 @@ func (sc *SiteInfoController) UpdateSMTPConfig(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.UpdateSMTPConfig(ctx, req)
+	err := services.SiteInfoServicer.UpdateSMTPConfig(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -405,7 +405,7 @@ func (sc *SiteInfoController) UpdateSMTPConfig(ctx *gin.Context) {
 // @Success 200 {object} handler.RespBody{data=schema.GetPrivilegesConfigResp}
 // @Router /answer/admin/api/setting/privileges [get]
 func (sc *SiteInfoController) GetPrivilegesConfig(ctx *gin.Context) {
-	resp, err := services.SiteInfoService.GetPrivilegesConfig(ctx)
+	resp, err := services.SiteInfoServicer.GetPrivilegesConfig(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -423,6 +423,6 @@ func (sc *SiteInfoController) UpdatePrivilegesConfig(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	err := services.SiteInfoService.UpdatePrivilegesConfig(ctx, req)
+	err := services.SiteInfoServicer.UpdatePrivilegesConfig(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }

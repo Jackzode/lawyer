@@ -140,7 +140,7 @@ func RegisterUserApi(r *gin.RouterGroup) {
 
 // revision
 func RegisterRevisionApi(r *gin.RouterGroup) {
-	c := controller.NewRevisionController()
+	c := controller.NewRevisionController(nil, nil)
 	r.GET("/revisions", c.GetRevisionList)
 	r.GET("/revisions/unreviewed", c.GetUnreviewedRevisionList)
 	r.PUT("/revisions/audit", c.RevisionAudit)
@@ -149,7 +149,7 @@ func RegisterRevisionApi(r *gin.RouterGroup) {
 }
 
 func RegisterTagApi(r *gin.RouterGroup) {
-	c := controller.NewTagController()
+	c := controller.NewTagController(nil, nil, nil)
 	// tag
 	r.GET("/tags/page", c.GetTagWithPage)
 	r.GET("/tags/following", c.GetFollowingTags)
@@ -177,7 +177,7 @@ func RegisterCommentApi(r *gin.RouterGroup) {
 }
 
 func RegisterNotificationApi(r *gin.RouterGroup) {
-	c := controller.NewNotificationController()
+	c := controller.NewNotificationController(nil, nil)
 	// notification
 	r.GET("/notification/status", c.GetRedDot)
 	r.PUT("/notification/status", c.ClearRedDot)
@@ -196,7 +196,7 @@ func RegisterVoteApi(r *gin.RouterGroup) {
 
 func RegisterReportApi(r *gin.RouterGroup) {
 	// report
-	c := controller.NewReportController()
+	c := controller.NewReportController(nil, nil, nil)
 	r.POST("/report", c.AddReport)
 	ac := controller_admin.NewReportController()
 	r.GET("/reports/page", ac.ListReportPage)
@@ -205,21 +205,21 @@ func RegisterReportApi(r *gin.RouterGroup) {
 
 func RegisterOtherApi(r *gin.RouterGroup) {
 
-	sc := controller.NewSearchController()
+	sc := controller.NewSearchController(nil, nil)
 	r.GET("/search", sc.Search)
 	r.GET("/search/desc", sc.SearchDesc)
 	// rank
-	rc := controller.NewRankController()
+	rc := controller.NewRankController(nil)
 	r.GET("/personal/rank/page", rc.GetRankPersonalWithPage)
 	// follow
-	fc := controller.NewFollowController()
+	fc := controller.NewFollowController(nil)
 	r.POST("/follow", fc.Follow)
 	r.PUT("/follow/tags", fc.UpdateFollowTags)
 	// collection
-	cc := controller.NewCollectionController()
+	cc := controller.NewCollectionController(nil)
 	r.POST("/collection/switch", cc.CollectionSwitch)
 	// reason
-	reasonC := controller.NewReasonController()
+	reasonC := controller.NewReasonController(nil)
 	r.GET("/reasons", reasonC.Reasons)
 	// activity
 	acc := controller.NewActivityController(nil)
@@ -229,13 +229,13 @@ func RegisterOtherApi(r *gin.RouterGroup) {
 	tc := controller_admin.NewThemeController()
 	r.GET("/theme/options", tc.GetThemeOptions)
 	// dashboard
-	dc := controller.NewDashboardController()
+	dc := controller.NewDashboardController(nil)
 	r.GET("/dashboard", dc.DashboardInfo)
 	// roles
 	roleC := controller_admin.NewRoleController()
 	r.GET("/roles", roleC.GetRoleList)
 	// permission
-	pc := controller.NewPermissionController()
+	pc := controller.NewPermissionController(nil)
 	r.GET("/permission", pc.GetPermission)
 	// upload file
 	uc := controller.NewUploadController()

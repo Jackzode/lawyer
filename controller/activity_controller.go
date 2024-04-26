@@ -6,16 +6,15 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/service/activity"
-	"github.com/lawyer/service/role"
+	"github.com/lawyer/service"
 )
 
 type ActivityController struct {
-	activityService *activity.ActivityService
+	activityService *service.ActivityService
 }
 
 // NewActivityController new activity controller.
-func NewActivityController(activityService *activity.ActivityService) *ActivityController {
+func NewActivityController(activityService *service.ActivityService) *ActivityController {
 	return &ActivityController{
 		activityService: activityService,
 	}
@@ -41,7 +40,7 @@ func (ac *ActivityController) GetObjectTimeline(ctx *gin.Context) {
 
 	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	if userInfo := middleware.GetUserInfoFromContext(ctx); userInfo != nil {
-		req.IsAdmin = userInfo.RoleID == role.RoleAdminID
+		req.IsAdmin = userInfo.RoleID == service.RoleAdminID
 	}
 
 	resp, err := ac.activityService.GetObjectTimeline(ctx, req)

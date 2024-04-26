@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/schema"
-	services "github.com/lawyer/initServer/initServices"
+	services "github.com/lawyer/service"
 )
 
 // RoleController role controller
@@ -28,6 +28,6 @@ func (rc *RoleController) GetRoleList(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	resp, err := services.RoleService.GetRoleList(ctx)
+	resp, err := services.RoleServicer.GetRoleList(ctx)
 	handler.HandleResponse(ctx, err, resp)
 }

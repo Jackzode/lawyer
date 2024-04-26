@@ -12,20 +12,19 @@ import (
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/plugin"
 	"github.com/lawyer/service"
-	"github.com/lawyer/service/action"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // SearchController tag controller
 type SearchController struct {
 	searchService *service.SearchService
-	actionService *action.CaptchaService
+	actionService *service.CaptchaService
 }
 
 // NewSearchController new controller
 func NewSearchController(
 	searchService *service.SearchService,
-	actionService *action.CaptchaService,
+	actionService *service.CaptchaService,
 ) *SearchController {
 	return &SearchController{
 		searchService: searchService,

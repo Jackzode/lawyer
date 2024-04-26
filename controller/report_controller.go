@@ -11,25 +11,23 @@ import (
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
-	"github.com/lawyer/service/action"
+	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
-	"github.com/lawyer/service/rank"
-	"github.com/lawyer/service/report"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // ReportController report controller
 type ReportController struct {
-	reportService *report.ReportService
-	rankService   *rank.RankService
-	actionService *action.CaptchaService
+	reportService *service.ReportService
+	rankService   *service.RankService
+	actionService *service.CaptchaService
 }
 
 // NewReportController new controller
 func NewReportController(
-	reportService *report.ReportService,
-	rankService *rank.RankService,
-	actionService *action.CaptchaService,
+	reportService *service.ReportService,
+	rankService *service.RankService,
+	actionService *service.CaptchaService,
 ) *ReportController {
 	return &ReportController{
 		reportService: reportService,

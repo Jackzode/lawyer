@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service/export"
-	"github.com/lawyer/service/siteinfo_common"
-	"github.com/lawyer/service/user_external_login"
+	"github.com/lawyer/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,16 +21,16 @@ const (
 
 // ConnectorController comment controller
 type ConnectorController struct {
-	siteInfoService     siteinfo_common.SiteInfoCommonService
-	userExternalService *user_external_login.UserExternalLoginService
-	emailService        *export.EmailService
+	siteInfoService     service.SiteInfoCommonService
+	userExternalService *service.UserExternalLoginService
+	emailService        *service.EmailService
 }
 
 // NewConnectorController new controller
 func NewConnectorController(
-	siteInfoService siteinfo_common.SiteInfoCommonService,
-	emailService *export.EmailService,
-	userExternalService *user_external_login.UserExternalLoginService,
+	siteInfoService service.SiteInfoCommonService,
+	emailService *service.EmailService,
+	userExternalService *service.UserExternalLoginService,
 ) *ConnectorController {
 	return &ConnectorController{
 		siteInfoService:     siteInfoService,

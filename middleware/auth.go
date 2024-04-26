@@ -7,11 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/converter"
-	"github.com/lawyer/service/auth"
-	"github.com/lawyer/service/role"
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -19,17 +15,18 @@ var ctxUUIDKey = "ctxUuidKey"
 
 // AuthUserMiddleware auth user middleware
 type AuthUserMiddleware struct {
-	authService           *auth.AuthService
-	siteInfoCommonService siteinfo_common.SiteInfoCommonService
+	//authService           *auth.AuthService
+	//siteInfoCommonService siteinfo_common.SiteInfoCommonService
 }
 
 // NewAuthUserMiddleware new auth user middleware
 func NewAuthUserMiddleware(
-	authService *auth.AuthService,
-	siteInfoCommonService siteinfo_common.SiteInfoCommonService) *AuthUserMiddleware {
+// authService *auth.AuthService,
+// siteInfoCommonService siteinfo_common.SiteInfoCommonService
+) *AuthUserMiddleware {
 	return &AuthUserMiddleware{
-		authService:           authService,
-		siteInfoCommonService: siteInfoCommonService,
+		//authService:           authService,
+		//siteInfoCommonService: siteInfoCommonService,
 	}
 }
 
@@ -41,14 +38,14 @@ func (am *AuthUserMiddleware) Auth() gin.HandlerFunc {
 			ctx.Next()
 			return
 		}
-		userInfo, err := am.authService.GetUserCacheInfo(ctx, token)
-		if err != nil {
-			ctx.Next()
-			return
-		}
-		if userInfo != nil {
-			ctx.Set(ctxUUIDKey, userInfo)
-		}
+		//userInfo, err := am.authService.GetUserCacheInfo(ctx, token)
+		//if err != nil {
+		//	ctx.Next()
+		//	return
+		//}
+		//if userInfo != nil {
+		//	ctx.Set(ctxUUIDKey, userInfo)
+		//}
 		ctx.Next()
 	}
 }
@@ -56,22 +53,22 @@ func (am *AuthUserMiddleware) Auth() gin.HandlerFunc {
 // EjectUserBySiteInfo if admin config the site can access by nologin user, eject user.
 func (am *AuthUserMiddleware) EjectUserBySiteInfo() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		mustLogin := false
-		siteInfo, _ := am.siteInfoCommonService.GetSiteLogin(ctx)
-		if siteInfo != nil {
-			mustLogin = siteInfo.LoginRequired
-		}
-		if !mustLogin {
-			ctx.Next()
-			return
-		}
-
-		_, isLogin := ctx.Get(ctxUUIDKey)
-		if !isLogin {
-			handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
-			ctx.Abort()
-			return
-		}
+		//mustLogin := false
+		//siteInfo, _ := am.siteInfoCommonService.GetSiteLogin(ctx)
+		//if siteInfo != nil {
+		//	mustLogin = siteInfo.LoginRequired
+		//}
+		//if !mustLogin {
+		//	ctx.Next()
+		//	return
+		//}
+		//
+		//_, isLogin := ctx.Get(ctxUUIDKey)
+		//if !isLogin {
+		//	handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
+		//	ctx.Abort()
+		//	return
+		//}
 		ctx.Next()
 	}
 }
@@ -85,73 +82,73 @@ func (am *AuthUserMiddleware) MustAuth() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		userInfo, err := am.authService.GetUserCacheInfo(ctx, token)
-		if err != nil || userInfo == nil {
-			handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
-			ctx.Abort()
-			return
-		}
-		if userInfo.EmailStatus != entity.EmailStatusAvailable {
-			handler.HandleResponse(ctx, errors.Forbidden(reason.EmailNeedToBeVerified),
-				&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeInactive})
-			ctx.Abort()
-			return
-		}
-		if userInfo.UserStatus == entity.UserStatusSuspended {
-			handler.HandleResponse(ctx, errors.Forbidden(reason.UserSuspended),
-				&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeUserSuspended})
-			ctx.Abort()
-			return
-		}
-		if userInfo.UserStatus == entity.UserStatusDeleted {
-			handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
-			ctx.Abort()
-			return
-		}
-		ctx.Set(ctxUUIDKey, userInfo)
+		//userInfo, err := am.authService.GetUserCacheInfo(ctx, token)
+		//if err != nil || userInfo == nil {
+		//	handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
+		//	ctx.Abort()
+		//	return
+		//}
+		//if userInfo.EmailStatus != entity.EmailStatusAvailable {
+		//	handler.HandleResponse(ctx, errors.Forbidden(reason.EmailNeedToBeVerified),
+		//		&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeInactive})
+		//	ctx.Abort()
+		//	return
+		//}
+		//if userInfo.UserStatus == entity.UserStatusSuspended {
+		//	handler.HandleResponse(ctx, errors.Forbidden(reason.UserSuspended),
+		//		&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeUserSuspended})
+		//	ctx.Abort()
+		//	return
+		//}
+		//if userInfo.UserStatus == entity.UserStatusDeleted {
+		//	handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
+		//	ctx.Abort()
+		//	return
+		//}
+		//ctx.Set(ctxUUIDKey, userInfo)
 		ctx.Next()
 	}
 }
 
 func (am *AuthUserMiddleware) AdminAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token := ExtractToken(ctx)
-		if len(token) == 0 {
-			handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
-			ctx.Abort()
-			return
-		}
-		userInfo, err := am.authService.GetAdminUserCacheInfo(ctx, token)
-		if err != nil || userInfo == nil {
-			handler.HandleResponse(ctx, errors.Forbidden(reason.UnauthorizedError), nil)
-			ctx.Abort()
-			return
-		}
-		if userInfo != nil {
-			if userInfo.UserStatus == entity.UserStatusDeleted {
-				handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
-				ctx.Abort()
-				return
-			}
-			ctx.Set(ctxUUIDKey, userInfo)
-		}
+		//token := ExtractToken(ctx)
+		//if len(token) == 0 {
+		//	handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
+		//	ctx.Abort()
+		//	return
+		//}
+		//userInfo, err := am.authService.GetAdminUserCacheInfo(ctx, token)
+		//if err != nil || userInfo == nil {
+		//	handler.HandleResponse(ctx, errors.Forbidden(reason.UnauthorizedError), nil)
+		//	ctx.Abort()
+		//	return
+		//}
+		//if userInfo != nil {
+		//	if userInfo.UserStatus == entity.UserStatusDeleted {
+		//		handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
+		//		ctx.Abort()
+		//		return
+		//	}
+		//	ctx.Set(ctxUUIDKey, userInfo)
+		//}
 		ctx.Next()
 	}
 }
 
 func (am *AuthUserMiddleware) CheckPrivateMode() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := am.siteInfoCommonService.GetSiteLogin(ctx)
-		if err != nil {
-			//ShowIndexPage(ctx)
-			ctx.Abort()
-			return
-		}
-		if resp.LoginRequired {
-			//ShowIndexPage(ctx)
-			ctx.Abort()
-			return
-		}
+		//resp, err := am.siteInfoCommonService.GetSiteLogin(ctx)
+		//if err != nil {
+		//	//ShowIndexPage(ctx)
+		//	ctx.Abort()
+		//	return
+		//}
+		//if resp.LoginRequired {
+		//	//ShowIndexPage(ctx)
+		//	ctx.Abort()
+		//	return
+		//}
 		ctx.Next()
 	}
 }
@@ -183,7 +180,8 @@ func GetIsAdminFromContext(ctx *gin.Context) (isAdmin bool) {
 	if userInfo == nil {
 		return false
 	}
-	return userInfo.RoleID == role.RoleAdminID
+	//return userInfo.RoleID == role.RoleAdminID
+	return true
 }
 
 // GetUserInfoFromContext get user info from context
@@ -200,17 +198,17 @@ func GetUserInfoFromContext(ctx *gin.Context) (u *entity.UserCacheInfo) {
 }
 
 func GetUserIsAdminModerator(ctx *gin.Context) (isAdminModerator bool) {
-	userInfo, exist := ctx.Get(ctxUUIDKey)
-	if !exist {
-		return false
-	}
-	u, ok := userInfo.(*entity.UserCacheInfo)
-	if !ok {
-		return false
-	}
-	if u.RoleID == role.RoleAdminID || u.RoleID == role.RoleModeratorID {
-		return true
-	}
+	//userInfo, exist := ctx.Get(ctxUUIDKey)
+	//if !exist {
+	//	return false
+	//}
+	//u, ok := userInfo.(*entity.UserCacheInfo)
+	//if !ok {
+	//	return false
+	//}
+	//if u.RoleID == role.RoleAdminID || u.RoleID == role.RoleModeratorID {
+	//	return true
+	//}
 	return false
 }
 

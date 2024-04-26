@@ -9,7 +9,6 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
@@ -29,7 +28,7 @@ import (
 
 // QuestionRepo question repository
 
-// QuestionService user service
+// QuestionServicer user service
 type QuestionService struct {
 }
 
@@ -56,12 +55,12 @@ func (qs *QuestionService) CloseQuestion(ctx context.Context, req *schema.CloseQ
 		CloseType: req.CloseType,
 		CloseMsg:  req.CloseMsg,
 	})
-	err = services.MetaService.AddMeta(ctx, req.ID, entity.QuestionCloseReasonKey, string(closeMeta))
+	err = MetaService.AddMeta(ctx, req.ID, entity.QuestionCloseReasonKey, string(closeMeta))
 	if err != nil {
 		return err
 	}
 
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
@@ -85,7 +84,7 @@ func (qs *QuestionService) ReopenQuestion(ctx context.Context, req *schema.Reope
 	if err != nil {
 		return err
 	}
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
@@ -117,7 +116,7 @@ func (qs *QuestionService) CheckAddQuestion(ctx context.Context, req *schema.Que
 		err = errors.BadRequest(reason.RecommendTagEnter)
 		return errorlist, err
 	}
-	recommendExist, err := services.TagCommonService.ExistRecommend(ctx, req.Tags)
+	recommendExist, err := TagCommonServicer.ExistRecommend(ctx, req.Tags)
 	if err != nil {
 		return
 	}
@@ -135,7 +134,7 @@ func (qs *QuestionService) CheckAddQuestion(ctx context.Context, req *schema.Que
 	for _, tag := range req.Tags {
 		tagNameList = append(tagNameList, tag.SlugName)
 	}
-	Tags, tagerr := services.TagCommonService.GetTagListByNames(ctx, tagNameList)
+	Tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		return errorlist, tagerr
 	}
@@ -158,7 +157,7 @@ func (qs *QuestionService) CheckAddQuestion(ctx context.Context, req *schema.Que
 
 // HasNewTag
 func (qs *QuestionService) HasNewTag(ctx context.Context, tags []*schema.TagItem) (bool, error) {
-	return services.TagCommonService.HasNewTag(ctx, tags)
+	return TagCommonServicer.HasNewTag(ctx, tags)
 }
 
 // AddQuestion add question
@@ -172,7 +171,7 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		err = errors.BadRequest(reason.RecommendTagEnter)
 		return errorlist, err
 	}
-	recommendExist, err := services.TagCommonService.ExistRecommend(ctx, req.Tags)
+	recommendExist, err := TagCommonServicer.ExistRecommend(ctx, req.Tags)
 	if err != nil {
 		return
 	}
@@ -191,7 +190,7 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		tag.SlugName = strings.ReplaceAll(tag.SlugName, " ", "-")
 		tagNameList = append(tagNameList, tag.SlugName)
 	}
-	tags, tagerr := services.TagCommonService.GetTagListByNames(ctx, tagNameList)
+	tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		return questionInfo, tagerr
 	}
@@ -252,23 +251,23 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 	}
 	infoJSON, _ := json.Marshal(questionWithTagsRevision)
 	revisionDTO.Content = string(infoJSON)
-	revisionID, err := services.RevisionService.AddRevision(ctx, revisionDTO, true)
+	revisionID, err := RevisionComServicer.AddRevision(ctx, revisionDTO, true)
 	if err != nil {
 		return
 	}
 
 	// user add question count
-	userQuestionCount, err := services.QuestionCommon.GetUserQuestionCount(ctx, question.UserID)
+	userQuestionCount, err := QuestionCommonServicer.GetUserQuestionCount(ctx, question.UserID)
 	if err != nil {
 		log.Errorf("get user question count error %v", err)
 	} else {
-		err = services.UserCommon.UpdateQuestionCount(ctx, question.UserID, userQuestionCount)
+		err = UserCommonServicer.UpdateQuestionCount(ctx, question.UserID, userQuestionCount)
 		if err != nil {
 			log.Errorf("update user question count error %v", err)
 		}
 	}
 
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           question.UserID,
 		ObjectID:         question.ID,
 		OriginalObjectID: question.ID,
@@ -276,7 +275,7 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		RevisionID:       revisionID,
 	})
 
-	services.ExternalNotificationQueueService.Send(ctx,
+	ExternalNotificationQueueService.Send(ctx,
 		schema.CreateNewQuestionNotificationMsg(question.ID, question.Title, question.UserID, tags))
 
 	questionInfo, err = qs.GetQuestion(ctx, question.ID, question.UserID, req.QuestionPermission)
@@ -304,21 +303,21 @@ func (qs *QuestionService) OperationQuestion(ctx context.Context, req *schema.Op
 	switch req.Operation {
 	case schema.QuestionOperationHide:
 		questionInfo.Show = entity.QuestionHide
-		err = services.TagCommonService.HideTagRelListByObjectID(ctx, req.ID)
+		err = TagCommonServicer.HideTagRelListByObjectID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
-		err = services.TagCommonService.RefreshTagCountByQuestionID(ctx, req.ID)
+		err = TagCommonServicer.RefreshTagCountByQuestionID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
 	case schema.QuestionOperationShow:
 		questionInfo.Show = entity.QuestionShow
-		err = services.TagCommonService.ShowTagRelListByObjectID(ctx, req.ID)
+		err = TagCommonServicer.ShowTagRelListByObjectID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
-		err = services.TagCommonService.RefreshTagCountByQuestionID(ctx, req.ID)
+		err = TagCommonServicer.RefreshTagCountByQuestionID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
@@ -340,7 +339,7 @@ func (qs *QuestionService) OperationQuestion(ctx context.Context, req *schema.Op
 	actMap[schema.QuestionOperationShow] = constant.ActQuestionShow
 	_, ok := actMap[req.Operation]
 	if ok {
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			ObjectID:         questionInfo.ID,
 			OriginalObjectID: questionInfo.ID,
@@ -380,7 +379,7 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 			answersearch := &entity.AnswerSearch{}
 			answersearch.QuestionID = req.ID
 			//todo
-			answerList, _, err := services.AnswerCommon.Search(ctx, answersearch)
+			answerList, _, err := AnswerCommonServicer.Search(ctx, answersearch)
 			if err != nil {
 				return err
 			}
@@ -398,11 +397,11 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 		return err
 	}
 
-	userQuestionCount, err := services.QuestionCommon.GetUserQuestionCount(ctx, questionInfo.UserID)
+	userQuestionCount, err := QuestionCommonServicer.GetUserQuestionCount(ctx, questionInfo.UserID)
 	if err != nil {
 		log.Error("user GetUserQuestionCount error", err.Error())
 	} else {
-		err = services.UserCommon.UpdateQuestionCount(ctx, questionInfo.UserID, userQuestionCount)
+		err = UserCommonServicer.UpdateQuestionCount(ctx, questionInfo.UserID, userQuestionCount)
 		if err != nil {
 			log.Error("user IncreaseQuestionCount error", err.Error())
 		}
@@ -410,7 +409,7 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 
 	//tag count
 	tagIDs := make([]string, 0)
-	Tags, tagerr := services.TagCommonService.GetObjectEntityTag(ctx, req.ID)
+	Tags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, req.ID)
 	if tagerr != nil {
 		log.Error("GetObjectEntityTag error", tagerr)
 		return nil
@@ -418,11 +417,11 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 	for _, v := range Tags {
 		tagIDs = append(tagIDs, v.ID)
 	}
-	err = services.TagCommonService.RemoveTagRelListByObjectID(ctx, req.ID)
+	err = TagCommonServicer.RemoveTagRelListByObjectID(ctx, req.ID)
 	if err != nil {
 		log.Error("RemoveTagRelListByObjectID error", err.Error())
 	}
-	err = services.TagCommonService.RefreshTagQuestionCount(ctx, tagIDs)
+	err = TagCommonServicer.RefreshTagQuestionCount(ctx, tagIDs)
 	if err != nil {
 		log.Error("efreshTagQuestionCount error", err.Error())
 	}
@@ -433,7 +432,7 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 	// if err != nil {
 	// 	 log.Errorf("user DeleteQuestion rank rollback error %s", err.Error())
 	// }
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
 		ObjectID:         questionInfo.ID,
 		OriginalObjectID: questionInfo.ID,
@@ -451,7 +450,7 @@ func (qs *QuestionService) UpdateQuestionCheckTags(ctx context.Context, req *sch
 		return
 	}
 
-	oldTags, tagerr := services.TagCommonService.GetObjectEntityTag(ctx, req.ID)
+	oldTags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, req.ID)
 	if tagerr != nil {
 		log.Error("GetObjectEntityTag error", tagerr)
 		return nil, nil
@@ -466,14 +465,14 @@ func (qs *QuestionService) UpdateQuestionCheckTags(ctx context.Context, req *sch
 		oldtagNameList = append(oldtagNameList, tag.SlugName)
 	}
 
-	isChange := services.TagCommonService.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
+	isChange := TagCommonServicer.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
 
 	//If the content is the same, ignore it
 	if dbinfo.Title == req.Title && dbinfo.OriginalText == req.Content && !isChange {
 		return
 	}
 
-	Tags, tagerr := services.TagCommonService.GetTagListByNames(ctx, tagNameList)
+	Tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		log.Error("GetTagListByNames error", tagerr)
 		return nil, nil
@@ -526,23 +525,23 @@ func (qs *QuestionService) RecoverQuestion(ctx context.Context, req *schema.Ques
 	}
 
 	// update user's question count
-	userQuestionCount, err := services.QuestionCommon.GetUserQuestionCount(ctx, questionInfo.UserID)
+	userQuestionCount, err := QuestionCommonServicer.GetUserQuestionCount(ctx, questionInfo.UserID)
 	if err != nil {
 		log.Error("user GetUserQuestionCount error", err.Error())
 	} else {
-		err = services.UserCommon.UpdateQuestionCount(ctx, questionInfo.UserID, userQuestionCount)
+		err = UserCommonServicer.UpdateQuestionCount(ctx, questionInfo.UserID, userQuestionCount)
 		if err != nil {
 			log.Error("user IncreaseQuestionCount error", err.Error())
 		}
 	}
 
 	// update tag's question count
-	if err = services.TagCommonService.RemoveTagRelListByObjectID(ctx, questionInfo.ID); err != nil {
+	if err = TagCommonServicer.RemoveTagRelListByObjectID(ctx, questionInfo.ID); err != nil {
 		log.Errorf("remove tag rel list by object id error %v", err)
 	}
 
 	tagIDs := make([]string, 0)
-	tags, err := services.TagCommonService.GetObjectEntityTag(ctx, questionInfo.ID)
+	tags, err := TagCommonServicer.GetObjectEntityTag(ctx, questionInfo.ID)
 	if err != nil {
 		return err
 	}
@@ -550,12 +549,12 @@ func (qs *QuestionService) RecoverQuestion(ctx context.Context, req *schema.Ques
 		tagIDs = append(tagIDs, v.ID)
 	}
 	if len(tagIDs) > 0 {
-		if err = services.TagCommonService.RefreshTagQuestionCount(ctx, tagIDs); err != nil {
+		if err = TagCommonServicer.RefreshTagQuestionCount(ctx, tagIDs); err != nil {
 			log.Errorf("update tag's question count failed, %v", err)
 		}
 	}
 
-	services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
 		TriggerUserID:    converter.StringToInt64(req.UserID),
 		ObjectID:         questionInfo.ID,
@@ -575,7 +574,7 @@ func (qs *QuestionService) UpdateQuestionInviteUser(ctx context.Context, req *sc
 	}
 
 	//verify invite user
-	inviteUserInfoList, err := services.UserCommon.BatchGetUserBasicInfoByUserNames(ctx, req.InviteUser)
+	inviteUserInfoList, err := UserCommonServicer.BatchGetUserBasicInfoByUserNames(ctx, req.InviteUser)
 	if err != nil {
 		log.Error("BatchGetUserBasicInfoByUserNames error", err.Error())
 	}
@@ -621,7 +620,7 @@ func (qs *QuestionService) UpdateQuestionInviteUser(ctx context.Context, req *sc
 
 func (qs *QuestionService) notificationInviteUser(
 	ctx context.Context, invitedUserIDs []string, questionID, questionTitle, questionUserID string) {
-	inviter, exist, err := services.UserCommon.GetUserBasicInfoByID(ctx, questionUserID)
+	inviter, exist, err := UserCommonServicer.GetUserBasicInfoByID(ctx, questionUserID)
 	if err != nil {
 		log.Error(err)
 		return
@@ -649,7 +648,7 @@ func (qs *QuestionService) notificationInviteUser(
 		}
 		msg.ObjectType = constant.QuestionObjectType
 		msg.NotificationAction = constant.NotificationInvitedYouToAnswer
-		services.NotificationQueueService.Send(ctx, msg)
+		NotificationQueueService.Send(ctx, msg)
 
 		receiverUserInfo, ok := invitee[userID]
 		if !ok {
@@ -668,7 +667,7 @@ func (qs *QuestionService) notificationInviteUser(
 			UnsubscribeCode:    token.GenerateToken(),
 		}
 		externalNotificationMsg.NewInviteAnswerTemplateRawData = rawData
-		services.ExternalNotificationQueueService.Send(ctx, externalNotificationMsg)
+		ExternalNotificationQueueService.Send(ctx, externalNotificationMsg)
 	}
 }
 
@@ -677,7 +676,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 	var canUpdate bool
 	questionInfo = &schema.QuestionInfo{}
 
-	_, existUnreviewed, err := services.RevisionService.ExistUnreviewedByObjectID(ctx, req.ID)
+	_, existUnreviewed, err := RevisionComServicer.ExistUnreviewedByObjectID(ctx, req.ID)
 	if err != nil {
 		return
 	}
@@ -709,7 +708,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 	question.UserID = dbinfo.UserID
 	question.LastEditUserID = req.UserID
 
-	oldTags, tagerr := services.TagCommonService.GetObjectEntityTag(ctx, question.ID)
+	oldTags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, question.ID)
 	if tagerr != nil {
 		return questionInfo, tagerr
 	}
@@ -724,14 +723,14 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 		oldtagNameList = append(oldtagNameList, tag.SlugName)
 	}
 
-	isChange := services.TagCommonService.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
+	isChange := TagCommonServicer.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
 
 	//If the content is the same, ignore it
 	if dbinfo.Title == req.Title && dbinfo.OriginalText == req.Content && !isChange {
 		return
 	}
 
-	Tags, tagerr := services.TagCommonService.GetTagListByNames(ctx, tagNameList)
+	Tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		return questionInfo, tagerr
 	}
@@ -763,7 +762,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 		}
 	}
 	// Check whether mandatory labels are selected
-	recommendExist, err := services.TagCommonService.ExistRecommend(ctx, req.Tags)
+	recommendExist, err := TagCommonServicer.ExistRecommend(ctx, req.Tags)
 	if err != nil {
 		return
 	}
@@ -818,12 +817,12 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 	}
 	infoJSON, _ := json.Marshal(questionWithTagsRevision)
 	revisionDTO.Content = string(infoJSON)
-	revisionID, err := services.RevisionService.AddRevision(ctx, revisionDTO, true)
+	revisionID, err := RevisionComServicer.AddRevision(ctx, revisionDTO, true)
 	if err != nil {
 		return
 	}
 	if canUpdate {
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			ObjectID:         question.ID,
 			ActivityTypeKey:  constant.ActQuestionEdited,
@@ -840,7 +839,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 func (qs *QuestionService) GetQuestion(ctx context.Context, questionID, userID string,
 	per schema.QuestionPermission) (resp *schema.QuestionInfo, err error) {
 
-	question, err := services.QuestionCommon.Info(ctx, questionID, userID)
+	question, err := QuestionCommonServicer.Info(ctx, questionID, userID)
 	if err != nil {
 		return
 	}
@@ -889,7 +888,7 @@ func (qs *QuestionService) GetQuestion(ctx context.Context, questionID, userID s
 func (qs *QuestionService) GetQuestionAndAddPV(ctx context.Context, questionID, loginUserID string,
 	per schema.QuestionPermission) (
 	resp *schema.QuestionInfo, err error) {
-	err = services.QuestionCommon.UpdatePv(ctx, questionID)
+	err = QuestionCommonServicer.UpdatePv(ctx, questionID)
 	if err != nil {
 		log.Error(err)
 	}
@@ -897,22 +896,22 @@ func (qs *QuestionService) GetQuestionAndAddPV(ctx context.Context, questionID, 
 }
 
 func (qs *QuestionService) InviteUserInfo(ctx context.Context, questionID string) (inviteList []*schema.UserBasicInfo, err error) {
-	return services.QuestionCommon.InviteUserInfo(ctx, questionID)
+	return QuestionCommonServicer.InviteUserInfo(ctx, questionID)
 }
 
 func (qs *QuestionService) ChangeTag(ctx context.Context, objectTagData *schema.TagChange) error {
-	return services.TagCommonService.ObjectChangeTag(ctx, objectTagData)
+	return TagCommonServicer.ObjectChangeTag(ctx, objectTagData)
 }
 
 func (qs *QuestionService) CheckChangeReservedTag(ctx context.Context, oldobjectTagData, objectTagData []*entity.Tag) (bool, bool, []string, []string) {
-	return services.TagCommonService.CheckChangeReservedTag(ctx, oldobjectTagData, objectTagData)
+	return TagCommonServicer.CheckChangeReservedTag(ctx, oldobjectTagData, objectTagData)
 }
 
 // PersonalQuestionPage get question list by user
 func (qs *QuestionService) PersonalQuestionPage(ctx context.Context, req *schema.PersonalQuestionPageReq) (
 	pageModel *pager.PageModel, err error) {
 
-	userinfo, exist, err := services.UserCommon.GetUserBasicInfoByUserName(ctx, req.Username)
+	userinfo, exist, err := UserCommonServicer.GetUserBasicInfoByUserName(ctx, req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -944,7 +943,7 @@ func (qs *QuestionService) PersonalQuestionPage(ctx context.Context, req *schema
 
 func (qs *QuestionService) PersonalAnswerPage(ctx context.Context, req *schema.PersonalAnswerPageReq) (
 	pageModel *pager.PageModel, err error) {
-	userinfo, exist, err := services.UserCommon.GetUserBasicInfoByUserName(ctx, req.Username)
+	userinfo, exist, err := UserCommonServicer.GetUserBasicInfoByUserName(ctx, req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -961,7 +960,7 @@ func (qs *QuestionService) PersonalAnswerPage(ctx context.Context, req *schema.P
 		answersearch.Order = entity.AnswerSearchOrderByDefault
 	}
 	questionIDs := make([]string, 0)
-	answerList, total, err := services.AnswerCommon.Search(ctx, answersearch)
+	answerList, total, err := AnswerCommonServicer.Search(ctx, answersearch)
 	if err != nil {
 		return nil, err
 	}
@@ -969,11 +968,11 @@ func (qs *QuestionService) PersonalAnswerPage(ctx context.Context, req *schema.P
 	answerlist := make([]*schema.AnswerInfo, 0)
 	userAnswerlist := make([]*schema.UserAnswerInfo, 0)
 	for _, item := range answerList {
-		answerinfo := services.AnswerCommon.ShowFormat(ctx, item)
+		answerinfo := AnswerCommonServicer.ShowFormat(ctx, item)
 		answerlist = append(answerlist, answerinfo)
 		questionIDs = append(questionIDs, uid.DeShortID(item.QuestionID))
 	}
-	questionMaps, err := services.QuestionCommon.FindInfoByID(ctx, questionIDs, req.LoginUserID)
+	questionMaps, err := QuestionCommonServicer.FindInfoByID(ctx, questionIDs, req.LoginUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -1007,7 +1006,7 @@ func (qs *QuestionService) PersonalCollectionPage(ctx context.Context, req *sche
 	collectionSearch.UserID = req.UserID
 	collectionSearch.Page = req.Page
 	collectionSearch.PageSize = req.PageSize
-	collectionList, total, err := services.CollectionCommon.SearchList(ctx, collectionSearch)
+	collectionList, total, err := CollectionCommon.SearchList(ctx, collectionSearch)
 	if err != nil {
 		return nil, err
 	}
@@ -1016,7 +1015,7 @@ func (qs *QuestionService) PersonalCollectionPage(ctx context.Context, req *sche
 		questionIDs = append(questionIDs, item.ObjectID)
 	}
 
-	questionMaps, err := services.QuestionCommon.FindInfoByID(ctx, questionIDs, req.UserID)
+	questionMaps, err := QuestionCommonServicer.FindInfoByID(ctx, questionIDs, req.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -1046,7 +1045,7 @@ func (qs *QuestionService) SearchUserTopList(ctx context.Context, userName strin
 	userAnswerlist := make([]*schema.UserAnswerInfo, 0)
 	userQuestionlist := make([]*schema.UserQuestionInfo, 0)
 
-	userinfo, Exist, err := services.UserCommon.GetUserBasicInfoByUserName(ctx, userName)
+	userinfo, Exist, err := UserCommonServicer.GetUserBasicInfoByUserName(ctx, userName)
 	if err != nil {
 		return userQuestionlist, userAnswerlist, err
 	}
@@ -1068,16 +1067,16 @@ func (qs *QuestionService) SearchUserTopList(ctx context.Context, userName strin
 	answersearch.PageSize = 5
 	answersearch.Order = entity.AnswerSearchOrderByVote
 	questionIDs := make([]string, 0)
-	answerList, _, err := services.AnswerCommon.Search(ctx, answersearch)
+	answerList, _, err := AnswerCommonServicer.Search(ctx, answersearch)
 	if err != nil {
 		return userQuestionlist, userAnswerlist, err
 	}
 	for _, item := range answerList {
-		answerinfo := services.AnswerCommon.ShowFormat(ctx, item)
+		answerinfo := AnswerCommonServicer.ShowFormat(ctx, item)
 		answerlist = append(answerlist, answerinfo)
 		questionIDs = append(questionIDs, item.QuestionID)
 	}
-	questionMaps, err := services.QuestionCommon.FindInfoByID(ctx, questionIDs, loginUserID)
+	questionMaps, err := QuestionCommonServicer.FindInfoByID(ctx, questionIDs, loginUserID)
 	if err != nil {
 		return userQuestionlist, userAnswerlist, err
 	}
@@ -1141,7 +1140,7 @@ func (qs *QuestionService) GetQuestionsByTitle(ctx context.Context, title string
 
 // SimilarQuestion
 func (qs *QuestionService) SimilarQuestion(ctx context.Context, questionID string, loginUserID string) ([]*schema.QuestionPageResp, int64, error) {
-	question, err := services.QuestionCommon.Info(ctx, questionID, loginUserID)
+	question, err := QuestionCommonServicer.Info(ctx, questionID, loginUserID)
 	if err != nil {
 		return nil, 0, nil
 	}
@@ -1167,7 +1166,7 @@ func (qs *QuestionService) GetQuestionPage(ctx context.Context, req *schema.Ques
 
 	// query by tag condition
 	if len(req.Tag) > 0 {
-		tagInfo, exist, err := services.TagCommonService.GetTagBySlugName(ctx, strings.ToLower(req.Tag))
+		tagInfo, exist, err := TagCommonServicer.GetTagBySlugName(ctx, strings.ToLower(req.Tag))
 		if err != nil {
 			return nil, 0, err
 		}
@@ -1178,7 +1177,7 @@ func (qs *QuestionService) GetQuestionPage(ctx context.Context, req *schema.Ques
 
 	// query by user condition
 	if req.Username != "" {
-		userinfo, exist, err := services.UserCommon.GetUserBasicInfoByUserName(ctx, req.Username)
+		userinfo, exist, err := UserCommonServicer.GetUserBasicInfoByUserName(ctx, req.Username)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -1193,7 +1192,7 @@ func (qs *QuestionService) GetQuestionPage(ctx context.Context, req *schema.Ques
 	if err != nil {
 		return nil, 0, err
 	}
-	questions, err = services.QuestionCommon.FormatQuestionsPage(ctx, questionList, req.LoginUserID, req.OrderCond)
+	questions, err = QuestionCommonServicer.FormatQuestionsPage(ctx, questionList, req.LoginUserID, req.OrderCond)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -1225,7 +1224,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 		//if err != nil {
 		//	log.Errorf("admin delete question then rank rollback error %s", err.Error())
 		//}
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           questionInfo.UserID,
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
@@ -1235,7 +1234,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 		msg.NotificationAction = constant.NotificationYourQuestionWasDeleted
 	}
 	if setStatus == entity.QuestionStatusAvailable && questionInfo.Status == entity.QuestionStatusClosed {
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           questionInfo.UserID,
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
@@ -1244,7 +1243,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 		})
 	}
 	if setStatus == entity.QuestionStatusClosed && questionInfo.Status != entity.QuestionStatusClosed {
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           questionInfo.UserID,
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
@@ -1255,7 +1254,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 	}
 	// recover
 	if setStatus == entity.QuestionStatusAvailable && questionInfo.Status == entity.QuestionStatusDeleted {
-		services.ActivityQueueService.Send(ctx, &schema.ActivityMsg{
+		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
 			TriggerUserID:    converter.StringToInt64(req.UserID),
 			ObjectID:         questionInfo.ID,
@@ -1270,7 +1269,7 @@ func (qs *QuestionService) AdminSetQuestionStatus(ctx context.Context, req *sche
 		msg.ReceiverUserID = questionInfo.UserID
 		msg.TriggerUserID = req.UserID
 		msg.ObjectType = constant.QuestionObjectType
-		services.NotificationQueueService.Send(ctx, msg)
+		NotificationQueueService.Send(ctx, msg)
 	}
 	return nil
 }
@@ -1295,7 +1294,7 @@ func (qs *QuestionService) AdminQuestionPage(
 		list = append(list, item)
 		userIds = append(userIds, info.UserID)
 	}
-	userInfoMap, err := services.UserCommon.BatchUserBasicInfoByID(ctx, userIds)
+	userInfoMap, err := UserCommonServicer.BatchUserBasicInfoByID(ctx, userIds)
 	if err != nil {
 		return nil, err
 	}
@@ -1310,7 +1309,7 @@ func (qs *QuestionService) AdminQuestionPage(
 // AdminAnswerPage search answer list
 func (qs *QuestionService) AdminAnswerPage(ctx context.Context, req *schema.AdminAnswerPageReq) (
 	resp *pager.PageModel, err error) {
-	answerList, count, err := services.AnswerCommon.AdminSearchList(ctx, req)
+	answerList, count, err := AnswerCommonServicer.AdminSearchList(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -1319,16 +1318,16 @@ func (qs *QuestionService) AdminAnswerPage(ctx context.Context, req *schema.Admi
 	userIds := make([]string, 0)
 	answerResp := make([]*schema.AdminAnswerInfo, 0)
 	for _, item := range answerList {
-		answerInfo := services.AnswerCommon.AdminShowFormat(ctx, item)
+		answerInfo := AnswerCommonServicer.AdminShowFormat(ctx, item)
 		answerResp = append(answerResp, answerInfo)
 		questionIDs = append(questionIDs, item.QuestionID)
 		userIds = append(userIds, item.UserID)
 	}
-	userInfoMap, err := services.UserCommon.BatchUserBasicInfoByID(ctx, userIds)
+	userInfoMap, err := UserCommonServicer.BatchUserBasicInfoByID(ctx, userIds)
 	if err != nil {
 		return nil, err
 	}
-	questionMaps, err := services.QuestionCommon.FindInfoByID(ctx, questionIDs, req.LoginUserID)
+	questionMaps, err := QuestionCommonServicer.FindInfoByID(ctx, questionIDs, req.LoginUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -1359,11 +1358,11 @@ func (qs *QuestionService) changeQuestionToRevision(ctx context.Context, questio
 }
 
 func (qs *QuestionService) SitemapCron(ctx context.Context) {
-	siteSeo, err := services.SiteInfoCommonService.GetSiteSeo(ctx)
+	siteSeo, err := SiteInfoCommonServicer.GetSiteSeo(ctx)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 	ctx = context.WithValue(ctx, constant.ShortIDFlag, siteSeo.IsShortLink())
-	services.QuestionCommon.SitemapCron(ctx)
+	QuestionCommonServicer.SitemapCron(ctx)
 }

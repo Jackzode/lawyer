@@ -5,21 +5,20 @@ import (
 	"fmt"
 
 	"github.com/lawyer/service"
-	"github.com/lawyer/service/siteinfo_common"
 	"github.com/robfig/cron/v3"
 	"github.com/segmentfault/pacman/log"
 )
 
 // ScheduledTaskManager scheduled task manager
 type ScheduledTaskManager struct {
-	siteInfoService siteinfo_common.SiteInfoCommonService
-	questionService *service.QuestionService
+	siteInfoService service.SiteInfoCommonServicer
+	questionService *service.QuestionServicer
 }
 
 // NewScheduledTaskManager new scheduled task manager
 func NewScheduledTaskManager(
-	siteInfoService siteinfo_common.SiteInfoCommonService,
-	questionService *service.QuestionService,
+	siteInfoService service.SiteInfoCommonServicer,
+	questionService *service.QuestionServicer,
 ) *ScheduledTaskManager {
 	manager := &ScheduledTaskManager{
 		siteInfoService: siteInfoService,

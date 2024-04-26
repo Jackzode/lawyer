@@ -4,12 +4,12 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils/pager"
-	services "github.com/lawyer/initServer/initServices"
+	services "github.com/lawyer/service"
 	"golang.org/x/net/context"
 )
 
 func (q *TemplateRenderController) TagList(ctx context.Context, req *schema.GetTagWithPageReq) (resp *pager.PageModel, err error) {
-	resp, err = services.TagService.GetTagWithPage(ctx, req)
+	resp, err = services.TagServicer.GetTagWithPage(ctx, req)
 	if err != nil {
 		return
 	}
@@ -19,7 +19,7 @@ func (q *TemplateRenderController) TagList(ctx context.Context, req *schema.GetT
 func (q *TemplateRenderController) TagInfo(ctx context.Context, req *schema.GetTamplateTagInfoReq) (resp *schema.GetTagResp, questionList []*schema.QuestionPageResp, questionCount int64, err error) {
 	dto := &schema.GetTagInfoReq{}
 	_ = copier.Copy(dto, req)
-	resp, err = services.TagService.GetTagInfo(ctx, dto)
+	resp, err = services.TagServicer.GetTagInfo(ctx, dto)
 	if err != nil {
 		return
 	}
@@ -29,7 +29,7 @@ func (q *TemplateRenderController) TagInfo(ctx context.Context, req *schema.GetT
 	searchQuestion.OrderCond = "newest"
 	searchQuestion.Tag = req.Name
 	searchQuestion.LoginUserID = req.UserID
-	questionList, questionCount, err = services.QuestionService.GetQuestionPage(ctx, searchQuestion)
+	questionList, questionCount, err = services.QuestionServicer.GetQuestionPage(ctx, searchQuestion)
 	if err != nil {
 		return
 	}

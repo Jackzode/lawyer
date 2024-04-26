@@ -6,15 +6,15 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service/rank"
+	"github.com/lawyer/service"
 )
 
 type PermissionController struct {
-	rankService *rank.RankService
+	rankService *service.RankService
 }
 
 // NewPermissionController new language controller.
-func NewPermissionController(rankService *rank.RankService) *PermissionController {
+func NewPermissionController(rankService *service.RankService) *PermissionController {
 	return &PermissionController{rankService: rankService}
 }
 

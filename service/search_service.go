@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/lawyer/commons/schema"
-	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/plugin"
 	"github.com/lawyer/repo"
 )
@@ -28,7 +27,7 @@ func (ss *SearchService) Search(ctx context.Context, dto *schema.SearchDTO) (res
 	}
 
 	// search type
-	cond := services.SearchParser.ParseStructure(ctx, dto)
+	cond := SearchParserServicer.ParseStructure(ctx, dto)
 
 	// check search plugin
 	var finder plugin.Search

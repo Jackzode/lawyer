@@ -4,9 +4,7 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/service/rank"
-	"github.com/lawyer/service/tag"
-	"github.com/lawyer/service/tag_common"
+	"github.com/lawyer/service"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -17,16 +15,16 @@ import (
 
 // TagController tag controller
 type TagController struct {
-	tagService       *tag.TagService
-	tagCommonService *tag_common.TagCommonService
-	rankService      *rank.RankService
+	tagService       *service.TagService
+	tagCommonService *service.TagCommonService
+	rankService      *service.RankService
 }
 
 // NewTagController new controller
 func NewTagController(
-	tagService *tag.TagService,
-	tagCommonService *tag_common.TagCommonService,
-	rankService *rank.RankService,
+	tagService *service.TagService,
+	tagCommonService *service.TagCommonService,
+	rankService *service.RankService,
 ) *TagController {
 	return &TagController{tagService: tagService, tagCommonService: tagCommonService, rankService: rankService}
 }

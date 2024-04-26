@@ -7,7 +7,6 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/initServer/initServices"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/config"
 	"strings"
@@ -20,8 +19,8 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// VoteRepo activity repository
-type VoteRepo interface {
+// VoteComRepo activity repository
+type VoteComRepo interface {
 	Vote(ctx context.Context, op *schema.VoteOperationInfo) (err error)
 	CancelVote(ctx context.Context, op *schema.VoteOperationInfo) (err error)
 	GetAndSaveVoteResult(ctx context.Context, objectID, objectType string) (up, down int64, err error)
@@ -29,7 +28,7 @@ type VoteRepo interface {
 		voteList []*entity.Activity, total int64, err error)
 }
 
-// VoteService user service
+// VoteServicer user service
 type VoteService struct {
 }
 
@@ -39,7 +38,7 @@ func NewVoteService() *VoteService {
 
 // VoteUp vote up
 func (vs *VoteService) VoteUp(ctx context.Context, req *schema.VoteReq) (resp *schema.VoteResp, err error) {
-	objectInfo, err := services.ObjService.GetInfo(ctx, req.ObjectID)
+	objectInfo, err := ObjServicer.GetInfo(ctx, req.ObjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +82,7 @@ func (vs *VoteService) VoteUp(ctx context.Context, req *schema.VoteReq) (resp *s
 
 // VoteDown vote down
 func (vs *VoteService) VoteDown(ctx context.Context, req *schema.VoteReq) (resp *schema.VoteResp, err error) {
-	objectInfo, err := services.ObjService.GetInfo(ctx, req.ObjectID)
+	objectInfo, err := ObjServicer.GetInfo(ctx, req.ObjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +154,7 @@ func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWith
 
 	votes := make([]*schema.GetVoteWithPageResp, 0)
 	for _, voteInfo := range voteList {
-		objInfo, err := services.ObjService.GetInfo(ctx, voteInfo.ObjectID)
+		objInfo, err := ObjServicer.GetInfo(ctx, voteInfo.ObjectID)
 		if err != nil {
 			log.Error(err)
 			continue

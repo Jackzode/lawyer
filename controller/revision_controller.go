@@ -12,20 +12,19 @@ import (
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
-	"github.com/lawyer/service/rank"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // RevisionController revision controller
 type RevisionController struct {
 	revisionListService *service.RevisionService
-	rankService         *rank.RankService
+	rankService         *service.RankService
 }
 
 // NewRevisionController new controller
 func NewRevisionController(
 	revisionListService *service.RevisionService,
-	rankService *rank.RankService,
+	rankService *service.RankService,
 ) *RevisionController {
 	return &RevisionController{
 		revisionListService: revisionListService,
