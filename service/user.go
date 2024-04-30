@@ -183,10 +183,10 @@ func (us *UserCommon) CacheLoginUserInfo(ctx context.Context, userID string, use
 	if err != nil {
 		return "", nil, err
 	}
-	if userCacheInfo.RoleID == RoleAdminID {
-		if err = AuthServicer.SetAdminUserCacheInfo(ctx, accessToken, &entity.UserCacheInfo{UserID: userID}); err != nil {
-			return "", nil, err
-		}
-	}
+	//if userCacheInfo.RoleID == RoleAdminID {
+	//	if err = AuthServicer.SetAdminUserCacheInfo(ctx, accessToken, &entity.UserCacheInfo{UserID: userID}); err != nil {
+	//		return "", nil, err
+	//	}
+	//}
 	return accessToken, userCacheInfo, nil
 }

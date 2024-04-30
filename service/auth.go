@@ -6,7 +6,6 @@ import (
 	"github.com/lawyer/repo"
 
 	"github.com/lawyer/pkg/token"
-	"github.com/lawyer/plugin"
 )
 
 // AuthRepo auth repository
@@ -56,15 +55,16 @@ func (as *AuthService) GetUserCacheInfo(ctx context.Context, accessToken string)
 	}
 
 	//todo  try to get user status from user center
-	uc, ok := plugin.GetUserCenter()
-	if ok && len(userCacheInfo.ExternalID) > 0 {
-		if userStatus := uc.UserStatus(userCacheInfo.ExternalID); userStatus != plugin.UserStatusAvailable {
-			userCacheInfo.UserStatus = int(userStatus)
-		}
-	}
+	//uc, ok := plugin.GetUserCenter()
+	//if ok && len(userCacheInfo.ExternalID) > 0 {
+	//	if userStatus := uc.UserStatus(userCacheInfo.ExternalID); userStatus != plugin.UserStatusAvailable {
+	//		userCacheInfo.UserStatus = int(userStatus)
+	//	}
+	//}
 	return userCacheInfo, nil
 }
 
+// visit token 指向access token， acctoken指向userCacheInfo
 func (as *AuthService) SetUserCacheInfo(ctx context.Context, userInfo *entity.UserCacheInfo) (
 	accessToken string, visitToken string, err error) {
 	accessToken = token.GenerateToken()

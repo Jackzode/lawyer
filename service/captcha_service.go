@@ -85,8 +85,8 @@ func (cs *CaptchaService) UserRegisterVerifyCaptcha(ctx context.Context, id, Ver
 // ActionRecordVerifyCaptcha
 // Verify that you need to enter a CAPTCHA, and that the CAPTCHA is correct
 func (cs *CaptchaService) ActionRecordVerifyCaptcha(ctx context.Context, actionType, IP, CaptchaId, CaptchaCode string) bool {
-	verificationResult := cs.ValidationStrategy(ctx, IP, actionType)
-	if !verificationResult {
+	noNeedVerification := cs.ValidationStrategy(ctx, IP, actionType)
+	if !noNeedVerification {
 		if CaptchaId == "" || CaptchaCode == "" {
 			return false
 		}
@@ -99,6 +99,7 @@ func (cs *CaptchaService) ActionRecordVerifyCaptcha(ctx context.Context, actionT
 	return true
 }
 
+// 这个函数干啥的？没看明白啊
 func (cs *CaptchaService) ActionRecordAdd(ctx context.Context, actionType string, unit string) (int, error) {
 	info, err := repo.CaptchaRepo.GetActionType(ctx, unit, actionType)
 	if err != nil {
@@ -151,7 +152,7 @@ func (cs *CaptchaService) GenerateCaptcha(ctx context.Context) (key, captchaBase
 	return id, captchaBase64, nil
 }
 
-// VerifyCaptcha generate captcha
+// VerifyCaptcha generate captcha 拿到验证码答案，在删除验证码key，再和端上入参进行对比
 func (cs *CaptchaService) VerifyCaptcha(ctx context.Context, key, captcha string) (isCorrect bool, err error) {
 	realCaptcha, err := repo.CaptchaRepo.GetCaptcha(ctx, key)
 	if err != nil {

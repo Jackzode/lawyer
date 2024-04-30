@@ -12,20 +12,21 @@ import (
 // true pass
 // false need captcha
 func (cs *CaptchaService) ValidationStrategy(ctx context.Context, IP, actionType string) bool {
-	//在缓存中查询最近6min的操作
+	//在缓存中查询最近操作
 	info, err := repo.CaptchaRepo.GetActionType(ctx, IP, actionType)
 	if err != nil {
 		glog.Logger.Error(err.Error())
 		return false
 	}
 	// If no operation previously, it is considered to be the first operation
-	//第一次操作不需要验证码之类的
+	//最近没有操作记录，不需要验证码
 	if info == nil {
 		return true
 	}
 	switch actionType {
 	case entity.CaptchaActionEmail:
 		return cs.CaptchaActionEmail(ctx, IP, info)
+		//下面的几种类型还没看
 	case entity.CaptchaActionPassword:
 		return cs.CaptchaActionPassword(ctx, IP, info)
 	case entity.CaptchaActionEditUserinfo:

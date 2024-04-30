@@ -65,15 +65,8 @@ func (us *UserService) GetOtherUserInfoByUsername(ctx context.Context, username 
 	return resp, nil
 }
 
-// EmailLogin email login
 func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLoginReq) (resp *schema.UserLoginResp, err error) {
-	siteLogin, err := SiteInfoCommonServicer.GetSiteLogin(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if !siteLogin.AllowPasswordLogin {
-		return nil, errors.BadRequest(reason.NotAllowedLoginViaPassword)
-	}
+
 	userInfo, exist, err := repo.UserRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, err
@@ -84,14 +77,14 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 	if !us.verifyPassword(ctx, req.Pass, userInfo.Pass) {
 		return nil, errors.BadRequest(reason.EmailOrPasswordWrong)
 	}
-	ok, externalID, err := UserExternalLoginServicer.CheckUserStatusInUserCenter(ctx, userInfo.ID)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, errors.BadRequest(reason.EmailOrPasswordWrong)
-	}
-
+	//ok, externalID, err := UserExternalLoginServicer.CheckUserStatusInUserCenter(ctx, userInfo.ID)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if !ok {
+	//	return nil, errors.BadRequest(reason.EmailOrPasswordWrong)
+	//}
+	//更新最近登陆时间
 	err = repo.UserRepo.UpdateLastLoginDate(ctx, userInfo.ID)
 	if err != nil {
 		log.Errorf("update last login data failed, err: %v", err)
@@ -110,19 +103,19 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 		EmailStatus: userInfo.MailStatus,
 		UserStatus:  userInfo.Status,
 		RoleID:      roleID,
-		ExternalID:  externalID,
+		//ExternalID:  externalID,
 	}
 	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
 	resp.RoleID = userCacheInfo.RoleID
-	if resp.RoleID == RoleAdminID {
-		err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, userCacheInfo)
-		if err != nil {
-			return nil, err
-		}
-	}
+	//if resp.RoleID == RoleAdminID {
+	//	err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, userCacheInfo)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 
 	return resp, nil
 }
@@ -167,7 +160,7 @@ func (us *UserService) UpdatePasswordWhenForgot(ctx context.Context, req *schema
 	if !exist {
 		return errors.BadRequest(reason.UserNotFound)
 	}
-	enpass, err := us.encryptPassword(ctx, req.Pass)
+	enpass, err := utils.EncryptPassword(req.Pass)
 	if err != nil {
 		return err
 	}
@@ -198,7 +191,7 @@ func (us *UserService) UserModifyPassWordVerification(ctx context.Context, req *
 
 // UserModifyPassword user modify password
 func (us *UserService) UserModifyPassword(ctx context.Context, req *schema.UserModifyPasswordReq) error {
-	enpass, err := us.encryptPassword(ctx, req.Pass)
+	enpass, err := utils.EncryptPassword(req.Pass)
 	if err != nil {
 		return err
 	}
@@ -332,6 +325,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	if err != nil {
 		return nil, err
 	}
+	//邮箱重复了
 	if has {
 		return nil, errors.BadRequest(reason.EmailDuplicate)
 	}
@@ -339,7 +333,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	userInfo := &entity.User{}
 	userInfo.EMail = registerUserInfo.Email
 	userInfo.DisplayName = registerUserInfo.Name
-	userInfo.Pass, err = us.encryptPassword(ctx, registerUserInfo.Pass)
+	userInfo.Pass, err = utils.EncryptPassword(registerUserInfo.Pass)
 	if err != nil {
 		return nil, err
 	}
@@ -351,12 +345,12 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	userInfo.MailStatus = entity.EmailStatusToBeVerified
 	userInfo.Status = entity.UserStatusAvailable
 	userInfo.LastLoginDate = time.Now()
-	//todo 这里有疑问  userInfo.ID是哪来的？插入mysql生成的？
+	//userInfo.ID是插入mysql生成的
 	err = repo.UserRepo.AddUser(ctx, userInfo)
 	if err != nil {
 		return nil, err
 	}
-	//todo  userInfo.ID这里
+	//todo
 	if err = UserNotificationConfigService.SetDefaultUserNotificationConfig(ctx, []string{userInfo.ID}); err != nil {
 		glog.Logger.Error("set default user notification config failed, err: " + err.Error())
 	}
@@ -373,7 +367,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 		return nil, err
 	}
 	go EmailServicer.SendAndSaveCode(ctx, userInfo.EMail, title, body, code, data.ToJSONString())
-
+	//新注册用户不存在role id，默认为1
 	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
 	if err != nil {
 		glog.Logger.Error(err.Error())
@@ -382,6 +376,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	// return user info and token
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
+	//todo
 	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	userCacheInfo := &entity.UserCacheInfo{
 		UserID:      userInfo.ID,
@@ -389,17 +384,18 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 		UserStatus:  userInfo.Status,
 		RoleID:      roleID,
 	}
+	//visit token 指向access token， acctoken指向userCacheInfo
 	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
 	resp.RoleID = userCacheInfo.RoleID
-	if resp.RoleID == RoleAdminID {
-		err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
-		if err != nil {
-			return nil, err
-		}
-	}
+	//if resp.RoleID == RoleAdminID {
+	//	err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 	return resp, nil
 }
 
@@ -432,7 +428,7 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 	if err != nil {
 		return nil, errors.BadRequest(reason.EmailVerifyURLExpired)
 	}
-
+	//根据code获取缓存里的content，里面包含email和uid
 	userInfo, has, err := repo.UserRepo.GetByEmail(ctx, data.Email)
 	if err != nil {
 		return nil, err
@@ -447,17 +443,18 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 			return nil, err
 		}
 	}
+	//记录用户操作的动作，
 	if err = repo.UserActiveActivityRepo.UserActive(ctx, userInfo.ID); err != nil {
 		glog.Logger.Error(err.Error())
 	}
 
 	// In the case of three-party login, the associated users are bound
-	if len(data.BindingKey) > 0 {
-		err = UserExternalLoginServicer.ExternalLoginBindingUser(ctx, data.BindingKey, userInfo)
-		if err != nil {
-			return nil, err
-		}
-	}
+	//if len(data.BindingKey) > 0 {
+	//	err = UserExternalLoginServicer.ExternalLoginBindingUser(ctx, data.BindingKey, userInfo)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 
 	accessToken, userCacheInfo, err := UserCommonServicer.CacheLoginUserInfo(
 		ctx, userInfo.ID, userInfo.MailStatus, userInfo.Status, "")
@@ -488,11 +485,6 @@ func (us *UserService) verifyPassword(ctx context.Context, loginPass, userPass s
 
 // encryptPassword
 // The password does irreversible encryption.
-func (us *UserService) encryptPassword(ctx context.Context, Pass string) (string, error) {
-	hashPwd, err := bcrypt.GenerateFromPassword([]byte(Pass), bcrypt.DefaultCost)
-	// This encrypted string can be saved to the database and can be used as password matching verification
-	return string(hashPwd), err
-}
 
 // UserChangeEmailSendCode user change email verification
 func (us *UserService) UserChangeEmailSendCode(ctx context.Context, req *schema.UserChangeEmailSendCodeReq) (
@@ -611,14 +603,15 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 	return resp, nil
 }
 
-// getSiteUrl get site url
+// getSiteUrl get site url todo 改成读配置文件
 func (us *UserService) getSiteUrl(ctx context.Context) string {
-	siteGeneral, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		log.Errorf("get site general failed: %s", err)
-		return ""
-	}
-	return siteGeneral.SiteUrl
+	//siteGeneral, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
+	//if err != nil {
+	//	log.Errorf("get site general failed: %s", err)
+	//	return ""
+	//}
+	//return siteGeneral.SiteUrl
+	return ""
 }
 
 // UserRanking get user ranking

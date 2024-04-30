@@ -66,7 +66,10 @@ func (ur *UserRankRepo) CheckReachLimit(ctx context.Context, session *xorm.Sessi
 func (ur *UserRankRepo) ChangeUserRank(
 	ctx context.Context, session *xorm.Session, userID string, userCurrentScore, deltaRank int) (err error) {
 	// IMPORTANT: If user center enabled the rank agent, then we should not change user rank.
-	if plugin.RankAgentEnabled() || deltaRank == 0 {
+	//if plugin.RankAgentEnabled() || deltaRank == 0 {
+	//	return nil
+	//}
+	if deltaRank == 0 {
 		return nil
 	}
 

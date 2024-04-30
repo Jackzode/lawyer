@@ -72,7 +72,7 @@ func (ar *UserActiveActivityRepo) UserActive(ctx context.Context, userID string)
 		if exist {
 			return nil, nil
 		}
-
+		//增加排名
 		err = repoCommon.NewUserRankRepo().ChangeUserRank(ctx, session, addActivity.UserID, user.Rank, addActivity.Rank)
 		if err != nil {
 			return nil, err

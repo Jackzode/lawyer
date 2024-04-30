@@ -128,15 +128,6 @@ func (ac *AnswerController) RecoverAnswer(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, nil)
 }
 
-// Get godoc
-// @Summary Get Answer
-// @Description Get Answer
-// @Tags api-answer
-// @Accept  json
-// @Produce  json
-// @Param id query string true "Answer TagID"  default(1)
-// @Router  /answer/api/v1/answer/info [get]
-// @Success 200 {string} string ""
 func (ac *AnswerController) Get(ctx *gin.Context) {
 	id := ctx.Query("id")
 	id = uid.DeShortID(id)

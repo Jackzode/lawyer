@@ -50,9 +50,10 @@ func (ar *AuthRepo) SetUserCacheInfo(ctx context.Context,
 	err = ar.Cache.Set(ctx, constant.UserTokenCacheKey+accessToken,
 		string(userInfoCache), constant.UserTokenCacheTime).Err()
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
-	if err := ar.AddUserTokenMapping(ctx, userInfo.UserID, accessToken); err != nil {
+	//
+	if err = ar.AddUserTokenMapping(ctx, userInfo.UserID, accessToken); err != nil {
 		log.Error(err)
 	}
 	if len(visitToken) == 0 {
@@ -161,7 +162,7 @@ func (ar *AuthRepo) RemoveAdminUserCacheInfo(ctx context.Context, accessToken st
 	return nil
 }
 
-// AddUserTokenMapping add user token mapping
+// AddUserTokenMapping add user token mapping todo没搞明白这是干啥
 func (ar *AuthRepo) AddUserTokenMapping(ctx context.Context, userID, accessToken string) (err error) {
 	key := constant.UserTokenMappingCacheKey + userID
 	resp := ar.Cache.Get(ctx, key).String()

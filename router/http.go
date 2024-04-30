@@ -3,12 +3,11 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/router/lawyerRoutes"
-	p "github.com/lawyer/router/plugin_api"
+	"github.com/lawyer/router/routes"
 )
 
 // NewHTTPServer new http server.
-func NewHTTPServer(debug bool, pluginAPIRouter *p.PluginAPIRouter) *gin.Engine {
+func NewHTTPServer(debug bool) *gin.Engine {
 
 	if debug {
 		gin.SetMode(gin.DebugMode)
@@ -16,23 +15,28 @@ func NewHTTPServer(debug bool, pluginAPIRouter *p.PluginAPIRouter) *gin.Engine {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.New()
-	r.GET("/heartBeat", heartBeat)
-	InitRoutes(r, pluginAPIRouter)
+	r.GET("/heartBeat", heartBeats)
+	InitRoutes(r)
 	return r
 }
 
-func InitRoutes(r *gin.Engine, pluginAPIRouter *p.PluginAPIRouter) {
+func InitRoutes(r *gin.Engine) {
 
 	//register middleware
 	r.Use(middleware.ExtractAndSetAcceptLanguage)
 	r.Use(middleware.TraceId)
 
-	routes := r.Group("/lawyer")
+	router := r.Group("/lawyer")
 	// todo a lots of route....
-	lawyerRoutes.RegisterUserApi(routes)
-	//lawyerRoutes.RegisterOtherApi(routes)
-
-	// plugin routes
+	routes.RegisterUserApi(router)
+	routes.RegisterOtherApi(router)
+	routes.RegisterAnswerApi(router)
+	routes.RegisterCommentApi(router)
+	routes.RegisterNotificationApi(router)
+	routes.RegisterReportApi(router)
+	routes.RegisterTagApi(router)
+	routes.RegisterRevisionApi(router)
+	// plugin router
 	//pluginAPIRouter.RegisterUnAuthConnectorRouter(adminauthV1)
 	//pluginAPIRouter.RegisterAuthUserConnectorRouter(adminauthV1)
 	//pluginAPIRouter.RegisterAuthAdminConnectorRouter(adminauthV1)
@@ -45,4 +49,5 @@ func InitRoutes(r *gin.Engine, pluginAPIRouter *p.PluginAPIRouter) {
 	//})
 
 }
-func heartBeat(ctx *gin.Context) { ctx.String(200, "OK") }
+
+func heartBeats(ctx *gin.Context) { ctx.String(200, "OK") }

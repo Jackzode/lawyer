@@ -7,6 +7,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/segmentfault/pacman/i18n"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // GetEnableShortID get language from header
@@ -64,4 +65,10 @@ func (c *CommentQuery) GetOrderBy() string {
 		return "created_at DESC"
 	}
 	return "created_at ASC"
+}
+
+func EncryptPassword(Pass string) (string, error) {
+	hashPwd, err := bcrypt.GenerateFromPassword([]byte(Pass), bcrypt.DefaultCost)
+	// This encrypted string can be saved to the database and can be used as password matching verification
+	return string(hashPwd), err
 }
