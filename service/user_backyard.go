@@ -9,6 +9,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/repo"
 	"net/mail"
@@ -20,7 +21,6 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -98,13 +98,13 @@ func (us *UserAdminService) UpdateUserStatus(ctx context.Context, req *schema.Up
 // removeAllUserCreatedContent remove all user created content
 func (us *UserAdminService) removeAllUserCreatedContent(ctx context.Context, userID string) {
 	if err := repo.QuestionRepo.RemoveAllUserQuestion(ctx, userID); err != nil {
-		log.Errorf("remove all user question error: %v", err)
+		glog.Slog.Errorf("remove all user question error: %v", err)
 	}
 	if err := repo.AnswerRepo.RemoveAllUserAnswer(ctx, userID); err != nil {
-		log.Errorf("remove all user answer error: %v", err)
+		glog.Slog.Errorf("remove all user answer error: %v", err)
 	}
 	if err := repo.CommentCommonRepo.RemoveAllUserComment(ctx, userID); err != nil {
-		log.Errorf("remove all user comment error: %v", err)
+		glog.Slog.Errorf("remove all user comment error: %v", err)
 	}
 }
 
@@ -120,7 +120,7 @@ func (us *UserAdminService) UpdateUserRole(ctx context.Context, req *schema.Upda
 		return err
 	}
 
-	AuthServicer.RemoveUserAllTokens(ctx, req.UserID)
+	//AuthServicer.RemoveUserAllTokens(ctx, req.UserID)
 	return
 }
 
@@ -282,7 +282,7 @@ func (us *UserAdminService) UpdateUserPassword(ctx context.Context, req *schema.
 		return err
 	}
 	// logout this user
-	AuthServicer.RemoveUserAllTokens(ctx, req.UserID)
+	//AuthServicer.RemoveUserAllTokens(ctx, req.UserID)
 	return
 }
 
@@ -382,7 +382,7 @@ func (us *UserAdminService) setUserRoleInfo(ctx context.Context, resp []*schema.
 
 	userRoleMapping, err := UserRoleRelServicer.GetUserRoleMapping(ctx, userIDs)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 

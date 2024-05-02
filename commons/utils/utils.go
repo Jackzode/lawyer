@@ -2,12 +2,16 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/segmentfault/pacman/i18n"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
+	"time"
 )
 
 // GetEnableShortID get language from header
@@ -28,7 +32,7 @@ func GetLang(ctx *gin.Context) i18n.Language {
 	return i18n.Language(acceptLanguage)
 }
 
-func GetTraceId(ctx *gin.Context) string {
+func GetTraceIdFromHeader(ctx *gin.Context) string {
 	trace := ctx.GetHeader(constant.TraceID)
 	return trace
 }
@@ -71,4 +75,75 @@ func EncryptPassword(Pass string) (string, error) {
 	hashPwd, err := bcrypt.GenerateFromPassword([]byte(Pass), bcrypt.DefaultCost)
 	// This encrypted string can be saved to the database and can be used as password matching verification
 	return string(hashPwd), err
+}
+
+// ExtractToken extract token from context
+func ExtractToken(ctx *gin.Context) (token string) {
+	token = ctx.GetHeader("Authorization")
+	if len(token) == 0 {
+		token = ctx.Query("Authorization")
+	}
+	return strings.TrimPrefix(token, "lawyer-")
+}
+
+func ParseToken(tokenString string) (*CustomClaim, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &CustomClaim{}, func(token *jwt.Token) (i interface{}, e error) {
+		return secret, nil
+	})
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				return nil, TokenMalformed
+			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				// Token is expired
+				return nil, TokenExpired
+			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+				return nil, TokenNotValidYet
+			} else {
+				return nil, TokenInvalid
+			}
+		}
+	}
+	if token == nil {
+		return nil, TokenInvalid
+	}
+	if claims, ok := token.Claims.(*CustomClaim); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, TokenInvalid
+}
+
+var secret = []byte("lawyer")
+var (
+	Issuer                 = "lawyer-test"
+	ExpireDate             = time.Hour * 24 * 15
+	ExpireBuffer     int64 = 1000 * 3600 * 24
+	TokenExpired           = errors.New("token is expired")
+	TokenNotValidYet       = errors.New("token not active yet")
+	TokenMalformed         = errors.New("that's not even a token")
+	TokenInvalid           = errors.New("token invalid")
+)
+
+type CustomClaim struct {
+	jwt.RegisteredClaims
+	UserName string
+	Role     int
+	Uid      string
+}
+
+func CreateToken(UserName, Uid string, Role int) (string, error) {
+
+	claims := CustomClaim{
+		UserName: UserName,
+		Uid:      "12345",
+		Role:     1,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience:  jwt.ClaimStrings{"lawyer"},                     // 受众
+			NotBefore: jwt.NewNumericDate(time.Now().Add(-1000)),      // 签名生效时间
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ExpireDate)), // 过期时间 7天  配置文件
+			Issuer:    Issuer,
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(secret)
 }

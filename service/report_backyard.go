@@ -3,16 +3,15 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
+	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
+	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/htmltext"
 	"github.com/lawyer/repo"
-	"github.com/segmentfault/pacman/log"
-
-	"github.com/jinzhu/copier"
-	"github.com/lawyer/commons/schema"
-	"github.com/lawyer/commons/utils/pager"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -109,7 +108,7 @@ func (rs *ReportAdminService) decorateReportResp(ctx context.Context, resp *sche
 	lang := utils.GetLangByCtx(ctx)
 	objectInfo, err := ObjServicer.GetInfo(ctx, resp.ObjectID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 
@@ -123,7 +122,7 @@ func (rs *ReportAdminService) decorateReportResp(ctx context.Context, resp *sche
 		resp.Reason = &schema.ReasonItem{ReasonType: resp.ReportType}
 		cf, err := utils.GetConfigByID(ctx, resp.ReportType)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		} else {
 			_ = json.Unmarshal([]byte(cf.Value), resp.Reason)
 			resp.Reason.Translate(cf.Key, lang)
@@ -133,7 +132,7 @@ func (rs *ReportAdminService) decorateReportResp(ctx context.Context, resp *sche
 		resp.FlaggedReason = &schema.ReasonItem{ReasonType: resp.FlaggedType}
 		cf, err := utils.GetConfigByID(ctx, resp.FlaggedType)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		} else {
 			_ = json.Unmarshal([]byte(cf.Value), resp.Reason)
 			resp.Reason.Translate(cf.Key, lang)

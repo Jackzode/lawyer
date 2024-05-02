@@ -5,6 +5,7 @@ const (
 	UserSuspended = "suspended"
 	UserDeleted   = "deleted"
 	UserInactive  = "inactive"
+	TokenClaim    = "TokenClaim"
 )
 const (
 	EmailStatusAvailable    = 1

@@ -36,6 +36,7 @@ func NewUserActiveActivityRepo() *UserActiveActivityRepo {
 
 // UserActive user active
 func (ar *UserActiveActivityRepo) UserActive(ctx context.Context, userID string) (err error) {
+	//{ID: 10, Key: "user.activated", Value: `1`},
 	cfg, err := utils.GetConfigByKey(ctx, UserActivated)
 	if err != nil {
 		return err
@@ -53,14 +54,14 @@ func (ar *UserActiveActivityRepo) UserActive(ctx context.Context, userID string)
 		session = session.Context(ctx)
 
 		user := &entity.User{}
-		exist, err := session.ID(userID).ForUpdate().Get(user)
+		exist, err := session.ID(userID).ForUpdate().Get(user) //当前读，获取用户信息
 		if err != nil {
 			return nil, err
 		}
 		if !exist {
 			return nil, fmt.Errorf("user not exist")
 		}
-
+		//查activity表，确认是否有重复
 		existsActivity := &entity.Activity{}
 		exist, err = session.
 			And(builder.Eq{"user_id": addActivity.UserID}).
@@ -77,7 +78,7 @@ func (ar *UserActiveActivityRepo) UserActive(ctx context.Context, userID string)
 		if err != nil {
 			return nil, err
 		}
-
+		//insert到activity表中
 		_, err = session.Insert(addActivity)
 		if err != nil {
 			return nil, err

@@ -5,6 +5,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	checker "github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/repo"
@@ -14,7 +15,6 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/random"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 type UserRepo interface {
@@ -32,9 +32,9 @@ type UserRepo interface {
 	UpdateInfo(ctx context.Context, userInfo *entity.User) (err error)
 	GetByUserID(ctx context.Context, userID string) (userInfo *entity.User, exist bool, err error)
 	BatchGetByID(ctx context.Context, ids []string) ([]*entity.User, error)
-	GetByUsername(ctx context.Context, username string) (userInfo *entity.User, exist bool, err error)
+	GetUserInfoByUsername(ctx context.Context, username string) (userInfo *entity.User, exist bool, err error)
 	GetByUsernames(ctx context.Context, usernames []string) ([]*entity.User, error)
-	GetByEmail(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error)
+	GetUserInfoByEmailFromDB(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error)
 	GetUserCount(ctx context.Context) (count int64, err error)
 	SearchUserListByName(ctx context.Context, name string, limit int) (userList []*entity.User, err error)
 }
@@ -59,7 +59,7 @@ func (us *UserCommon) GetUserBasicInfoByID(ctx context.Context, ID string) (
 }
 
 func (us *UserCommon) GetUserBasicInfoByUserName(ctx context.Context, username string) (*schema.UserBasicInfo, bool, error) {
-	userInfo, exist, err := repo.UserRepo.GetByUsername(ctx, username)
+	userInfo, exist, err := repo.UserRepo.GetUserInfoByUsername(ctx, username)
 	if err != nil {
 		return nil, exist, err
 	}
@@ -152,7 +152,7 @@ func (us *UserCommon) MakeUsername(ctx context.Context, displayName string) (use
 	}
 
 	for {
-		_, has, err := repo.UserRepo.GetByUsername(ctx, username+suffix)
+		_, has, err := repo.UserRepo.GetUserInfoByUsername(ctx, username+suffix)
 		if err != nil {
 			return "", err
 		}
@@ -166,9 +166,10 @@ func (us *UserCommon) MakeUsername(ctx context.Context, displayName string) (use
 
 func (us *UserCommon) CacheLoginUserInfo(ctx context.Context, userID string, userStatus, emailStatus int, externalID string) (
 	accessToken string, userCacheInfo *entity.UserCacheInfo, err error) {
+
 	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 
 	userCacheInfo = &entity.UserCacheInfo{
@@ -179,14 +180,9 @@ func (us *UserCommon) CacheLoginUserInfo(ctx context.Context, userID string, use
 		ExternalID:  externalID,
 	}
 
-	accessToken, _, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
+	accessToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return "", nil, err
 	}
-	//if userCacheInfo.RoleID == RoleAdminID {
-	//	if err = AuthServicer.SetAdminUserCacheInfo(ctx, accessToken, &entity.UserCacheInfo{UserID: userID}); err != nil {
-	//		return "", nil, err
-	//	}
-	//}
 	return accessToken, userCacheInfo, nil
 }

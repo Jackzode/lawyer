@@ -55,7 +55,7 @@ func (ur *UserAdminRepo) UpdateUserStatus(ctx context.Context, userID string, us
 	}
 	t, _ := json.Marshal(userCacheInfo)
 	log.Infof("user change status: %s", string(t))
-	err = auth.NewAuthRepo().SetUserStatus(ctx, userID, userCacheInfo)
+	err = auth.NewAuthRepo().SetUserCacheInfoByUid(ctx, userID, userCacheInfo)
 	if err != nil {
 		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}

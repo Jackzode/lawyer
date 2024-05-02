@@ -8,6 +8,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/repo"
 	"sort"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/converter"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 type TagCommonRepo interface {
@@ -376,7 +376,7 @@ func (ts *TagCommonService) TagsFormatRecommendAndReserved(ctx context.Context, 
 	}
 	tagConfig, err := SiteInfoCommonServicer.GetSiteWrite(ctx)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 	if !tagConfig.RequiredTag {
@@ -392,7 +392,7 @@ func (ts *TagCommonService) tagFormatRecommendAndReserved(ctx context.Context, t
 	}
 	tagConfig, err := SiteInfoCommonServicer.GetSiteWrite(ctx)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 	if !tagConfig.RequiredTag {
@@ -654,7 +654,7 @@ func (ts *TagCommonService) RefreshTagQuestionCount(ctx context.Context, tagIDs 
 		if err != nil {
 			return err
 		}
-		log.Debugf("tag count updated %s %d", tagID, count)
+		glog.Slog.Debugf("tag count updated %s %d", tagID, count)
 	}
 	return nil
 }
@@ -752,7 +752,7 @@ func (ts *TagCommonService) CreateOrUpdateTagRelList(ctx context.Context, object
 
 	err = ts.RefreshTagQuestionCount(ctx, needRefreshTagIDs)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return nil
 }
@@ -801,7 +801,7 @@ func (ts *TagCommonService) UpdateTag(ctx context.Context, req *schema.UpdateTag
 			return err
 		}
 		if tagInfo.MainTagID == 0 && len(req.SlugName) > 0 {
-			log.Debugf("tag %s update slug_name", tagInfo.SlugName)
+			glog.Slog.Debugf("tag %s update slug_name", tagInfo.SlugName)
 			tagList, err := repo.TagRepo.GetTagList(ctx, &entity.Tag{MainTagID: converter.StringToInt64(tagInfo.ID)})
 			if err != nil {
 				return err

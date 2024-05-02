@@ -8,14 +8,15 @@ import (
 
 func main() {
 	// todo init log
-	glog.InitLog("stdout")
+	glog.InitLogger("./log/test.log", "debug")
 	defer func() {
-		err := glog.Logger.Sync()
+		err := glog.Klog.Sync()
 		fmt.Println(err)
 	}()
+	fmt.Println("server is starting...")
 	filename := `.\conf\config.yaml`
 	application := initServer.Init(filename)
-	err := application.Run()
+	err := application.Run(":8081")
 	if err != nil {
 		panic(err)
 	}

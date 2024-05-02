@@ -7,6 +7,7 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/repo"
@@ -165,17 +166,17 @@ func (qs *QuestionCommon) Info(ctx context.Context, questionID string, loginUser
 		var metainfo *entity.Meta
 		metainfo, err = MetaService.GetMetaByObjectIdAndKey(ctx, dbinfo.ID, entity.QuestionCloseReasonKey)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		} else {
 			// metainfo.Value
 			closemsg := &schema.CloseQuestionMeta{}
 			err = json.Unmarshal([]byte(metainfo.Value), closemsg)
 			if err != nil {
-				log.Error("json.Unmarshal CloseQuestionMeta error", err.Error())
+				glog.Slog.Error("json.Unmarshal CloseQuestionMeta error", err.Error())
 			} else {
 				cfg, err := utils.GetConfigByID(ctx, closemsg.CloseType)
 				if err != nil {
-					log.Error("json.Unmarshal QuestionCloseJson error", err.Error())
+					glog.Slog.Error("json.Unmarshal QuestionCloseJson error", err.Error())
 				} else {
 					reasonItem := &schema.ReasonItem{}
 					_ = json.Unmarshal(cfg.GetByteValue(), reasonItem)
@@ -238,7 +239,7 @@ func (qs *QuestionCommon) Info(ctx context.Context, questionID string, loginUser
 
 	ids, err := AnswerCommonServicer.SearchAnswerIDs(ctx, loginUserID, dbinfo.ID)
 	if err != nil {
-		log.Error("AnswerFunc.SearchAnswerIDs", err)
+		glog.Slog.Error("AnswerFunc.SearchAnswerIDs", err)
 	}
 	showinfo.Answered = len(ids) > 0
 	if showinfo.Answered {
@@ -420,11 +421,11 @@ func (qs *QuestionCommon) RemoveQuestion(ctx context.Context, req *schema.Remove
 
 	userQuestionCount, err := qs.GetUserQuestionCount(ctx, questionInfo.UserID)
 	if err != nil {
-		log.Error("user GetUserQuestionCount error", err.Error())
+		glog.Slog.Error("user GetUserQuestionCount error", err.Error())
 	} else {
 		err = UserCommonServicer.UpdateQuestionCount(ctx, questionInfo.UserID, userQuestionCount)
 		if err != nil {
-			log.Error("user IncreaseQuestionCount error", err.Error())
+			glog.Slog.Error("user IncreaseQuestionCount error", err.Error())
 		}
 	}
 

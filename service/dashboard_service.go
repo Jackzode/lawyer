@@ -7,6 +7,7 @@ import (
 	"github.com/lawyer/commons/config"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/handler"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/repo"
@@ -19,7 +20,6 @@ import (
 
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/dir"
-	"github.com/segmentfault/pacman/log"
 )
 
 type dashboardService struct {
@@ -81,14 +81,14 @@ func (ds *dashboardService) setCache(ctx context.Context, info *schema.Dashboard
 	infoStr, _ := json.Marshal(info)
 	err := handler.RedisClient.Set(ctx, schema.DashboardCacheKey, string(infoStr), schema.DashboardCacheTime).Err()
 	if err != nil {
-		log.Errorf("set dashboard statistical failed: %s", err)
+		glog.Slog.Errorf("set dashboard statistical failed: %s", err)
 	}
 }
 
 func (ds *dashboardService) questionCount(ctx context.Context) int64 {
 	questionCount, err := repo.QuestionRepo.GetQuestionCount(ctx)
 	if err != nil {
-		log.Errorf("get question count failed: %s", err)
+		glog.Slog.Errorf("get question count failed: %s", err)
 	}
 	return questionCount
 }
@@ -96,7 +96,7 @@ func (ds *dashboardService) questionCount(ctx context.Context) int64 {
 func (ds *dashboardService) answerCount(ctx context.Context) int64 {
 	answerCount, err := repo.AnswerRepo.GetAnswerCount(ctx)
 	if err != nil {
-		log.Errorf("get answer count failed: %s", err)
+		glog.Slog.Errorf("get answer count failed: %s", err)
 	}
 	return answerCount
 }
@@ -104,7 +104,7 @@ func (ds *dashboardService) answerCount(ctx context.Context) int64 {
 func (ds *dashboardService) commentCount(ctx context.Context) int64 {
 	commentCount, err := repo.CommentCommonRepo.GetCommentCount(ctx)
 	if err != nil {
-		log.Errorf("get comment count failed: %s", err)
+		glog.Slog.Errorf("get comment count failed: %s", err)
 	}
 	return commentCount
 }
@@ -112,7 +112,7 @@ func (ds *dashboardService) commentCount(ctx context.Context) int64 {
 func (ds *dashboardService) userCount(ctx context.Context) int64 {
 	userCount, err := repo.UserRepo.GetUserCount(ctx)
 	if err != nil {
-		log.Errorf("get user count failed: %s", err)
+		glog.Slog.Errorf("get user count failed: %s", err)
 	}
 	return userCount
 }
@@ -120,7 +120,7 @@ func (ds *dashboardService) userCount(ctx context.Context) int64 {
 func (ds *dashboardService) reportCount(ctx context.Context) int64 {
 	reportCount, err := repo.ReportRepo.GetReportCount(ctx)
 	if err != nil {
-		log.Errorf("get report count failed: %s", err)
+		glog.Slog.Errorf("get report count failed: %s", err)
 	}
 	return reportCount
 }
@@ -143,7 +143,7 @@ func (ds *dashboardService) voteCount(ctx context.Context) int64 {
 	}
 	voteCount, err := repo.VoteRepo.GetVoteCount(ctx, activityTypes)
 	if err != nil {
-		log.Errorf("get vote count failed: %s", err)
+		glog.Slog.Errorf("get vote count failed: %s", err)
 	}
 	return voteCount
 }
@@ -155,19 +155,19 @@ func (ds *dashboardService) remoteVersion(ctx context.Context) string {
 	httpClient.Timeout = 15 * time.Second
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Errorf("request remote version failed: %s", err)
+		glog.Slog.Errorf("request remote version failed: %s", err)
 		return ""
 	}
 	defer resp.Body.Close()
 
 	respByte, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("read response body failed: %s", err)
+		glog.Slog.Errorf("read response body failed: %s", err)
 		return ""
 	}
 	remoteVersion := &schema.RemoteVersion{}
 	if err := json.Unmarshal(respByte, remoteVersion); err != nil {
-		log.Errorf("parsing response body failed: %s", err)
+		glog.Slog.Errorf("parsing response body failed: %s", err)
 		return ""
 	}
 	return remoteVersion.Release.Version
@@ -176,13 +176,13 @@ func (ds *dashboardService) remoteVersion(ctx context.Context) string {
 func (ds *dashboardService) smtpStatus(ctx context.Context) (smtpStatus string) {
 	emailConf, err := utils.GetStringValue(ctx, "email.config")
 	if err != nil {
-		log.Errorf("get email config failed: %s", err)
+		glog.Slog.Errorf("get email config failed: %s", err)
 		return "disabled"
 	}
 	ec := &config.EmailConfig{}
 	err = json.Unmarshal([]byte(emailConf), ec)
 	if err != nil {
-		log.Errorf("parsing email config failed: %s", err)
+		glog.Slog.Errorf("parsing email config failed: %s", err)
 		return "disabled"
 	}
 	if ec.SMTPHost != "" {
@@ -194,12 +194,12 @@ func (ds *dashboardService) smtpStatus(ctx context.Context) (smtpStatus string) 
 func (ds *dashboardService) httpsStatus(ctx context.Context) (enabled bool) {
 	siteGeneral, err := SiteInfoServicer.GetSiteGeneral(ctx)
 	if err != nil {
-		log.Errorf("get site general failed: %s", err)
+		glog.Slog.Errorf("get site general failed: %s", err)
 		return false
 	}
 	siteUrl, err := url.Parse(siteGeneral.SiteUrl)
 	if err != nil {
-		log.Errorf("parse site url failed: %s", err)
+		glog.Slog.Errorf("parse site url failed: %s", err)
 		return false
 	}
 	return siteUrl.Scheme == "https"
@@ -216,7 +216,7 @@ func (ds *dashboardService) getTimezone(ctx context.Context) string {
 func (ds *dashboardService) calculateStorage() string {
 	dirSize, err := dir.DirSize("ds.serviceConfig.UploadPath")
 	if err != nil {
-		log.Errorf("get upload dir size failed: %s", err)
+		glog.Slog.Errorf("get upload dir size failed: %s", err)
 		return ""
 	}
 	return dir.FormatFileSize(dirSize)
@@ -225,7 +225,7 @@ func (ds *dashboardService) calculateStorage() string {
 func (ds *dashboardService) getDatabaseInfo() (versionDesc string) {
 	dbVersion, err := handler.Engine.DBVersion()
 	if err != nil {
-		log.Errorf("get db version failed: %s", err)
+		glog.Slog.Errorf("get db version failed: %s", err)
 	} else {
 		versionDesc = fmt.Sprintf("%s %s", handler.Engine.Dialect().URI().DBType, dbVersion.Number)
 	}
@@ -239,7 +239,7 @@ func (ds *dashboardService) GetDatabaseSize() (dbSize string) {
 			handler.Engine.Dialect().URI().DBName)
 		res, err := handler.Engine.QueryInterface(sql)
 		if err != nil {
-			log.Warnf("get db size failed: %s", err)
+			glog.Slog.Warnf("get db size failed: %s", err)
 		} else {
 			if res != nil && len(res) > 0 && res[0]["db_size"] != nil {
 				dbSizeStr, _ := res[0]["db_size"].(string)
@@ -251,7 +251,7 @@ func (ds *dashboardService) GetDatabaseSize() (dbSize string) {
 			handler.Engine.Dialect().URI().DBName)
 		res, err := handler.Engine.QueryInterface(sql)
 		if err != nil {
-			log.Warnf("get db size failed: %s", err)
+			glog.Slog.Warnf("get db size failed: %s", err)
 		} else {
 			if res != nil && len(res) > 0 && res[0]["db_size"] != nil {
 				dbSizeStr, _ := res[0]["db_size"].(int32)
@@ -261,7 +261,7 @@ func (ds *dashboardService) GetDatabaseSize() (dbSize string) {
 	case schemas.SQLITE:
 		dirSize, err := dir.DirSize(handler.Engine.DataSourceName())
 		if err != nil {
-			log.Errorf("get upload dir size failed: %s", err)
+			glog.Slog.Errorf("get upload dir size failed: %s", err)
 			return ""
 		}
 		dbSize = dir.FormatFileSize(dirSize)

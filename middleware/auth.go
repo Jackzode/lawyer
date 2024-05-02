@@ -1,12 +1,11 @@
 package middleware
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
-	"strings"
-
-	"github.com/gin-gonic/gin"
+	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/pkg/converter"
 	"github.com/segmentfault/pacman/errors"
 )
@@ -33,7 +32,7 @@ func NewAuthUserMiddleware(
 // Auth get token and auth user, set user info to context if user is already login
 func (am *AuthUserMiddleware) Auth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token := ExtractToken(ctx)
+		token := utils.ExtractToken(ctx)
 		if len(token) == 0 {
 			ctx.Next()
 			return
@@ -76,7 +75,7 @@ func (am *AuthUserMiddleware) EjectUserBySiteInfo() gin.HandlerFunc {
 // MustAuth auth user info. If the user does not log in, an unauthenticated error is displayed
 func (am *AuthUserMiddleware) MustAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token := ExtractToken(ctx)
+		token := utils.ExtractToken(ctx)
 		if len(token) == 0 {
 			handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
 			ctx.Abort()
@@ -215,13 +214,4 @@ func GetUserIsAdminModerator(ctx *gin.Context) (isAdminModerator bool) {
 func GetLoginUserIDInt64FromContext(ctx *gin.Context) (userID int64) {
 	userIDStr := GetLoginUserIDFromContext(ctx)
 	return converter.StringToInt64(userIDStr)
-}
-
-// ExtractToken extract token from context
-func ExtractToken(ctx *gin.Context) (token string) {
-	token = ctx.GetHeader("Authorization")
-	if len(token) == 0 {
-		token = ctx.Query("Authorization")
-	}
-	return strings.TrimPrefix(token, "lawyer-")
 }

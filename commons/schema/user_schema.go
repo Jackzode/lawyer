@@ -171,7 +171,7 @@ type UserEmailLoginReq struct {
 // UserRegisterReq user register request
 type UserRegisterReq struct {
 	Name        string `validate:"required,gt=3,lte=30" json:"name"`
-	Email       string `validate:"required,email,gt=0,lte=500" json:"e_mail" `
+	Email       string `validate:"required,email,gt=0,lte=500" json:"email" `
 	Pass        string `validate:"required,gte=8,lte=32" json:"pass"`
 	CaptchaID   string `json:"captcha_id"`
 	CaptchaCode string `json:"captcha_code"`

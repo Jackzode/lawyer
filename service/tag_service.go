@@ -6,6 +6,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/converter"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 // TagServicer user service
@@ -394,7 +394,7 @@ func (ts *TagService) checkTagIsFollow(ctx context.Context, userID, tagID string
 	}
 	followed, err := repo.FollowRepo.IsFollowed(ctx, userID, tagID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return followed
 }

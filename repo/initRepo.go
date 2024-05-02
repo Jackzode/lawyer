@@ -75,7 +75,9 @@ func InitRepo() {
 	//UserRankRepo = repoCommon.NewUserRankRepo()
 	UserActiveActivityRepo = activity.NewUserActiveActivityRepo()
 	EmailRepo = export.NewEmailRepo()
+
 	UserRoleRelRepo = role.NewUserRoleRelRepo()
+
 	RoleRepo = role.NewRoleRepo()
 	UserExternalLoginRepo = user_external_login.NewUserExternalLoginRepo()
 	UserNotificationConfigRepo = user_notification_config.NewUserNotificationConfigRepo()

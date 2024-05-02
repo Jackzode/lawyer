@@ -30,6 +30,7 @@ func NewUserNotificationConfigService() *UserNotificationConfigService {
 
 func (us *UserNotificationConfigService) GetUserNotificationConfig(ctx context.Context, userID string) (
 	resp *schema.GetUserNotificationConfigResp, err error) {
+
 	notificationConfigs, err := repo.UserNotificationConfigRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err

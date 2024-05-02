@@ -7,19 +7,19 @@ import (
 
 const (
 	defaultSEORobotTxt = `User-agent: *
-Disallow: /admin
-Disallow: /search
-Disallow: /install
-Disallow: /review
-Disallow: /users/login
-Disallow: /users/register
-Disallow: /users/account-recovery
-Disallow: /users/oauth/*
-Disallow: /users/*/*
-Disallow: /answer/api
-Disallow: /*?code*
-
-Sitemap: `
+							Disallow: /admin
+							Disallow: /search
+							Disallow: /install
+							Disallow: /review
+							Disallow: /users/login
+							Disallow: /users/register
+							Disallow: /users/account-recovery
+							Disallow: /users/oauth/*
+							Disallow: /users/*/*
+							Disallow: /answer/api
+							Disallow: /*?code*
+							
+								Sitemap: `
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lawyer/commons/entity"
-	data2 "github.com/lawyer/initServer/data"
+	"github.com/lawyer/commons/handler"
 
 	"xorm.io/xorm"
 )
@@ -108,19 +108,9 @@ func ExpectedVersion() int64 {
 }
 
 // Migrate database to current version
-func Migrate(debug bool, dbConf *data2.Database, cacheConf *data2.RedisConf, upgradeToSpecificVersion string) error {
-	cache, cacheCleanup, err := data2.NewCache(cacheConf)
-	if err != nil {
-		fmt.Println("new cache failed:", err.Error())
-	}
-	engine, err := data2.NewDB(debug, dbConf)
-	if err != nil {
-		fmt.Println("new database failed: ", err.Error())
-		return err
-	}
-	defer engine.Close()
+func Migrate(debug bool, upgradeToSpecificVersion string) error {
 
-	currentDBVersion, err := GetCurrentDBVersion(engine)
+	currentDBVersion, err := GetCurrentDBVersion(handler.Engine)
 	if err != nil {
 		return err
 	}
@@ -140,24 +130,22 @@ func Migrate(debug bool, dbConf *data2.Database, cacheConf *data2.RedisConf, upg
 			currentDBVersion, currentDBVersion+1, expectedVersion)
 		migrationFunc := migrations[currentDBVersion]
 		fmt.Printf("[migrate] try to migrate Answer version %s, description: %s\n", migrationFunc.Version(), migrationFunc.Description())
-		if err := migrationFunc.Migrate(context.Background(), engine); err != nil {
+		if err := migrationFunc.Migrate(context.Background(), handler.Engine); err != nil {
 			fmt.Printf("[migrate] migrate to db version %d failed: %s\n", currentDBVersion+1, err.Error())
 			return err
 		}
 		if migrationFunc.ShouldCleanCache() {
-			if err := cache.Flush(context.Background()); err != nil {
-				fmt.Printf("[migrate] flush cache failed: %s\n", err.Error())
-			}
+			//if err := handler.RedisClient.Flush(context.Background()); err != nil {
+			//	fmt.Printf("[migrate] flush cache failed: %s\n", err.Error())
+			//}
 		}
 		fmt.Printf("[migrate] migrate to db version %d success\n", currentDBVersion+1)
-		if _, err := engine.Update(&entity.Version{ID: 1, VersionNumber: currentDBVersion + 1}); err != nil {
+		if _, err := handler.Engine.Update(&entity.Version{ID: 1, VersionNumber: currentDBVersion + 1}); err != nil {
 			fmt.Printf("[migrate] migrate to db version %d, update failed: %s", currentDBVersion+1, err.Error())
 			return err
 		}
 		currentDBVersion++
 	}
-	if cache != nil {
-		cacheCleanup()
-	}
+
 	return nil
 }

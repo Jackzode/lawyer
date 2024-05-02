@@ -6,6 +6,7 @@ import (
 	"github.com/lawyer/commons/config"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/repo"
+	"github.com/lawyer/router"
 	"github.com/lawyer/service"
 )
 
@@ -31,4 +32,11 @@ func Init(filename string) *gin.Engine {
 	application, err := initApplication(c.Debug)
 	checkErr(err)
 	return application
+}
+
+func initApplication(debug bool) (*gin.Engine, error) {
+
+	ginEngine := router.NewHTTPServer(debug)
+	return ginEngine, nil
+
 }

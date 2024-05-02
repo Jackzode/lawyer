@@ -1,7 +1,9 @@
 package router
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/router/routes"
 )
@@ -22,32 +24,48 @@ func NewHTTPServer(debug bool) *gin.Engine {
 
 func InitRoutes(r *gin.Engine) {
 
-	//register middleware
+	//register common middleware
 	r.Use(middleware.ExtractAndSetAcceptLanguage)
 	r.Use(middleware.TraceId)
 
 	router := r.Group("/lawyer")
-	// todo a lots of route....
+
 	routes.RegisterUserApi(router)
-	routes.RegisterOtherApi(router)
-	routes.RegisterAnswerApi(router)
-	routes.RegisterCommentApi(router)
-	routes.RegisterNotificationApi(router)
-	routes.RegisterReportApi(router)
-	routes.RegisterTagApi(router)
-	routes.RegisterRevisionApi(router)
-	// plugin router
-	//pluginAPIRouter.RegisterUnAuthConnectorRouter(adminauthV1)
-	//pluginAPIRouter.RegisterAuthUserConnectorRouter(adminauthV1)
-	//pluginAPIRouter.RegisterAuthAdminConnectorRouter(adminauthV1)
+
+	//routes.RegisterQuestionApi(router)
 	//
-	//_ = plugin.CallAgent(func(agent plugin.Agent) error {
-	//	agent.RegisterUnAuthRouter(adminauthV1)
-	//	agent.RegisterAuthUserRouter(adminauthV1)
-	//	agent.RegisterAuthAdminRouter(adminauthV1)
-	//	return nil
-	//})
+	//routes.RegisterOtherApi(router)
+	//
+	//routes.RegisterAnswerApi(router)
+	//
+	//routes.RegisterCommentApi(router)
+	//
+	//routes.RegisterNotificationApi(router)
+	//
+	//routes.RegisterReportApi(router)
+	//
+	//routes.RegisterTagApi(router)
+	//
+	//routes.RegisterRevisionApi(router)
+	//管理员用的后台接口
+	//routes.RegisterAdminUserApi(router)
 
 }
 
-func heartBeats(ctx *gin.Context) { ctx.String(200, "OK") }
+func heartBeats(ctx *gin.Context) {
+	fmt.Println("heart beat ....")
+	glog.Klog.Info("heart beat ...")
+	ctx.String(200, "OK")
+}
+
+// plugin router
+//pluginAPIRouter.RegisterUnAuthConnectorRouter(adminauthV1)
+//pluginAPIRouter.RegisterAuthUserConnectorRouter(adminauthV1)
+//pluginAPIRouter.RegisterAuthAdminConnectorRouter(adminauthV1)
+//
+//_ = plugin.CallAgent(func(agent plugin.Agent) error {
+//	agent.RegisterUnAuthRouter(adminauthV1)
+//	agent.RegisterAuthUserRouter(adminauthV1)
+//	agent.RegisterAuthAdminRouter(adminauthV1)
+//	return nil
+//})

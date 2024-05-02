@@ -7,6 +7,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/pkg/random"
 	"github.com/lawyer/plugin"
-	"github.com/segmentfault/pacman/log"
 )
 
 // UserCenterLoginService user external login service
@@ -61,7 +61,7 @@ func (us *UserCenterLoginService) ExternalLogin(
 			return nil, err
 		}
 		if !checker.EmailInAllowEmailDomain(basicUserInfo.Email, siteInfo.AllowEmailDomains) {
-			log.Debugf("email domain not allowed: %s", basicUserInfo.Email)
+			glog.Slog.Debugf("email domain not allowed: %s", basicUserInfo.Email)
 			return &schema.UserExternalLoginResp{
 				ErrTitle: translator.Tr(utils.GetLangByCtx(ctx), reason.UserAccessDenied),
 				ErrMsg:   translator.Tr(utils.GetLangByCtx(ctx), reason.EmailIllegalDomainError),
@@ -89,7 +89,7 @@ func (us *UserCenterLoginService) ExternalLogin(
 				}, nil
 			}
 			if err := us.userRepo.UpdateLastLoginDate(ctx, oldUserInfo.ID); err != nil {
-				log.Errorf("update user last login date failed: %v", err)
+				glog.Slog.Errorf("update user last glog.Slogin date failed: %v", err)
 			}
 			accessToken, _, err := us.userCommonService.CacheLoginUserInfo(
 				ctx, oldUserInfo.ID, oldUserInfo.MailStatus, oldUserInfo.Status, oldExternalLoginUserInfo.ExternalID)
@@ -122,7 +122,7 @@ func (us *UserCenterLoginService) registerNewUser(ctx context.Context, provider 
 
 	userInfo.Username, err = us.userCommonService.MakeUsername(ctx, basicUserInfo.Username)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		userInfo.Username = random.Username()
 	}
 
@@ -161,7 +161,7 @@ func (us *UserCenterLoginService) registerNewUser(ctx context.Context, provider 
 
 func (us *UserCenterLoginService) activeUser(ctx context.Context, oldUserInfo *entity.User) {
 	if err := us.userActivity.UserActive(ctx, oldUserInfo.ID); err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 }
 
@@ -191,7 +191,7 @@ func (us *UserCenterLoginService) UserCenterUserSettings(ctx context.Context, us
 
 	settings, err := userCenter.UserSettings(externalInfo.ExternalID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return resp, nil
 	}
 
@@ -245,7 +245,7 @@ func (us *UserCenterLoginService) UserCenterPersonalBranding(ctx context.Context
 		return
 	}
 
-	userInfo, exist, err := us.userRepo.GetByUsername(ctx, username)
+	userInfo, exist, err := us.userRepo.GetUserInfoByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/lawyer/commons/constant/reason"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils/checker"
 	"io"
 	"mime/multipart"
@@ -20,7 +21,6 @@ import (
 	"github.com/lawyer/plugin"
 	exifremove "github.com/scottleedavis/go-exif-remove"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 const (
@@ -223,7 +223,7 @@ func (us *uploaderService) uploadFile(ctx *gin.Context, file *multipart.FileHead
 	}
 
 	if err := removeExif(filePath); err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 
 	url = fmt.Sprintf("%s/uploads/%s", siteGeneral.SiteUrl, fileSubPath)
@@ -235,7 +235,7 @@ func (us *uploaderService) tryToUploadByPlugin(ctx *gin.Context, source plugin.U
 	_ = plugin.CallStorage(func(fn plugin.Storage) error {
 		resp := fn.UploadFile(ctx, source)
 		if resp.OriginalError != nil {
-			log.Errorf("upload file by plugin failed, err: %v", resp.OriginalError)
+			glog.Slog.Errorf("upload file by plugin failed, err: %v", resp.OriginalError)
 			err = errors.BadRequest("").WithMsg(resp.DisplayErrorMsg.Translate(ctx)).WithError(err)
 		} else {
 			url = resp.FullURL

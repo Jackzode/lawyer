@@ -6,6 +6,7 @@ import (
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/repo"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/pkg/obj"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 // RevisionComServicer user service
@@ -206,7 +206,7 @@ func (rs *RevisionService) revisionAuditTag(ctx context.Context, revisionitem *s
 			return errors.BadRequest(reason.TagNotFound)
 		}
 		if tagInfo.MainTagID == 0 && len(tagInfo.SlugName) > 0 {
-			log.Debugf("tag %s update slug_name", tagInfo.SlugName)
+			glog.Slog.Debugf("tag %s update slug_name", tagInfo.SlugName)
 			tagList, err := repo.TagRepo.GetTagList(ctx, &entity.Tag{MainTagID: converter.StringToInt64(tagInfo.ID)})
 			if err != nil {
 				return err

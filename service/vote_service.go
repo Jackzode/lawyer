@@ -6,16 +6,15 @@ import (
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/config"
 	"strings"
 
+	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/htmltext"
-	"github.com/segmentfault/pacman/log"
-
-	"github.com/lawyer/commons/schema"
 	"github.com/segmentfault/pacman/errors"
 )
 
@@ -71,7 +70,7 @@ func (vs *VoteService) VoteUp(ctx context.Context, req *schema.VoteReq) (resp *s
 	resp = &schema.VoteResp{}
 	resp.UpVotes, resp.DownVotes, err = repo.ServiceVoteRepo.GetAndSaveVoteResult(ctx, req.ObjectID, objectInfo.ObjectType)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	resp.Votes = resp.UpVotes - resp.DownVotes
 	if !req.IsCancel {
@@ -116,7 +115,7 @@ func (vs *VoteService) VoteDown(ctx context.Context, req *schema.VoteReq) (resp 
 	resp = &schema.VoteResp{}
 	resp.UpVotes, resp.DownVotes, err = repo.ServiceVoteRepo.GetAndSaveVoteResult(ctx, req.ObjectID, objectInfo.ObjectType)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	resp.Votes = resp.UpVotes - resp.DownVotes
 	if !req.IsCancel {
@@ -156,7 +155,7 @@ func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWith
 	for _, voteInfo := range voteList {
 		objInfo, err := ObjServicer.GetInfo(ctx, voteInfo.ObjectID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			continue
 		}
 
@@ -221,7 +220,7 @@ func (vs *VoteService) getActivities(ctx context.Context, op *schema.VoteOperati
 		t := &schema.VoteActivity{}
 		cfg, err := (&config.ConfigService{}).GetConfigByKey(ctx, action)
 		if err != nil {
-			log.Warnf("get config by key error: %v", err)
+			glog.Slog.Warnf("get config by key error: %v", err)
 			continue
 		}
 		t.ActivityType, t.Rank = cfg.ID, cfg.GetIntValue()

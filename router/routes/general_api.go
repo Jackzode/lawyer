@@ -6,6 +6,16 @@ import (
 	"github.com/lawyer/controller_admin"
 )
 
+// i18n
+func RegisterLanguageApi(r *gin.RouterGroup) {
+	c := &controller.LangController{}
+	r.GET("/language/config", c.GetLangMapping)
+	r.GET("/language/options", c.GetUserLangOptions)
+	// language
+	r.GET("/language/options", c.GetAdminLangOptions)
+
+}
+
 // siteinfo
 func RegisterSiteInfoApi(r *gin.RouterGroup) {
 	c := &controller.SiteInfoController{}

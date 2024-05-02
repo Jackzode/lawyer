@@ -30,10 +30,9 @@ func ExtractAndSetAcceptLanguage(ctx *gin.Context) {
 	lang := utils.GetLang(ctx)
 	if langMapping[lang] {
 		ctx.Set(constant.AcceptLanguageFlag, lang)
-		return
+	} else {
+		// default language
+		ctx.Set(constant.AcceptLanguageFlag, i18n.LanguageEnglish)
 	}
-
-	// default language
-	ctx.Set(constant.AcceptLanguageFlag, i18n.LanguageEnglish)
 	ctx.Next()
 }

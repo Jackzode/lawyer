@@ -69,7 +69,7 @@ func (ur *UserNotificationConfigRepo) GetByUserID(ctx context.Context, userID st
 	var configs []*entity.UserNotificationConfig
 	err := ur.DB.Context(ctx).Where("user_id = ?", userID).Find(&configs)
 	if err != nil {
-		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return nil, err
 	}
 	return configs, nil
 }

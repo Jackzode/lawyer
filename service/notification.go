@@ -9,13 +9,13 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/plugin"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/repoCommon"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 	"time"
 )
 
@@ -65,7 +65,7 @@ func (ns *NotificationCommon) AddNotification(ctx context.Context, msg *schema.N
 	var questionID string // just for notify all followers
 	objInfo, err := ObjServicer.GetInfo(ctx, req.ObjectInfo.ObjectID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	} else {
 		req.ObjectInfo.Title = objInfo.Title
 		questionID = objInfo.QuestionID
@@ -134,7 +134,7 @@ func (ns *NotificationCommon) AddNotification(ctx context.Context, msg *schema.N
 	}
 	err = ns.addRedDot(ctx, info.UserID, info.Type)
 	if err != nil {
-		log.Error("addRedDot Error", err.Error())
+		glog.Slog.Error("addRedDot Error", err.Error())
 	}
 
 	go ns.SendNotificationToAllFollower(ctx, msg, questionID)
@@ -168,10 +168,10 @@ func (ns *NotificationCommon) SendNotificationToAllFollower(ctx context.Context,
 	}
 	userIDs, err := repo.FollowRepo.GetFollowUserIDs(ctx, condObjectID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
-	log.Infof("send notification to all followers: %s %d", condObjectID, len(userIDs))
+	glog.Slog.Infof("send notification to all followers: %s %d", condObjectID, len(userIDs))
 	for _, userID := range userIDs {
 		t := &schema.NotificationMsg{}
 		_ = copier.Copy(t, msg)

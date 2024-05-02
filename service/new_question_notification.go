@@ -4,11 +4,11 @@ import (
 	"context"
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/handler"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/repo"
 	"github.com/segmentfault/pacman/i18n"
-	"github.com/segmentfault/pacman/log"
 	"time"
 )
 
@@ -19,12 +19,12 @@ type NewQuestionSubscriber struct {
 
 func (ns *ExternalNotificationService) handleNewQuestionNotification(ctx context.Context,
 	msg *schema.ExternalNotificationMsg) error {
-	log.Debugf("try to send new question notification %+v", msg)
+	glog.Slog.Debugf("try to send new question notification %+v", msg)
 	subscribers, err := ns.getNewQuestionSubscribers(ctx, msg)
 	if err != nil {
 		return err
 	}
-	log.Debugf("get subscribers %d for question %s", len(subscribers), msg.NewQuestionTemplateRawData.QuestionID)
+	glog.Slog.Debugf("get subscribers %d for question %s", len(subscribers), msg.NewQuestionTemplateRawData.QuestionID)
 
 	for _, subscriber := range subscribers {
 		for _, channel := range subscriber.Channels {
@@ -56,7 +56,7 @@ func (ns *ExternalNotificationService) getNewQuestionSubscribers(ctx context.Con
 	for _, tagID := range msg.NewQuestionTemplateRawData.TagIDs {
 		userIDs, err := repo.FollowRepo.GetFollowUserIDs(ctx, tagID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			continue
 		}
 		for _, userID := range userIDs {
@@ -81,7 +81,7 @@ func (ns *ExternalNotificationService) getNewQuestionSubscribers(ctx context.Con
 			Channels: schema.NewNotificationChannelsFormJson(userNotificationConfig.Channels),
 		}
 	}
-	log.Debugf("get %d subscribers from tags", len(subscribersMapping))
+	glog.Slog.Debugf("get %d subscribers from tags", len(subscribersMapping))
 
 	// 2. get all new question's followers
 	notificationConfigs, err := repo.UserNotificationConfigRepo.GetBySource(ctx, constant.AllNewQuestionSource)
@@ -106,7 +106,7 @@ func (ns *ExternalNotificationService) getNewQuestionSubscribers(ctx context.Con
 	for _, subscriber := range subscribersMapping {
 		subscribers = append(subscribers, subscriber)
 	}
-	log.Debugf("get %d subscribers from all new question config", len(subscribers))
+	glog.Slog.Debugf("get %d subscribers from all new question config", len(subscribers))
 	return subscribers, nil
 }
 
@@ -114,17 +114,17 @@ func (ns *ExternalNotificationService) checkSendNewQuestionNotificationEmailLimi
 	key := constant.NewQuestionNotificationLimitCacheKeyPrefix + userID
 	old, err := handler.RedisClient.Get(ctx, key).Int64()
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return false
 	}
 	if old >= constant.NewQuestionNotificationLimitMax {
-		log.Debugf("%s user reach new question notification limit", userID)
+		glog.Slog.Debugf("%s user reach new question notification limit", userID)
 		return true
 	}
 
 	err = handler.RedisClient.Incr(ctx, key).Err()
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return false
 }
@@ -133,11 +133,11 @@ func (ns *ExternalNotificationService) sendNewQuestionNotificationEmail(ctx cont
 	userID string, rawData *schema.NewQuestionTemplateRawData) {
 	userInfo, exist, err := repo.UserRepo.GetByUserID(ctx, userID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 	if !exist {
-		log.Errorf("user %s not exist", userID)
+		glog.Slog.Errorf("user %s not exist", userID)
 		return
 	}
 	// If receiver has set language, use it to send email.
@@ -146,7 +146,7 @@ func (ns *ExternalNotificationService) sendNewQuestionNotificationEmail(ctx cont
 	}
 	title, body, err := EmailServicer.NewQuestionTemplate(ctx, rawData)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 

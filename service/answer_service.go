@@ -6,6 +6,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/pkg/uid"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 // AnswerServicer user service
@@ -71,21 +71,21 @@ func (as *AnswerService) RemoveAnswer(ctx context.Context, req *schema.RemoveAns
 	// user add question count
 	err = QuestionCommonServicer.UpdateAnswerCount(ctx, answerInfo.QuestionID)
 	if err != nil {
-		log.Error("IncreaseAnswerCount error", err.Error())
+		glog.Slog.Error("IncreaseAnswerCount error", err.Error())
 	}
 	userAnswerCount, err := repo.AnswerRepo.GetCountByUserID(ctx, answerInfo.UserID)
 	if err != nil {
-		log.Error("GetCountByUserID error", err.Error())
+		glog.Slog.Error("GetCountByUserID error", err.Error())
 	}
 	err = UserCommonServicer.UpdateAnswerCount(ctx, answerInfo.UserID, int(userAnswerCount))
 	if err != nil {
-		log.Error("user IncreaseAnswerCount error", err.Error())
+		glog.Slog.Error("user IncreaseAnswerCount error", err.Error())
 	}
 	// #2372 In order to simplify the process and complexity, as well as to consider if it is in-house,
 	// facing the problem of recovery.
 	//err = initServer.AnswerActivityServicer.DeleteAnswer(ctx, answerInfo.ID, answerInfo.CreatedAt, answerInfo.VoteCount)
 	//if err != nil {
-	//	log.Errorf("delete answer activity change failed: %s", err.Error())
+	//	glog.Slog.Errorf("delete answer activity change failed: %s", err.Error())
 	//}
 	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
@@ -113,15 +113,15 @@ func (as *AnswerService) RecoverAnswer(ctx context.Context, req *schema.RecoverA
 	}
 
 	if err = QuestionCommonServicer.UpdateAnswerCount(ctx, answerInfo.QuestionID); err != nil {
-		log.Errorf("update answer count failed: %s", err.Error())
+		glog.Slog.Errorf("update answer count failed: %s", err.Error())
 	}
 	userAnswerCount, err := repo.AnswerRepo.GetCountByUserID(ctx, answerInfo.UserID)
 	if err != nil {
-		log.Errorf("get user answer count failed: %s", err.Error())
+		glog.Slog.Errorf("get user answer count failed: %s", err.Error())
 	} else {
 		err = UserCommonServicer.UpdateAnswerCount(ctx, answerInfo.UserID, int(userAnswerCount))
 		if err != nil {
-			log.Errorf("update user answer count failed: %s", err.Error())
+			glog.Slog.Errorf("update user answer count failed: %s", err.Error())
 		}
 	}
 	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
@@ -161,11 +161,11 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	}
 	err = QuestionCommonServicer.UpdateAnswerCount(ctx, req.QuestionID)
 	if err != nil {
-		log.Error("IncreaseAnswerCount error", err.Error())
+		glog.Slog.Error("IncreaseAnswerCount error", err.Error())
 	}
 	err = QuestionCommonServicer.UpdateLastAnswer(ctx, req.QuestionID, uid.DeShortID(insertData.ID))
 	if err != nil {
-		log.Error("UpdateLastAnswer error", err.Error())
+		glog.Slog.Error("UpdateLastAnswer error", err.Error())
 	}
 	err = QuestionCommonServicer.UpdatePostTime(ctx, req.QuestionID)
 	if err != nil {
@@ -173,11 +173,11 @@ func (as *AnswerService) Insert(ctx context.Context, req *schema.AnswerAddReq) (
 	}
 	userAnswerCount, err := repo.AnswerRepo.GetCountByUserID(ctx, req.UserID)
 	if err != nil {
-		log.Error("GetCountByUserID error", err.Error())
+		glog.Slog.Error("GetCountByUserID error", err.Error())
 	}
 	err = UserCommonServicer.UpdateAnswerCount(ctx, req.UserID, int(userAnswerCount))
 	if err != nil {
-		log.Error("user IncreaseAnswerCount error", err.Error())
+		glog.Slog.Error("user IncreaseAnswerCount error", err.Error())
 	}
 
 	revisionDTO := &schema.AddRevisionDTO{
@@ -336,7 +336,7 @@ func (as *AnswerService) AcceptAnswer(ctx context.Context, req *schema.AcceptAns
 	// update question status
 	err = QuestionCommonServicer.UpdateAccepted(ctx, req.QuestionID, req.AnswerID)
 	if err != nil {
-		log.Error("UpdateLastAnswer error", err.Error())
+		glog.Slog.Error("UpdateLastAnswer error", err.Error())
 	}
 
 	var oldAnswerInfo *entity.Answer
@@ -360,14 +360,14 @@ func (as *AnswerService) updateAnswerRank(ctx context.Context, userID string,
 		err := AnswerActivityServicer.CancelAcceptAnswer(ctx, userID,
 			questionInfo.AcceptedAnswerID, questionInfo.ID, questionInfo.UserID, oldAnswerInfo.UserID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		}
 	}
 	if newAnswerInfo != nil {
 		err := AnswerActivityServicer.AcceptAnswer(ctx, userID, newAnswerInfo.ID,
 			questionInfo.ID, questionInfo.UserID, newAnswerInfo.UserID, newAnswerInfo.UserID == questionInfo.UserID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		}
 	}
 }
@@ -445,7 +445,7 @@ func (as *AnswerService) AdminSetAnswerStatus(ctx context.Context, req *schema.A
 		// facing the problem of recovery.
 		//err = initServer.AnswerActivityServicer.DeleteAnswer(ctx, answerInfo.ID, answerInfo.CreatedAt, answerInfo.VoteCount)
 		//if err != nil {
-		//	log.Errorf("admin delete question then rank rollback error %s", err.Error())
+		//	glog.Slog.Errorf("admin delete question then rank rollback error %s", err.Error())
 		//}
 		ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 			UserID:           req.UserID,
@@ -574,11 +574,11 @@ func (as *AnswerService) notificationAnswerTheQuestion(ctx context.Context,
 
 	receiverUserInfo, exist, err := repo.UserRepo.GetByUserID(ctx, questionUserID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 	if !exist {
-		log.Warnf("user %s not found", questionUserID)
+		glog.Slog.Warnf("user %s not found", questionUserID)
 		return
 	}
 

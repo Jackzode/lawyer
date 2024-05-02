@@ -3,12 +3,9 @@ package controller_admin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
-	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/middleware"
-	"github.com/lawyer/plugin"
 	services "github.com/lawyer/service"
-	"github.com/segmentfault/pacman/errors"
 )
 
 // UserAdminController user controller
@@ -31,10 +28,7 @@ func NewUserAdminController() *UserAdminController {
 // @Success 200 {object} handler.RespBody
 // @Router /answer/admin/api/user/status [put]
 func (uc *UserAdminController) UpdateUserStatus(ctx *gin.Context) {
-	if u, ok := plugin.GetUserCenter(); ok && u.Description().UserStatusAgentEnabled {
-		handler.HandleResponse(ctx, errors.Forbidden(reason.ForbiddenError), nil)
-		return
-	}
+
 	req := &schema.UpdateUserStatusReq{}
 	if handler.BindAndCheck(ctx, req) {
 		return

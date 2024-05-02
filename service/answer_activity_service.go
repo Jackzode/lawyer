@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"github.com/lawyer/commons/constant"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/repo"
-	"github.com/segmentfault/pacman/log"
 )
 
 // AnswerActivityRepo answer activity
@@ -27,7 +27,7 @@ func NewAnswerActivityService() *AnswerActivityService {
 // AcceptAnswer accept answer change activity
 func (as *AnswerActivityService) AcceptAnswer(ctx context.Context,
 	loginUserID, answerObjID, questionObjID, questionUserID, answerUserID string, isSelf bool) (err error) {
-	log.Debugf("user %s want to accept answer %s[%s] for question %s[%s]", loginUserID,
+	glog.Slog.Debugf("user %s want to accept answer %s[%s] for question %s[%s]", loginUserID,
 		answerObjID, answerUserID,
 		questionObjID, questionUserID)
 	operationInfo := as.createAcceptAnswerOperationInfo(ctx, loginUserID,
@@ -69,7 +69,7 @@ func (as *AnswerActivityService) getActivities(ctx context.Context, op *schema.A
 		t := &schema.AcceptAnswerActivity{}
 		cfg, err := utils.GetConfigByKey(ctx, action)
 		if err != nil {
-			log.Warnf("get config by key error: %v", err)
+			glog.Slog.Warnf("get config by key error: %v", err)
 			continue
 		}
 		t.ActivityType, t.Rank = cfg.ID, cfg.GetIntValue()

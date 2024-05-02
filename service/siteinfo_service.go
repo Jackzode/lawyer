@@ -10,12 +10,12 @@ import (
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/plugin"
 	"github.com/lawyer/repo"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 type SiteInfoService struct {
@@ -25,7 +25,7 @@ func NewSiteInfoService() *SiteInfoService {
 	plugin.RegisterGetSiteURLFunc(func() string {
 		generalSiteInfo, err := SiteInfoCommonServicer.GetSiteGeneral(context.Background())
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			return ""
 		}
 		return generalSiteInfo.SiteUrl
@@ -65,7 +65,7 @@ func (s *SiteInfoService) GetSiteWrite(ctx context.Context) (resp *schema.SiteWr
 	resp = &schema.SiteWriteResp{}
 	siteInfo, exist, err := repo.SiteInfoRepo.GetByType(ctx, constant.SiteTypeWrite)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return resp, nil
 	}
 	if exist {
@@ -74,11 +74,11 @@ func (s *SiteInfoService) GetSiteWrite(ctx context.Context) (resp *schema.SiteWr
 
 	resp.RecommendTags, err = TagCommonServicer.GetSiteWriteRecommendTag(ctx)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	resp.ReservedTags, err = TagCommonServicer.GetSiteWriteReservedTag(ctx)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return resp, nil
 }
@@ -248,7 +248,7 @@ func (s *SiteInfoService) GetSeo(ctx context.Context) (resp *schema.SiteSeoReq, 
 	}
 	loginConfig, err := s.GetSiteLogin(ctx)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return resp, nil
 	}
 	// If the site is set to privacy mode, prohibit crawling any page.

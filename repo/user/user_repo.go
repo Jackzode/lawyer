@@ -185,17 +185,18 @@ func (ur *UserRepo) BatchGetByID(ctx context.Context, ids []string) ([]*entity.U
 }
 
 // GetByUsername get user by username
-func (ur *UserRepo) GetByUsername(ctx context.Context, username string) (userInfo *entity.User, exist bool, err error) {
+func (ur *UserRepo) GetUserInfoByUsername(ctx context.Context, username string) (userInfo *entity.User, exist bool, err error) {
 	userInfo = &entity.User{}
 	exist, err = ur.DB.Context(ctx).Where("username = ?", username).Get(userInfo)
 	if err != nil {
 		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 		return
 	}
-	err = tryToDecorateUserInfoFromUserCenter(ctx, ur.DB, userInfo)
-	if err != nil {
-		return nil, false, err
-	}
+	//todo
+	//err = tryToDecorateUserInfoFromUserCenter(ctx, ur.DB, userInfo)
+	//if err != nil {
+	//	return nil, false, err
+	//}
 	return
 }
 
@@ -211,7 +212,7 @@ func (ur *UserRepo) GetByUsernames(ctx context.Context, usernames []string) ([]*
 }
 
 // GetByEmail get user by email
-func (ur *UserRepo) GetByEmail(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error) {
+func (ur *UserRepo) GetUserInfoByEmailFromDB(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error) {
 	userInfo = &entity.User{}
 	exist, err = ur.DB.Context(ctx).Where("e_mail = ?", email).
 		Where("status != ?", entity.UserStatusDeleted).Get(userInfo)
@@ -242,7 +243,8 @@ func (ur *UserRepo) SearchUserListByName(ctx context.Context, name string, limit
 	if err != nil {
 		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
-	tryToDecorateUserListFromUserCenter(ctx, ur.DB, userList)
+	//todo
+	//tryToDecorateUserListFromUserCenter(ctx, ur.DB, userList)
 	return
 }
 

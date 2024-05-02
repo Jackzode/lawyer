@@ -7,19 +7,16 @@ import (
 	"github.com/lawyer/commons/base/translator"
 	c "github.com/lawyer/commons/config"
 	"github.com/lawyer/commons/constant"
-	"github.com/lawyer/commons/constant/reason"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/pkg/display"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/config"
-	"mime"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/lawyer/commons/schema"
-	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 	"golang.org/x/net/context"
 	"gopkg.in/gomail.v2"
 )
@@ -44,7 +41,7 @@ func NewEmailService() *EmailService {
 func (es *EmailService) SaveCode(ctx context.Context, code, codeContent string) {
 	err := repo.EmailRepo.SetCode(ctx, code, codeContent, 10*time.Minute)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 }
 
@@ -53,7 +50,7 @@ func (es *EmailService) SendAndSaveCode(ctx context.Context, toEmailAddr, subjec
 	es.Send(ctx, toEmailAddr, subject, body)
 	err := repo.EmailRepo.SetCode(ctx, code, codeContent, 10*time.Minute)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 }
 
@@ -63,26 +60,26 @@ func (es *EmailService) SendAndSaveCodeWithTime(
 	es.Send(ctx, toEmailAddr, subject, body)
 	err := repo.EmailRepo.SetCode(ctx, code, codeContent, duration)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 }
 
 // Send email send
 func (es *EmailService) Send(ctx context.Context, toEmailAddr, subject, body string) {
-	log.Infof("try to send email to %s", toEmailAddr)
+	glog.Slog.Infof("try to send email to %s", toEmailAddr)
 	ec, err := es.GetEmailConfig(ctx)
 	if err != nil {
-		log.Errorf("get email config failed: %s", err)
+		glog.Slog.Errorf("get email config failed: %s", err)
 		return
 	}
 	if len(ec.SMTPHost) == 0 {
-		log.Warnf("smtp host is empty, skip send email")
+		glog.Slog.Warnf("smtp host is empty, skip send email")
 		return
 	}
 
 	m := gomail.NewMessage()
-	fromName := mime.QEncoding.Encode("utf-8", ec.FromName)
-	m.SetHeader("From", fmt.Sprintf("%s <%s>", fromName, ec.FromEmail))
+	//fromName := mime.QEncoding.Encode("utf-8", ec.FromName)
+	m.SetHeader("From", fmt.Sprintf(ec.FromEmail))
 	m.SetHeader("To", toEmailAddr)
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", body)
@@ -95,17 +92,17 @@ func (es *EmailService) Send(ctx context.Context, toEmailAddr, subject, body str
 		d.TLSConfig = &tls.Config{ServerName: d.Host, InsecureSkipVerify: true}
 	}
 	if err := d.DialAndSend(m); err != nil {
-		log.Errorf("send email to %s failed: %s", toEmailAddr, err)
+		glog.Slog.Errorf("send email to %s failed: %s", toEmailAddr, err)
 	} else {
-		log.Infof("send email to %s success", toEmailAddr)
+		glog.Slog.Infof("send email to %s success", toEmailAddr)
 	}
 }
 
-// VerifyUrlExpired 根据code从缓存中获取content
-func (es *EmailService) VerifyUrlExpired(ctx context.Context, code string) (content string) {
+// VerifyEmailByCode 根据code从缓存中获取content
+func (es *EmailService) VerifyEmailByCode(ctx context.Context, code string) (content string) {
 	content, err := repo.EmailRepo.VerifyCode(ctx, code)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return content
 }
@@ -127,12 +124,12 @@ func (es *EmailService) RegisterTemplate(ctx context.Context, registerUrl string
 }
 
 func (es *EmailService) PassResetTemplate(ctx context.Context, passResetUrl string) (title, body string, err error) {
-	siteInfo, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		return
-	}
+	//siteInfo, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
+	//if err != nil {
+	//	return
+	//}
 
-	templateData := &schema.PassResetTemplateData{SiteName: siteInfo.Name, PassResetUrl: passResetUrl}
+	templateData := &schema.PassResetTemplateData{SiteName: "siteInfo.Name", PassResetUrl: passResetUrl}
 
 	lang := utils.GetLangByCtx(ctx)
 	title = translator.TrWithData(lang, constant.EmailTplKeyPassResetTitle, templateData)
@@ -141,12 +138,12 @@ func (es *EmailService) PassResetTemplate(ctx context.Context, passResetUrl stri
 }
 
 func (es *EmailService) ChangeEmailTemplate(ctx context.Context, changeEmailUrl string) (title, body string, err error) {
-	siteInfo, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		return
-	}
+	//siteInfo, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
+	//if err != nil {
+	//	return
+	//}
 	templateData := &schema.ChangeEmailTemplateData{
-		SiteName:       siteInfo.Name,
+		SiteName:       "siteInfo.Name",
 		ChangeEmailUrl: changeEmailUrl,
 	}
 
@@ -275,16 +272,17 @@ func (es *EmailService) NewQuestionTemplate(ctx context.Context, raw *schema.New
 }
 
 func (es *EmailService) GetEmailConfig(ctx context.Context) (ec *c.EmailConfig, err error) {
-	emailConf, err := utils.GetStringValue(ctx, "email.config")
-	if err != nil {
-		return nil, err
-	}
 	ec = &c.EmailConfig{}
-	err = json.Unmarshal([]byte(emailConf), ec)
-	if err != nil {
-		log.Errorf("old email config format is invalid, you need to update smtp config: %v", err)
-		return nil, errors.BadRequest(reason.SiteInfoConfigNotFound)
-	}
+	//todo 先写死在这里
+	//Encryption         string `json:"encryption"` // "" SSL
+	//SMTPAuthentication bool   `json:"smtp_authentication"`
+	ec.FromEmail = "jackzhi4716@gmail.com"
+	ec.FromName = "jackzhi4716@gmail.com"
+	ec.SMTPHost = "smtp.gmail.com"
+	ec.SMTPPort = 465
+	ec.SMTPPassword = "myxz hxsn anin awon"
+	ec.SMTPUsername = "jackzhi4716@gmail.com"
+
 	return ec, nil
 }
 

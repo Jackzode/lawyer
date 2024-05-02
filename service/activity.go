@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/repo"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/lawyer/pkg/converter"
 	"github.com/lawyer/pkg/obj"
 	"github.com/lawyer/pkg/uid"
-	"github.com/segmentfault/pacman/log"
 )
 
 // ActivityComRepo activity repository
@@ -70,7 +70,7 @@ func (as *ActivityService) GetObjectTimeline(ctx context.Context, req *schema.Ge
 
 		cfg, err := utils.GetConfigByID(ctx, act.ActivityType)
 		if err != nil {
-			log.Errorf("fail to get config by id: %d, err: %v, act id is: %s", act.ActivityType, err, act.ID)
+			glog.Slog.Errorf("fail to get config by id: %d, err: %v, act id is: %s", act.ActivityType, err, act.ID)
 		} else {
 			// database save activity type is number, change to activity type string is like "question.asked".
 			// so we need to cut the front part of '.', only need string like 'asked'
@@ -139,7 +139,7 @@ func (as *ActivityService) getTimelineActivityComment(ctx context.Context, objec
 	if objectType == constant.CommentObjectType {
 		commentInfo, err := CommentCommonService.GetComment(ctx, objectID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		} else {
 			return commentInfo.ParsedText
 		}
@@ -149,7 +149,7 @@ func (as *ActivityService) getTimelineActivityComment(ctx context.Context, objec
 	if activityType == constant.ActEdited {
 		revision, err := RevisionComServicer.GetRevision(ctx, revisionID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		} else {
 			return revision.Log
 		}
@@ -159,7 +159,7 @@ func (as *ActivityService) getTimelineActivityComment(ctx context.Context, objec
 		// only question can be closed
 		metaInfo, err := MetaService.GetMetaByObjectIdAndKey(ctx, objectID, entity.QuestionCloseReasonKey)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		} else {
 			closeMsg := &schema.CloseQuestionMeta{}
 			if err := json.Unmarshal([]byte(metaInfo.Value), closeMsg); err == nil {
@@ -184,7 +184,7 @@ func (as *ActivityService) formatTimelineUserInfo(ctx context.Context, timeline 
 	}
 	userInfoMapping, err := UserCommonServicer.BatchUserBasicInfoByID(ctx, userIDs)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 	for _, info := range timeline {
@@ -216,7 +216,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 
 	revision, err := RevisionComServicer.GetRevision(ctx, revisionID)
 	if err != nil {
-		log.Warn(err)
+		glog.Slog.Warn(err)
 		return nil, nil
 	}
 	objInfo, err := ObjServicer.GetInfo(ctx, revision.ObjectID)
@@ -228,7 +228,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 	case constant.QuestionObjectType:
 		data := &entity.QuestionWithTagsRevision{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
-			log.Errorf("revision parsing error %s", err)
+			glog.Slog.Errorf("revision parsing error %s", err)
 			return resp, nil
 		}
 		for _, tag := range data.Tags {
@@ -245,7 +245,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 	case constant.AnswerObjectType:
 		data := &entity.Answer{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
-			log.Errorf("revision parsing error %s", err)
+			glog.Slog.Errorf("revision parsing error %s", err)
 			return resp, nil
 		}
 		resp.Title = objInfo.Title // answer show question title
@@ -253,7 +253,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 	case constant.TagObjectType:
 		data := &entity.Tag{}
 		if err = json.Unmarshal([]byte(revision.Content), data); err != nil {
-			log.Errorf("revision parsing error %s", err)
+			glog.Slog.Errorf("revision parsing error %s", err)
 			return resp, nil
 		}
 		resp.Title = data.DisplayName
@@ -261,7 +261,7 @@ func (as *ActivityService) getOneObjectDetail(ctx context.Context, revisionID st
 		resp.SlugName = data.SlugName
 		resp.MainTagSlugName = data.MainTagSlugName
 	default:
-		log.Errorf("unknown object type %s", objInfo.ObjectType)
+		glog.Slog.Errorf("unknown object type %s", objInfo.ObjectType)
 	}
 	return resp, nil
 }

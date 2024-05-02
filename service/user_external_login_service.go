@@ -8,6 +8,7 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/repo"
@@ -19,7 +20,6 @@ import (
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/plugin"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 )
 
 type UserExternalLoginRepo interface {
@@ -65,11 +65,11 @@ func (us *UserExternalLoginService) ExternalLogin(
 		}
 		if exist && oldUserInfo.Status != entity.UserStatusDeleted {
 			if err := repo.UserRepo.UpdateLastLoginDate(ctx, oldUserInfo.ID); err != nil {
-				log.Errorf("update user last login date failed: %v", err)
+				glog.Slog.Errorf("update user last glog.Slogin date failed: %v", err)
 			}
 			newMailStatus, err := us.activeUser(ctx, oldUserInfo, externalUserInfo)
 			if err != nil {
-				log.Error(err)
+				glog.Slog.Error(err)
 			}
 			accessToken, _, err := UserCommonServicer.CacheLoginUserInfo(
 				ctx, oldUserInfo.ID, newMailStatus, oldUserInfo.Status, oldExternalLoginUserInfo.ExternalID)
@@ -93,14 +93,14 @@ func (us *UserExternalLoginService) ExternalLogin(
 		return nil, err
 	}
 	if !checker.EmailInAllowEmailDomain(externalUserInfo.Email, siteInfo.AllowEmailDomains) {
-		log.Debugf("email domain not allowed: %s", externalUserInfo.Email)
+		glog.Slog.Debugf("email domain not allowed: %s", externalUserInfo.Email)
 		return &schema.UserExternalLoginResp{
 			ErrTitle: translator.Tr(utils.GetLangByCtx(ctx), reason.UserAccessDenied),
 			ErrMsg:   translator.Tr(utils.GetLangByCtx(ctx), reason.EmailIllegalDomainError),
 		}, nil
 	}
 
-	oldUserInfo, exist, err := repo.UserRepo.GetByEmail(ctx, externalUserInfo.Email)
+	oldUserInfo, exist, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, externalUserInfo.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -120,12 +120,12 @@ func (us *UserExternalLoginService) ExternalLogin(
 	// If user login with external account and email is exist, active user directly.
 	newMailStatus, err := us.activeUser(ctx, oldUserInfo, externalUserInfo)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 
 	// set default user notification config for external user
 	if err := UserNotificationConfigService.SetDefaultUserNotificationConfig(ctx, []string{oldUserInfo.ID}); err != nil {
-		log.Errorf("set default user notification config failed, err: %v", err)
+		glog.Slog.Errorf("set default user notification config failed, err: %v", err)
 	}
 
 	accessToken, _, err := UserCommonServicer.CacheLoginUserInfo(
@@ -141,7 +141,7 @@ func (us *UserExternalLoginService) registerNewUser(ctx context.Context,
 
 	userInfo.Username, err = UserCommonServicer.MakeUsername(ctx, externalUserInfo.Username)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		userInfo.Username = random.Username()
 	}
 
@@ -193,7 +193,7 @@ func (us *UserExternalLoginService) bindOldUser(ctx context.Context,
 func (us *UserExternalLoginService) activeUser(ctx context.Context, oldUserInfo *entity.User,
 	externalUserInfo *schema.ExternalLoginUserInfoCache) (
 	mailStatus int, err error) {
-	log.Infof("user %s login with external account, try to active email, old status is %d",
+	glog.Slog.Infof("user %s glog.Slogin with external account, try to active email, old status is %d",
 		oldUserInfo.ID, oldUserInfo.MailStatus)
 
 	// try to active user email
@@ -214,7 +214,7 @@ func (us *UserExternalLoginService) activeUser(ctx context.Context, oldUserInfo 
 		oldUserInfo.Avatar = string(avatar)
 		err = repo.UserRepo.UpdateInfo(ctx, oldUserInfo)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		}
 	}
 
@@ -238,11 +238,11 @@ func (us *UserExternalLoginService) ExternalLoginBindingUserSendEmail(
 		return nil, errors.BadRequest(reason.UserNotFound)
 	}
 	if len(externalLoginInfo.Email) > 0 {
-		log.Warnf("the binding email has been sent %s", req.BindingKey)
+		glog.Slog.Warnf("the binding email has been sent %s", req.BindingKey)
 		return &schema.ExternalLoginBindingUserSendEmailResp{}, nil
 	}
 
-	userInfo, exist, err := repo.UserRepo.GetByEmail(ctx, req.Email)
+	userInfo, exist, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, req.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (us *UserExternalLoginService) ExternalLoginBindingUserSendEmail(
 		resp.AccessToken, _, err = UserCommonServicer.CacheLoginUserInfo(
 			ctx, userInfo.ID, userInfo.MailStatus, userInfo.Status, externalLoginInfo.ExternalID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 		}
 	}
 	err = repo.UserExternalLoginRepo.SetCacheUserExternalLoginInfo(ctx, req.BindingKey, externalLoginInfo)

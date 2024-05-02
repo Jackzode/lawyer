@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
-	"github.com/segmentfault/pacman/log"
 )
 
 type ExternalNotificationService struct {
@@ -16,7 +16,7 @@ func NewExternalNotificationService() *ExternalNotificationService {
 }
 
 func (ns *ExternalNotificationService) Handler(ctx context.Context, msg *schema.ExternalNotificationMsg) error {
-	log.Debugf("try to send external notification %+v", msg)
+	glog.Slog.Debugf("try to send external notification %+v", msg)
 
 	if msg.NewQuestionTemplateRawData != nil {
 		return ns.handleNewQuestionNotification(ctx, msg)
@@ -30,6 +30,6 @@ func (ns *ExternalNotificationService) Handler(ctx context.Context, msg *schema.
 	if msg.NewInviteAnswerTemplateRawData != nil {
 		return ns.handleInviteAnswerNotification(ctx, msg)
 	}
-	log.Errorf("unknown notification message: %+v", msg)
+	glog.Slog.Errorf("unknown notification message: %+v", msg)
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	entity "github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/repo"
@@ -259,11 +260,11 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 	// user add question count
 	userQuestionCount, err := QuestionCommonServicer.GetUserQuestionCount(ctx, question.UserID)
 	if err != nil {
-		log.Errorf("get user question count error %v", err)
+		glog.Slog.Errorf("get user question count error %v", err)
 	} else {
 		err = UserCommonServicer.UpdateQuestionCount(ctx, question.UserID, userQuestionCount)
 		if err != nil {
-			log.Errorf("update user question count error %v", err)
+			glog.Slog.Errorf("update user question count error %v", err)
 		}
 	}
 
@@ -399,11 +400,11 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 
 	userQuestionCount, err := QuestionCommonServicer.GetUserQuestionCount(ctx, questionInfo.UserID)
 	if err != nil {
-		log.Error("user GetUserQuestionCount error", err.Error())
+		glog.Slog.Error("user GetUserQuestionCount error", err.Error())
 	} else {
 		err = UserCommonServicer.UpdateQuestionCount(ctx, questionInfo.UserID, userQuestionCount)
 		if err != nil {
-			log.Error("user IncreaseQuestionCount error", err.Error())
+			glog.Slog.Error("user IncreaseQuestionCount error", err.Error())
 		}
 	}
 
@@ -411,7 +412,7 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 	tagIDs := make([]string, 0)
 	Tags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, req.ID)
 	if tagerr != nil {
-		log.Error("GetObjectEntityTag error", tagerr)
+		glog.Slog.Error("GetObjectEntityTag error", tagerr)
 		return nil
 	}
 	for _, v := range Tags {
@@ -419,18 +420,18 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 	}
 	err = TagCommonServicer.RemoveTagRelListByObjectID(ctx, req.ID)
 	if err != nil {
-		log.Error("RemoveTagRelListByObjectID error", err.Error())
+		glog.Slog.Error("RemoveTagRelListByObjectID error", err.Error())
 	}
 	err = TagCommonServicer.RefreshTagQuestionCount(ctx, tagIDs)
 	if err != nil {
-		log.Error("efreshTagQuestionCount error", err.Error())
+		glog.Slog.Error("efreshTagQuestionCount error", err.Error())
 	}
 
 	// #2372 In order to simplify the process and complexity, as well as to consider if it is in-house,
 	// facing the problem of recovery.
 	// err = qs.answerActivityService.DeleteQuestion(ctx, questionInfo.ID, questionInfo.CreatedAt, questionInfo.VoteCount)
 	// if err != nil {
-	// 	 log.Errorf("user DeleteQuestion rank rollback error %s", err.Error())
+	// 	 glog.Slog.Errorf("user DeleteQuestion rank rollback error %s", err.Error())
 	// }
 	ActivityQueueServicer.Send(ctx, &schema.ActivityMsg{
 		UserID:           req.UserID,
@@ -452,7 +453,7 @@ func (qs *QuestionService) UpdateQuestionCheckTags(ctx context.Context, req *sch
 
 	oldTags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, req.ID)
 	if tagerr != nil {
-		log.Error("GetObjectEntityTag error", tagerr)
+		glog.Slog.Error("GetObjectEntityTag error", tagerr)
 		return nil, nil
 	}
 
@@ -474,7 +475,7 @@ func (qs *QuestionService) UpdateQuestionCheckTags(ctx context.Context, req *sch
 
 	Tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
-		log.Error("GetTagListByNames error", tagerr)
+		glog.Slog.Error("GetTagListByNames error", tagerr)
 		return nil, nil
 	}
 
@@ -527,17 +528,17 @@ func (qs *QuestionService) RecoverQuestion(ctx context.Context, req *schema.Ques
 	// update user's question count
 	userQuestionCount, err := QuestionCommonServicer.GetUserQuestionCount(ctx, questionInfo.UserID)
 	if err != nil {
-		log.Error("user GetUserQuestionCount error", err.Error())
+		glog.Slog.Error("user GetUserQuestionCount error", err.Error())
 	} else {
 		err = UserCommonServicer.UpdateQuestionCount(ctx, questionInfo.UserID, userQuestionCount)
 		if err != nil {
-			log.Error("user IncreaseQuestionCount error", err.Error())
+			glog.Slog.Error("user IncreaseQuestionCount error", err.Error())
 		}
 	}
 
 	// update tag's question count
 	if err = TagCommonServicer.RemoveTagRelListByObjectID(ctx, questionInfo.ID); err != nil {
-		log.Errorf("remove tag rel list by object id error %v", err)
+		glog.Slog.Errorf("remove tag rel list by object id error %v", err)
 	}
 
 	tagIDs := make([]string, 0)
@@ -550,7 +551,7 @@ func (qs *QuestionService) RecoverQuestion(ctx context.Context, req *schema.Ques
 	}
 	if len(tagIDs) > 0 {
 		if err = TagCommonServicer.RefreshTagQuestionCount(ctx, tagIDs); err != nil {
-			log.Errorf("update tag's question count failed, %v", err)
+			glog.Slog.Errorf("update tag's question count failed, %v", err)
 		}
 	}
 
@@ -576,7 +577,7 @@ func (qs *QuestionService) UpdateQuestionInviteUser(ctx context.Context, req *sc
 	//verify invite user
 	inviteUserInfoList, err := UserCommonServicer.BatchGetUserBasicInfoByUserNames(ctx, req.InviteUser)
 	if err != nil {
-		log.Error("BatchGetUserBasicInfoByUserNames error", err.Error())
+		glog.Slog.Error("BatchGetUserBasicInfoByUserNames error", err.Error())
 	}
 	inviteUserIDs := make([]string, 0)
 	for _, item := range req.InviteUser {
@@ -588,7 +589,7 @@ func (qs *QuestionService) UpdateQuestionInviteUser(ctx context.Context, req *sc
 	inviteUserStr := ""
 	inviteUserByte, err := json.Marshal(inviteUserIDs)
 	if err != nil {
-		log.Error("json.Marshal error", err.Error())
+		glog.Slog.Error("json.Marshal error", err.Error())
 		inviteUserStr = "[]"
 	} else {
 		inviteUserStr = string(inviteUserByte)
@@ -622,7 +623,7 @@ func (qs *QuestionService) notificationInviteUser(
 	ctx context.Context, invitedUserIDs []string, questionID, questionTitle, questionUserID string) {
 	inviter, exist, err := UserCommonServicer.GetUserBasicInfoByID(ctx, questionUserID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 	if !exist {

@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
+	glog "github.com/lawyer/commons/logger"
 
 	"github.com/lawyer/commons/schema"
-	"github.com/segmentfault/pacman/log"
 )
 
 type ActivityQueueService interface {
@@ -29,13 +29,13 @@ func (ns *activityQueueService) RegisterHandler(
 func (ns *activityQueueService) working() {
 	go func() {
 		for msg := range ns.Queue {
-			log.Debugf("received activity %+v", msg)
+			glog.Slog.Debugf("received activity %+v", msg)
 			if ns.Handler == nil {
-				log.Warnf("no handler for activity")
+				glog.Slog.Warnf("no handler for activity")
 				continue
 			}
 			if err := ns.Handler(context.Background(), msg); err != nil {
-				log.Error(err)
+				glog.Slog.Error(err)
 			}
 		}
 	}()

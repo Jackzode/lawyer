@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/repo"
 
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/gravatar"
-	"github.com/segmentfault/pacman/log"
 )
 
 //go:generate mockgen -source=./siteinfo_service.go -destination=../mock/siteinfo_repo_mock.go -package=mock
@@ -100,7 +100,7 @@ func (s *siteInfoCommonService) getAvatarDefaultConfig(ctx context.Context) (str
 	gravatarBaseURL, defaultAvatar := constant.DefaultGravatarBaseURL, constant.DefaultAvatar
 	usersConfig, err := s.GetSiteUsers(ctx)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	if len(usersConfig.GravatarBaseURL) > 0 {
 		gravatarBaseURL = usersConfig.GravatarBaseURL
@@ -111,10 +111,9 @@ func (s *siteInfoCommonService) getAvatarDefaultConfig(ctx context.Context) (str
 	return gravatarBaseURL, defaultAvatar
 }
 
-func (s *siteInfoCommonService) selectedAvatar(
-	originalAvatarData,
-	defaultAvatar, gravatarBaseURL,
+func (s *siteInfoCommonService) selectedAvatar(originalAvatarData, defaultAvatar, gravatarBaseURL,
 	email string, userStatus int) *schema.AvatarInfo {
+
 	avatarInfo := &schema.AvatarInfo{}
 	_ = json.Unmarshal([]byte(originalAvatarData), avatarInfo)
 
@@ -193,7 +192,7 @@ func (s *siteInfoCommonService) GetSiteSeo(ctx context.Context) (resp *schema.Si
 func (s *siteInfoCommonService) EnableShortID(ctx context.Context) (enabled bool) {
 	siteSeo, err := s.GetSiteSeo(ctx)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return false
 	}
 	return siteSeo.IsShortLink()

@@ -3,16 +3,16 @@ package service
 import (
 	"context"
 	"github.com/lawyer/commons/constant"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/repo"
 	"github.com/segmentfault/pacman/i18n"
-	"github.com/segmentfault/pacman/log"
 	"time"
 )
 
 func (ns *ExternalNotificationService) handleInviteAnswerNotification(ctx context.Context,
 	msg *schema.ExternalNotificationMsg) error {
-	log.Debugf("try to send invite answer notification %+v", msg)
+	glog.Slog.Debugf("try to send invite answer notification %+v", msg)
 
 	notificationConfig, exist, err := repo.UserNotificationConfigRepo.GetByUserIDAndSource(ctx, msg.ReceiverUserID, constant.InboxSource)
 	if err != nil {
@@ -51,7 +51,7 @@ func (ns *ExternalNotificationService) sendInviteAnswerNotificationEmail(ctx con
 	}
 	title, body, err := EmailServicer.NewInviteAnswerTemplate(ctx, rawData)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return
 	}
 

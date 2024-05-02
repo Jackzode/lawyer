@@ -7,7 +7,7 @@ import (
 )
 
 func TraceId(ctx *gin.Context) {
-	traceId := utils.GetTraceId(ctx)
+	traceId := utils.GetTraceIdFromHeader(ctx)
 	if traceId == "" {
 		traceId = utils.GenerateTraceId()
 	}

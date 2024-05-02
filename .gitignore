@@ -5,4 +5,7 @@
 tmp
 vendor/
 note
+log
+test
+*_test.go
 

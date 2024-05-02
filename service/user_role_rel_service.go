@@ -15,16 +15,13 @@ type UserRoleRelRepo interface {
 	GetUserRoleRel(ctx context.Context, userID string) (rolePowerRel *entity.UserRoleRel, exist bool, err error)
 }
 
-// UserRoleRelServicer user service
 type UserRoleRelService struct {
 }
 
-// NewUserRoleRelService new user role rel service
 func NewUserRoleRelService() *UserRoleRelService {
 	return &UserRoleRelService{}
 }
 
-// SaveUserRole save user role
 func (us *UserRoleRelService) SaveUserRole(ctx context.Context, userID string, roleID int) (err error) {
 	return repo.UserRoleRelRepo.SaveUserRoleRel(ctx, userID, roleID)
 }

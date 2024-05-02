@@ -11,7 +11,7 @@ import (
 	entity "github.com/lawyer/commons/entity"
 	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
-	checker2 "github.com/lawyer/commons/utils/checker"
+	checker "github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/repoCommon"
 	"time"
@@ -20,7 +20,6 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/plugin"
 	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,7 +51,7 @@ func (us *UserService) GetUserInfoByUserID(ctx context.Context, token, userID st
 
 func (us *UserService) GetOtherUserInfoByUsername(ctx context.Context, username string) (
 	resp *schema.GetOtherUserInfoByUsernameResp, err error) {
-	userInfo, exist, err := repo.UserRepo.GetByUsername(ctx, username)
+	userInfo, exist, err := repo.UserRepo.GetUserInfoByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +64,14 @@ func (us *UserService) GetOtherUserInfoByUsername(ctx context.Context, username 
 	return resp, nil
 }
 
+/*
+检查邮箱状态是否正常，也就是账号状态
+对比密码是否正确
+然后更新最近登录时间
+*/
 func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLoginReq) (resp *schema.UserLoginResp, err error) {
 
-	userInfo, exist, err := repo.UserRepo.GetByEmail(ctx, req.Email)
+	userInfo, exist, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, req.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -77,26 +81,21 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 	if !us.verifyPassword(ctx, req.Pass, userInfo.Pass) {
 		return nil, errors.BadRequest(reason.EmailOrPasswordWrong)
 	}
-	//ok, externalID, err := UserExternalLoginServicer.CheckUserStatusInUserCenter(ctx, userInfo.ID)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//if !ok {
-	//	return nil, errors.BadRequest(reason.EmailOrPasswordWrong)
-	//}
 	//更新最近登陆时间
 	err = repo.UserRepo.UpdateLastLoginDate(ctx, userInfo.ID)
 	if err != nil {
-		log.Errorf("update last login data failed, err: %v", err)
+		glog.Slog.Errorf("update last glog.Slogin data failed, err: %v", err)
 	}
-
+	//查db获取用户角色id
 	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
+	resp.RoleID = roleID
+	//生成用户头像
 	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	userCacheInfo := &entity.UserCacheInfo{
 		UserID:      userInfo.ID,
@@ -105,24 +104,18 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 		RoleID:      roleID,
 		//ExternalID:  externalID,
 	}
-	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
+	resp.AccessToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
-	resp.RoleID = userCacheInfo.RoleID
-	//if resp.RoleID == RoleAdminID {
-	//	err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, userCacheInfo)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
-
 	return resp, nil
 }
 
-// RetrievePassWord .
+// RetrievePassWord
+// 通过email获取用户信息,然后给这个邮箱地址发个邮件
 func (us *UserService) RetrievePassWord(ctx context.Context, req *schema.UserRetrievePassWordRequest) error {
-	userInfo, has, err := repo.UserRepo.GetByEmail(ctx, req.Email)
+
+	userInfo, has, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, req.Email)
 	if err != nil {
 		return err
 	}
@@ -148,40 +141,44 @@ func (us *UserService) RetrievePassWord(ctx context.Context, req *schema.UserRet
 // UpdatePasswordWhenForgot update user password when user forgot password
 func (us *UserService) UpdatePasswordWhenForgot(ctx context.Context, req *schema.UserRePassWordRequest) (err error) {
 	data := &schema.EmailCodeContent{}
+	//这个content是通过code从缓存里拿到的，里面包含的是用户信息，应该是给用户发修改密码邮件前存的
 	err = data.FromJSONString(req.Content)
 	if err != nil {
 		return errors.BadRequest(reason.EmailVerifyURLExpired)
 	}
-
-	userInfo, exist, err := repo.UserRepo.GetByEmail(ctx, data.Email)
+	//从db中查询用户信息
+	userInfo, exist, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, data.Email)
 	if err != nil {
 		return err
 	}
 	if !exist {
 		return errors.BadRequest(reason.UserNotFound)
 	}
-	enpass, err := utils.EncryptPassword(req.Pass)
+	//加密新密码
+	newPass, err := utils.EncryptPassword(req.Pass)
 	if err != nil {
 		return err
 	}
-	err = repo.UserRepo.UpdatePass(ctx, userInfo.ID, enpass)
+	//更新
+	err = repo.UserRepo.UpdatePass(ctx, userInfo.ID, newPass)
 	if err != nil {
 		return err
 	}
 	// When the user changes the password, all the current user's tokens are invalid.
-	AuthServicer.RemoveUserAllTokens(ctx, userInfo.ID)
+	//todo 确实需要删除旧的token，那么服务端如何删除这个token？这个也涉及到如何refresh token
+	//AuthServicer.RemoveUserAllTokens(ctx, userInfo.ID)
 	return nil
 }
 
-func (us *UserService) UserModifyPassWordVerification(ctx context.Context, req *schema.UserModifyPasswordReq) (bool, error) {
-	userInfo, has, err := repo.UserRepo.GetByUserID(ctx, req.UserID)
+func (us *UserService) UserPassWordVerification(ctx context.Context, uid, oldPass string) (bool, error) {
+	userInfo, has, err := repo.UserRepo.GetByUserID(ctx, uid)
 	if err != nil {
 		return false, err
 	}
 	if !has {
 		return false, errors.BadRequest(reason.UserNotFound)
 	}
-	isPass := us.verifyPassword(ctx, req.OldPass, userInfo.Pass)
+	isPass := us.verifyPassword(ctx, oldPass, userInfo.Pass)
 	if !isPass {
 		return false, nil
 	}
@@ -202,75 +199,59 @@ func (us *UserService) UserModifyPassword(ctx context.Context, req *schema.UserM
 	if !exist {
 		return errors.BadRequest(reason.UserNotFound)
 	}
-
+	//再次验证老密码是否正确
 	isPass := us.verifyPassword(ctx, req.OldPass, userInfo.Pass)
 	if !isPass {
 		return errors.BadRequest(reason.OldPasswordVerificationFailed)
 	}
+	//更新数据库密码
 	err = repo.UserRepo.UpdatePass(ctx, userInfo.ID, enpass)
 	if err != nil {
 		return err
 	}
 
-	AuthServicer.RemoveTokensExceptCurrentUser(ctx, userInfo.ID, req.AccessToken)
+	//AuthServicer.RemoveTokensExceptCurrentUser(ctx, userInfo.ID, req.AccessToken)
 	return nil
 }
 
 // UpdateInfo update user info
-func (us *UserService) UpdateInfo(ctx context.Context, req *schema.UpdateInfoRequest) (
-	errFields []*validator.FormErrorField, err error) {
-	siteUsers, err := SiteInfoCommonServicer.GetSiteUsers(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (us *UserService) UpdateInfo(ctx context.Context, req *schema.UpdateInfoRequest) (err error) {
+	//siteUsers, err := SiteInfoCommonServicer.GetSiteUsers(ctx)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	if siteUsers.AllowUpdateUsername && len(req.Username) > 0 {
-		if checker2.IsInvalidUsername(req.Username) {
-			return append(errFields, &validator.FormErrorField{
-				ErrorField: "username",
-				ErrorMsg:   reason.UsernameInvalid,
-			}), errors.BadRequest(reason.UsernameInvalid)
-		}
+	if len(req.Username) > 0 {
+
 		// admin can use reserved username
-		if !req.IsAdmin && checker2.IsReservedUsername(req.Username) {
-			return append(errFields, &validator.FormErrorField{
-				ErrorField: "username",
-				ErrorMsg:   reason.UsernameInvalid,
-			}), errors.BadRequest(reason.UsernameInvalid)
-		} else if req.IsAdmin && checker2.IsUsersIgnorePath(req.Username) {
-			return append(errFields, &validator.FormErrorField{
-				ErrorField: "username",
-				ErrorMsg:   reason.UsernameInvalid,
-			}), errors.BadRequest(reason.UsernameInvalid)
+		if checker.IsInvalidUsername(req.Username) || checker.IsReservedUsername(req.Username) || checker.IsUsersIgnorePath(req.Username) {
+			return errors.BadRequest(reason.UsernameInvalid)
 		}
 
-		userInfo, exist, err := repo.UserRepo.GetByUsername(ctx, req.Username)
+		userInfo, exist, err := repo.UserRepo.GetUserInfoByUsername(ctx, req.Username)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if exist && userInfo.ID != req.UserID {
-			return append(errFields, &validator.FormErrorField{
-				ErrorField: "username",
-				ErrorMsg:   reason.UsernameDuplicate,
-			}), errors.BadRequest(reason.UsernameDuplicate)
+			return errors.BadRequest(reason.UsernameDuplicate)
 		}
 	}
 
 	oldUserInfo, exist, err := repo.UserRepo.GetByUserID(ctx, req.UserID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !exist {
-		return nil, errors.BadRequest(reason.UserNotFound)
+		return errors.BadRequest(reason.UserNotFound)
 	}
 
-	cond := us.formatUserInfoForUpdateInfo(oldUserInfo, req, siteUsers)
+	cond := us.formatUserInfoForUpdateInfo(oldUserInfo, req)
 	err = repo.UserRepo.UpdateInfo(ctx, cond)
-	return nil, err
+	return err
 }
 
 func (us *UserService) formatUserInfoForUpdateInfo(
-	oldUserInfo *entity.User, req *schema.UpdateInfoRequest, siteUsersConf *schema.SiteUsersResp) *entity.User {
+	oldUserInfo *entity.User, req *schema.UpdateInfoRequest) *entity.User {
 	avatar, _ := json.Marshal(req.Avatar)
 
 	userInfo := &entity.User{}
@@ -283,33 +264,25 @@ func (us *UserService) formatUserInfoForUpdateInfo(
 	userInfo.Location = oldUserInfo.Location
 	userInfo.ID = req.UserID
 
-	if len(req.DisplayName) > 0 && siteUsersConf.AllowUpdateDisplayName {
+	if len(req.DisplayName) > 0 {
 		userInfo.DisplayName = req.DisplayName
 	}
-	if len(req.Username) > 0 && siteUsersConf.AllowUpdateUsername {
+	if len(req.Username) > 0 {
 		userInfo.Username = req.Username
 	}
-	if len(avatar) > 0 && siteUsersConf.AllowUpdateAvatar {
+	if len(avatar) > 0 {
 		userInfo.Avatar = string(avatar)
 	}
-	if siteUsersConf.AllowUpdateBio {
-		userInfo.Bio = req.Bio
-		userInfo.BioHTML = req.BioHTML
-	}
-	if siteUsersConf.AllowUpdateWebsite {
-		userInfo.Website = req.Website
-	}
-	if siteUsersConf.AllowUpdateLocation {
-		userInfo.Location = req.Location
-	}
+	userInfo.Bio = req.Bio
+	userInfo.BioHTML = req.BioHTML
+	userInfo.Website = req.Website
+	userInfo.Location = req.Location
 	return userInfo
 }
 
 // UserUpdateInterface update user interface
 func (us *UserService) UserUpdateInterface(ctx context.Context, req *schema.UpdateUserInterfaceRequest) (err error) {
-	if !translator.CheckLanguageIsValid(req.Language) {
-		return errors.BadRequest(reason.LangNotFound)
-	}
+
 	err = repo.UserRepo.UpdateLanguage(ctx, req.UserId, req.Language)
 	if err != nil {
 		return
@@ -321,7 +294,7 @@ func (us *UserService) UserUpdateInterface(ctx context.Context, req *schema.Upda
 func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo *schema.UserRegisterReq) (
 	resp *schema.UserLoginResp, err error) {
 	//先查一下数据库是否有这个邮箱地址，有则是重复注册
-	_, has, err := repo.UserRepo.GetByEmail(ctx, registerUserInfo.Email)
+	_, has, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, registerUserInfo.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +325,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	}
 	//todo
 	if err = UserNotificationConfigService.SetDefaultUserNotificationConfig(ctx, []string{userInfo.ID}); err != nil {
-		glog.Logger.Error("set default user notification config failed, err: " + err.Error())
+		glog.Klog.Error("set default user notification config failed, err: " + err.Error())
 	}
 
 	// send email
@@ -370,12 +343,13 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 	//新注册用户不存在role id，默认为1
 	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
 	if err != nil {
-		glog.Logger.Error(err.Error())
+		glog.Klog.Error(err.Error())
 	}
 
 	// return user info and token
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
+	resp.RoleID = roleID
 	//todo
 	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	userCacheInfo := &entity.UserCacheInfo{
@@ -383,19 +357,13 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 		EmailStatus: userInfo.MailStatus,
 		UserStatus:  userInfo.Status,
 		RoleID:      roleID,
+		UserName:    userInfo.Username,
 	}
-	//visit token 指向access token， acctoken指向userCacheInfo
-	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
+	//acctoken指向userCacheInfo
+	resp.AccessToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
-	resp.RoleID = userCacheInfo.RoleID
-	//if resp.RoleID == RoleAdminID {
-	//	err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
 	return resp, nil
 }
 
@@ -428,8 +396,8 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 	if err != nil {
 		return nil, errors.BadRequest(reason.EmailVerifyURLExpired)
 	}
-	//根据code获取缓存里的content，里面包含email和uid
-	userInfo, has, err := repo.UserRepo.GetByEmail(ctx, data.Email)
+	//根据content里的email和uid，查db获取用户的全部信息
+	userInfo, has, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, data.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -438,14 +406,15 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 	}
 	if userInfo.MailStatus == entity.EmailStatusToBeVerified {
 		userInfo.MailStatus = entity.EmailStatusAvailable
+		//更新用户的邮箱状态为激活状态
 		err = repo.UserRepo.UpdateEmailStatus(ctx, userInfo.ID, userInfo.MailStatus)
 		if err != nil {
 			return nil, err
 		}
 	}
-	//记录用户操作的动作，
+	//记录用户activity事件，修改用户rank排名，在一个事务里做的
 	if err = repo.UserActiveActivityRepo.UserActive(ctx, userInfo.ID); err != nil {
-		glog.Logger.Error(err.Error())
+		glog.Klog.Error(err.Error())
 	}
 
 	// In the case of three-party login, the associated users are bound
@@ -456,8 +425,9 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 	//	}
 	//}
 
-	accessToken, userCacheInfo, err := UserCommonServicer.CacheLoginUserInfo(
-		ctx, userInfo.ID, userInfo.MailStatus, userInfo.Status, "")
+	//这里为啥又缓存了一下用户信息？在注册的时候已经保存了一次
+	//但是之前缓存信息里的email status过期了，需要更新，这里如何做也是个问题 todo
+	accessToken, userCacheInfo, err := UserCommonServicer.CacheLoginUserInfo(ctx, userInfo.ID, userInfo.MailStatus, userInfo.Status, "")
 	if err != nil {
 		return nil, err
 	}
@@ -467,7 +437,7 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	resp.AccessToken = accessToken
 	// User verified email will update user email status. So user status cache should be updated.
-	if err = AuthServicer.SetUserStatus(ctx, userCacheInfo); err != nil {
+	if err = AuthServicer.SetUserCacheInfoByUid(ctx, userCacheInfo); err != nil {
 		return nil, err
 	}
 	return resp, nil
@@ -486,9 +456,9 @@ func (us *UserService) verifyPassword(ctx context.Context, loginPass, userPass s
 // encryptPassword
 // The password does irreversible encryption.
 
-// UserChangeEmailSendCode user change email verification
 func (us *UserService) UserChangeEmailSendCode(ctx context.Context, req *schema.UserChangeEmailSendCodeReq) (
 	resp []*validator.FormErrorField, err error) {
+	//根据uid查询用户信息
 	userInfo, exist, err := repo.UserRepo.GetByUserID(ctx, req.UserID)
 	if err != nil {
 		return nil, err
@@ -496,7 +466,7 @@ func (us *UserService) UserChangeEmailSendCode(ctx context.Context, req *schema.
 	if !exist {
 		return nil, errors.BadRequest(reason.UserNotFound)
 	}
-
+	//校对邮箱状态和密码
 	// If user's email already verified, then must verify password first.
 	if userInfo.MailStatus == entity.EmailStatusAvailable && !us.verifyPassword(ctx, req.Pass, userInfo.Pass) {
 		resp = append(resp, &validator.FormErrorField{
@@ -505,8 +475,8 @@ func (us *UserService) UserChangeEmailSendCode(ctx context.Context, req *schema.
 		})
 		return resp, errors.BadRequest(reason.OldPasswordVerificationFailed)
 	}
-
-	_, exist, err = repo.UserRepo.GetByEmail(ctx, req.Email)
+	//确认下是否是重复的邮箱
+	_, exist, err = repo.UserRepo.GetUserInfoByEmailFromDB(ctx, req.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -533,8 +503,8 @@ func (us *UserService) UserChangeEmailSendCode(ctx context.Context, req *schema.
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("send email confirmation %s", verifyEmailURL)
-
+	glog.Slog.Infof("send email confirmation %s", verifyEmailURL)
+	//给新邮箱发送验证码
 	go EmailServicer.SendAndSaveCode(ctx, req.Email, title, body, code, data.ToJSONString())
 	return nil, nil
 }
@@ -547,7 +517,7 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 		return nil, errors.BadRequest(reason.EmailVerifyURLExpired)
 	}
 
-	_, exist, err := repo.UserRepo.GetByEmail(ctx, data.Email)
+	_, exist, err := repo.UserRepo.GetUserInfoByEmailFromDB(ctx, data.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -562,6 +532,7 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 	if !exist {
 		return nil, errors.BadRequest(reason.UserNotFound)
 	}
+	//更新db中的邮箱
 	err = repo.UserRepo.UpdateEmail(ctx, data.UserID, data.Email)
 	if err != nil {
 		return nil, errors.BadRequest(reason.UserNotFound)
@@ -573,7 +544,7 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 
 	roleID, err := UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 
 	resp = &schema.UserLoginResp{}
@@ -585,21 +556,15 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 		UserStatus:  userInfo.Status,
 		RoleID:      roleID,
 	}
-	resp.AccessToken, resp.VisitToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
+	resp.AccessToken, err = AuthServicer.SetUserCacheInfo(ctx, userCacheInfo)
 	if err != nil {
 		return nil, err
 	}
 	// User verified email will update user email status. So user status cache should be updated.
-	if err = AuthServicer.SetUserStatus(ctx, userCacheInfo); err != nil {
+	if err = AuthServicer.SetUserCacheInfoByUid(ctx, userCacheInfo); err != nil {
 		return nil, err
 	}
 	resp.RoleID = userCacheInfo.RoleID
-	if resp.RoleID == RoleAdminID {
-		err = AuthServicer.SetAdminUserCacheInfo(ctx, resp.AccessToken, &entity.UserCacheInfo{UserID: userInfo.ID})
-		if err != nil {
-			return nil, err
-		}
-	}
 	return resp, nil
 }
 
@@ -607,7 +572,7 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 func (us *UserService) getSiteUrl(ctx context.Context) string {
 	//siteGeneral, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
 	//if err != nil {
-	//	log.Errorf("get site general failed: %s", err)
+	//	glog.Slog.Errorf("get site general failed: %s", err)
 	//	return ""
 	//}
 	//return siteGeneral.SiteUrl
@@ -685,9 +650,9 @@ func (us *UserService) UserUnsubscribeNotification(
 
 func (us *UserService) getActivityUserRankStat(ctx context.Context, startTime, endTime time.Time, limit int,
 	userIDExist map[string]bool) (rankStat []*entity.ActivityUserRankStat, userIDs []string, err error) {
-	if plugin.RankAgentEnabled() {
-		return make([]*entity.ActivityUserRankStat, 0), make([]string, 0), nil
-	}
+	//if plugin.RankAgentEnabled() {
+	//	return make([]*entity.ActivityUserRankStat, 0), make([]string, 0), nil
+	//}
 	rankStat, err = repoCommon.NewActivityRepo().GetUsersWhoHasGainedTheMostReputation(ctx, startTime, endTime, limit)
 	if err != nil {
 		return nil, nil, err
@@ -767,6 +732,7 @@ func (us *UserService) SearchUserListByName(ctx context.Context, req *schema.Get
 	if len(req.Username) == 0 {
 		return resp, nil
 	}
+	//根据username或者display name查db
 	userList, err := repo.UserRepo.SearchUserListByName(ctx, req.Username, 5)
 	if err != nil {
 		return resp, err
@@ -774,6 +740,7 @@ func (us *UserService) SearchUserListByName(ctx context.Context, req *schema.Get
 	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, userList)
 	for _, u := range userList {
 		if req.UserID == u.ID {
+			//搜到了自己，就跳过
 			continue
 		}
 		basicInfo := UserCommonServicer.FormatUserBasicInfo(ctx, u)
