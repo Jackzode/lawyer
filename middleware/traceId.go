@@ -6,11 +6,14 @@ import (
 	"github.com/lawyer/commons/utils"
 )
 
-func TraceId(ctx *gin.Context) {
-	traceId := utils.GetTraceIdFromHeader(ctx)
-	if traceId == "" {
-		traceId = utils.GenerateTraceId()
+func TraceId() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		traceId := utils.GetTraceIdFromHeader(ctx)
+		if traceId == "" {
+			traceId = utils.GenerateTraceId()
+		}
+		ctx.Set(constant.TraceID, traceId)
+		ctx.Next()
 	}
-	ctx.Set(constant.TraceID, traceId)
-	ctx.Next()
+
 }

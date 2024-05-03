@@ -36,6 +36,6 @@ func (e *EmailRepo) SetCode(ctx context.Context, code, content string, duration 
 
 // VerifyCode verify the code if out of date
 func (e *EmailRepo) VerifyCode(ctx context.Context, code string) (content string, err error) {
-	content = e.Cache.Get(ctx, code).String()
+	content = e.Cache.Get(ctx, code).Val()
 	return content, nil
 }

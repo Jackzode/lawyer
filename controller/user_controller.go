@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/base/translator"
-	"github.com/lawyer/commons/base/validator"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
@@ -178,7 +177,7 @@ func (uc *UserController) UserVerifyEmail(ctx *gin.Context) {
 	//VerifyEmailByCode 根据code从缓存中获取content,包含email和uid
 	req.Content = service.EmailServicer.VerifyEmailByCode(ctx, req.Code)
 	if len(req.Content) == 0 {
-		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired),
+		handler.HandleResponse(ctx, errors.New(2, reason.EmailVerifyURLExpired),
 			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
 		return
 	}
@@ -206,11 +205,7 @@ func (uc *UserController) UserVerifyEmailSend(ctx *gin.Context) {
 
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
 	if !captchaPass {
-		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
-			ErrorField: "captcha_code",
-			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
-		})
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
+		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 
@@ -230,11 +225,7 @@ func (uc *UserController) UserModifyPassWord(ctx *gin.Context) {
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, req.UserID,
 		req.CaptchaID, req.CaptchaCode)
 	if !captchaPass {
-		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
-			ErrorField: "captcha_code",
-			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
-		})
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
+		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 	//记录action
@@ -250,20 +241,12 @@ func (uc *UserController) UserModifyPassWord(ctx *gin.Context) {
 		return
 	}
 	if !oldPassVerification {
-		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
-			ErrorField: "old_pass",
-			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.OldPasswordVerificationFailed),
-		})
-		handler.HandleResponse(ctx, errors.BadRequest(reason.OldPasswordVerificationFailed), errFields)
+		handler.HandleResponse(ctx, errors.BadRequest(reason.OldPasswordVerificationFailed), nil)
 		return
 	}
 	//修改密码时新密码和老密码不能一样
 	if req.OldPass == req.Pass {
-		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
-			ErrorField: "pass",
-			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.NewPasswordSameAsPreviousSetting),
-		})
-		handler.HandleResponse(ctx, errors.BadRequest(reason.NewPasswordSameAsPreviousSetting), errFields)
+		handler.HandleResponse(ctx, errors.BadRequest(reason.NewPasswordSameAsPreviousSetting), nil)
 		return
 	}
 	err = service.UserServicer.UserModifyPassword(ctx, req)
@@ -385,11 +368,7 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 	//记录本次修改用户信息的操作
 	service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionEditUserinfo, req.UserID)
 	if !captchaPass {
-		errFields := append([]*validator.FormErrorField{}, &validator.FormErrorField{
-			ErrorField: "captcha_code",
-			ErrorMsg:   translator.Tr(utils.GetLang(ctx), reason.CaptchaVerificationFailed),
-		})
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), errFields)
+		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 	//核心逻辑

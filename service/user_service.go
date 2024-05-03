@@ -334,7 +334,7 @@ func (us *UserService) UserRegisterByEmail(ctx context.Context, registerUserInfo
 		UserID: userInfo.ID,
 	}
 	code := uuid.NewString()
-	verifyEmailURL := fmt.Sprintf("%s/users/account-activation?code=%s", us.getSiteUrl(ctx), code)
+	verifyEmailURL := fmt.Sprintf("http:://localhost:8081/lawyer/user/email/verification?code=%s", code)
 	title, body, err := EmailServicer.RegisterTemplate(ctx, verifyEmailURL)
 	if err != nil {
 		return nil, err

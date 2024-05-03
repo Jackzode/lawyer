@@ -25,8 +25,9 @@ func NewHTTPServer(debug bool) *gin.Engine {
 func InitRoutes(r *gin.Engine) {
 
 	//register common middleware
-	r.Use(middleware.ExtractAndSetAcceptLanguage)
-	r.Use(middleware.TraceId)
+	r.Use(middleware.ExtractAndSetLanguage())
+	r.Use(middleware.TraceId())
+	r.Use(middleware.RecoverPanic())
 
 	router := r.Group("/lawyer")
 

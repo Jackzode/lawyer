@@ -25,14 +25,16 @@ var (
 )
 
 // ExtractAndSetAcceptLanguage extract accept language from header and set to context
-func ExtractAndSetAcceptLanguage(ctx *gin.Context) {
-	// The language of our front-end configuration, like en_US
-	lang := utils.GetLang(ctx)
-	if langMapping[lang] {
-		ctx.Set(constant.AcceptLanguageFlag, lang)
-	} else {
-		// default language
-		ctx.Set(constant.AcceptLanguageFlag, i18n.LanguageEnglish)
+func ExtractAndSetLanguage() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// The language of our front-end configuration, like en_US
+		lang := utils.GetLang(ctx)
+		if langMapping[lang] {
+			ctx.Set(constant.AcceptLanguageFlag, lang)
+		} else {
+			// default language
+			ctx.Set(constant.AcceptLanguageFlag, i18n.LanguageEnglish)
+		}
+		ctx.Next()
 	}
-	ctx.Next()
 }
