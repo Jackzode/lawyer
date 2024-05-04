@@ -14,6 +14,7 @@ func main() {
 		fmt.Println(err)
 	}()
 	fmt.Println("server is starting...")
+	glog.Slog.Debug("server is starting...")
 	filename := `.\conf\config.yaml`
 	application := initServer.Init(filename)
 	err := application.Run(":8081")

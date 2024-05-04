@@ -3,6 +3,8 @@ package constant
 import "time"
 
 const (
+	UserRegisterInfoKey                        = "lawyer:user:register:"
+	UserRegisterInfoTime                       = 10 * time.Minute
 	UserCacheInfoKey                           = "lawyer:user:cache:"
 	UserCacheInfoChangedCacheTime              = 7 * 24 * time.Hour
 	UserTokenCacheKey                          = "lawyer:user:token:"

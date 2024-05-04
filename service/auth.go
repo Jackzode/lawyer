@@ -14,6 +14,7 @@ type IAuthRepo interface {
 	GetUserInfoFromCacheByToken(ctx context.Context, accessToken string) (userInfo *entity.UserCacheInfo, err error)
 	SetUserCacheInfoByToken(ctx context.Context, accessToken string, userInfo *entity.UserCacheInfo) (err error)
 	RemoveUserCacheInfoByToken(ctx context.Context, accessToken string) (err error)
+	SetUserRegisterInfoByEmail(ctx context.Context, user *entity.User) (err error)
 }
 
 // AuthServicer kit service
@@ -73,6 +74,10 @@ func (as *AuthService) SetUserCacheInfo(ctx context.Context, userInfo *entity.Us
 		return "", err
 	}
 	return accessToken, err
+}
+
+func (as *AuthService) SetUserRegisterInfoByEmail(ctx context.Context, userInfo *entity.User) error {
+	return as.r.SetUserRegisterInfoByEmail(ctx, userInfo)
 }
 
 func (as *AuthService) SetUserCacheInfoByUid(ctx context.Context, userInfo *entity.UserCacheInfo) (err error) {

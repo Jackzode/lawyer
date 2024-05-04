@@ -104,10 +104,10 @@ func ParseToken(tokenString string) (*CustomClaim, error) {
 			}
 		}
 	}
-	if token == nil {
+	if token == nil || !token.Valid {
 		return nil, TokenInvalid
 	}
-	if claims, ok := token.Claims.(*CustomClaim); ok && token.Valid {
+	if claims, ok := token.Claims.(*CustomClaim); ok {
 		return claims, nil
 	}
 	return nil, TokenInvalid
@@ -135,8 +135,8 @@ func CreateToken(UserName, Uid string, Role int) (string, error) {
 
 	claims := CustomClaim{
 		UserName: UserName,
-		Uid:      "12345",
-		Role:     1,
+		Uid:      Uid,
+		Role:     Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Audience:  jwt.ClaimStrings{"lawyer"},                     // 受众
 			NotBefore: jwt.NewNumericDate(time.Now().Add(-1000)),      // 签名生效时间

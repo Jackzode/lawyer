@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/utils"
@@ -16,6 +17,7 @@ func AccessToken() gin.HandlerFunc {
 		//不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
 		token := ctx.Request.Header.Get("lawyer-token")
 		if token == "" {
+			fmt.Println(token, "...token")
 			//response.FailWithDetailed(gin.H{"reload": true}, "未登录或非法访问", c)
 			ctx.Abort()
 			return
@@ -23,6 +25,7 @@ func AccessToken() gin.HandlerFunc {
 		// parseToken 解析token包含的信息
 		claims, err := utils.ParseToken(token)
 		if err != nil {
+			fmt.Println(err.Error())
 			ctx.Abort()
 			return
 		}

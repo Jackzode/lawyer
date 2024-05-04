@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/lawyer/commons/base/translator"
 	"github.com/segmentfault/pacman/i18n"
 )
 
@@ -9,9 +8,9 @@ import (
 type RespBody struct {
 	// http code
 	Code int `json:"code"`
-	// reason key
-	Reason string `json:"reason"`
-	// response message
+	//// reason key
+	//Reason string `json:"reason"`
+	//// response message
 	Message string `json:"msg"`
 	//
 	TraceId string `json:"trace_id"`
@@ -21,9 +20,9 @@ type RespBody struct {
 
 // TrMsg translate the reason cause as a message
 func (r *RespBody) TrMsg(lang i18n.Language) *RespBody {
-	if len(r.Message) == 0 {
-		r.Message = translator.Tr(lang, r.Reason)
-	}
+	//if len(r.Message) == 0 {
+	//	r.Message = translator.Tr(lang, r.Reason)
+	//}
 	return r
 }
 
@@ -46,10 +45,11 @@ func (r *RespBody) TrMsg(lang i18n.Language) *RespBody {
 //}
 
 // NewRespBodyData new response body with data
-func NewRespBodyData(code int, msg string, data interface{}) *RespBody {
+func NewRespBodyData(code int, msg, trace string, data interface{}) *RespBody {
 	return &RespBody{
 		Code:    code,
 		Message: msg,
+		TraceId: trace,
 		Data:    data,
 	}
 }

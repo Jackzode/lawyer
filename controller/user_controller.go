@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/commons/base/handler"
@@ -12,8 +13,7 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/middleware"
-	service "github.com/lawyer/service"
-	"github.com/segmentfault/pacman/errors"
+	"github.com/lawyer/service"
 )
 
 // UserController user controller, no need login
@@ -32,7 +32,7 @@ func (uc *UserController) UserEmailLogin(ctx *gin.Context) {
 	//验证码是否正确
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
 	if !captchaPass {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
+		handler.HandleResponse(ctx, errors.New(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 	//查询db，生成userCacheInfo,这里包含了role id
@@ -40,7 +40,7 @@ func (uc *UserController) UserEmailLogin(ctx *gin.Context) {
 	if err != nil {
 		//记录登陆失败的次数，先注释掉，和主业务没关系的统统注释掉
 		//service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
-		handler.HandleResponse(ctx, errors.BadRequest(reason.EmailOrPasswordWrong), nil)
+		handler.HandleResponse(ctx, errors.New(reason.EmailOrPasswordWrong), nil)
 		return
 	}
 
@@ -102,11 +102,12 @@ func (uc *UserController) RetrievePassWord(ctx *gin.Context) {
 	}
 	//校对验证码
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
+	fmt.Println("captchaPass: ", captchaPass)
 	if !captchaPass {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
+		handler.HandleResponse(ctx, errors.New(reason.CaptchaVerificationFailed), nil)
 		return
 	}
-	//
+	//core logic
 	err := service.UserServicer.RetrievePassWord(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
@@ -117,15 +118,15 @@ func (uc *UserController) UserReplacePassWord(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	//这个code是啥
+	//这个code是/password/reset接口生成的，里面存的是email和uid
 	req.Content = service.EmailServicer.VerifyEmailByCode(ctx, req.Code)
 	if len(req.Content) == 0 {
-		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired), nil)
+		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired), nil)
 		return
 	}
 	//更新db中的密码
 	err := service.UserServicer.UpdatePasswordWhenForgot(ctx, req)
-	service.CaptchaServicer.ActionRecordDel(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
+	//service.CaptchaServicer.ActionRecordDel(ctx, entity.CaptchaActionPassword, ctx.ClientIP())
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -154,19 +155,14 @@ func (uc *UserController) UserRegisterByEmail(ctx *gin.Context) {
 	}
 	req.IP = ctx.ClientIP()
 	//对比验证码是否正确
-	fmt.Println(req.IP)
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, req.IP, req.CaptchaID, req.CaptchaCode)
 	if !captchaPass {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
+		handler.HandleResponse(ctx, errors.New(reason.CaptchaVerificationFailed), nil)
 		return
 	}
-	//
+	//核心逻辑
 	resp, err := service.UserServicer.UserRegisterByEmail(ctx, req)
-	if err != nil {
-		handler.HandleResponse(ctx, err, nil)
-	} else {
-		handler.HandleResponse(ctx, err, resp)
-	}
+	handler.HandleResponse(ctx, err, resp)
 }
 
 func (uc *UserController) UserVerifyEmail(ctx *gin.Context) {
@@ -177,8 +173,7 @@ func (uc *UserController) UserVerifyEmail(ctx *gin.Context) {
 	//VerifyEmailByCode 根据code从缓存中获取content,包含email和uid
 	req.Content = service.EmailServicer.VerifyEmailByCode(ctx, req.Code)
 	if len(req.Content) == 0 {
-		handler.HandleResponse(ctx, errors.New(2, reason.EmailVerifyURLExpired),
-			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
+		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired), nil)
 		return
 	}
 	//验证邮箱
@@ -199,13 +194,13 @@ func (uc *UserController) UserVerifyEmailSend(ctx *gin.Context) {
 	}
 	userInfo := middleware.GetUserInfoFromContext(ctx)
 	if userInfo == nil {
-		handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
+		handler.HandleResponse(ctx, errors.New(reason.UnauthorizedError), nil)
 		return
 	}
 
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
 	if !captchaPass {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
+		handler.HandleResponse(ctx, errors.New(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 
@@ -216,40 +211,41 @@ func (uc *UserController) UserVerifyEmailSend(ctx *gin.Context) {
 // @Router /answer/api/v1/user/password [put]
 func (uc *UserController) UserModifyPassWord(ctx *gin.Context) {
 	req := &schema.UserModifyPasswordReq{}
+	fmt.Println("req ", req)
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
-	req.AccessToken = utils.ExtractToken(ctx)
+	v, ok := ctx.Get(constant.TokenClaim)
+	if !ok {
+		fmt.Println("!ok ", ok)
+		handler.HandleResponse(ctx, errors.New(reason.UserTokenInvalid), nil)
+		return
+	}
+	claim := v.(*utils.CustomClaim)
+	req.UserID = claim.Uid
 	//校对验证码
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, req.UserID,
 		req.CaptchaID, req.CaptchaCode)
 	if !captchaPass {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
+		handler.HandleResponse(ctx, errors.New(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 	//记录action
-	_, err := service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionPassword, req.UserID)
-	if err != nil {
-		glog.Slog.Error(err)
-	}
+	service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionPassword, req.UserID)
 
 	//验证用户老密码是否正确
-	oldPassVerification, err := service.UserServicer.UserPassWordVerification(ctx, req.UserID, req.OldPass)
-	if err != nil {
-		handler.HandleResponse(ctx, err, nil)
-		return
-	}
+	oldPassVerification := service.UserServicer.UserPassWordVerification(ctx, req.UserID, req.OldPass)
 	if !oldPassVerification {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.OldPasswordVerificationFailed), nil)
+		handler.HandleResponse(ctx, errors.New(reason.OldPasswordVerificationFailed), nil)
 		return
 	}
+
 	//修改密码时新密码和老密码不能一样
 	if req.OldPass == req.Pass {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.NewPasswordSameAsPreviousSetting), nil)
+		handler.HandleResponse(ctx, errors.New(reason.NewPasswordSameAsPreviousSetting), nil)
 		return
 	}
-	err = service.UserServicer.UserModifyPassword(ctx, req)
+	err := service.UserServicer.UserModifyPassword(ctx, req)
 	if err == nil {
 		//删除这个action记录
 		service.CaptchaServicer.ActionRecordDel(ctx, entity.CaptchaActionPassword, req.UserID)
@@ -277,7 +273,7 @@ func (uc *UserController) UserUpdateInterfaceLang(ctx *gin.Context) {
 	}
 	req.UserId = middleware.GetLoginUserIDFromContext(ctx)
 	if !translator.CheckLanguageIsValid(req.Language) {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.LangNotFound), nil)
+		handler.HandleResponse(ctx, errors.New(reason.LangNotFound), nil)
 		return
 	}
 	err := service.UserServicer.UserUpdateInterface(ctx, req)
@@ -350,7 +346,7 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 	// If the user is not logged in, the api cannot be used.
 	// If the user email is not verified, that also can use this api to modify the email.
 	if len(req.UserID) == 0 {
-		handler.HandleResponse(ctx, errors.Unauthorized(reason.UnauthorizedError), nil)
+		handler.HandleResponse(ctx, errors.New(reason.UnauthorizedError), nil)
 		return
 	}
 	// check whether email allow register or not
@@ -360,7 +356,7 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 	//	return
 	//}
 	//if !checker.EmailInAllowEmailDomain(req.Email, siteInfo.AllowEmailDomains) {
-	//	handler.HandleResponse(ctx, errors.BadRequest(reason.EmailIllegalDomainError), nil)
+	//	handler.HandleResponse(ctx, errors.New(reason.EmailIllegalDomainError), nil)
 	//	return
 	//}
 	//校对验证码
@@ -368,7 +364,7 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 	//记录本次修改用户信息的操作
 	service.CaptchaServicer.ActionRecordAdd(ctx, entity.CaptchaActionEditUserinfo, req.UserID)
 	if !captchaPass {
-		handler.HandleResponse(ctx, errors.BadRequest(reason.CaptchaVerificationFailed), nil)
+		handler.HandleResponse(ctx, errors.New(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 	//核心逻辑
@@ -390,7 +386,7 @@ func (uc *UserController) UserChangeEmailVerify(ctx *gin.Context) {
 	}
 	req.Content = service.EmailServicer.VerifyEmailByCode(ctx, req.Code)
 	if len(req.Content) == 0 {
-		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired),
+		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired),
 			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
 		return
 	}
@@ -423,7 +419,7 @@ func (uc *UserController) UserUnsubscribeNotification(ctx *gin.Context) {
 
 	req.Content = service.EmailServicer.VerifyEmailByCode(ctx, req.Code)
 	if len(req.Content) == 0 {
-		handler.HandleResponse(ctx, errors.Forbidden(reason.EmailVerifyURLExpired),
+		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired),
 			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
 		return
 	}

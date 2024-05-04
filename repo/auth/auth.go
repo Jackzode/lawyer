@@ -27,6 +27,15 @@ func NewAuthRepo() *AuthRepo {
 		Cache: handler.RedisClient,
 	}
 }
+func (ar *AuthRepo) SetUserRegisterInfoByEmail(ctx context.Context, user *entity.User) (err error) {
+	userInfo, err := json.Marshal(user)
+	if err != nil {
+		return err
+	}
+	err = ar.Cache.Set(ctx, constant.UserRegisterInfoKey+user.EMail,
+		string(userInfo), constant.UserRegisterInfoTime).Err()
+	return err
+}
 
 // 以uid为key， userCacheInfo为value，存到缓存里
 func (ar *AuthRepo) SetUserCacheInfoByUid(ctx context.Context, userID string, userInfo *entity.UserCacheInfo) (err error) {

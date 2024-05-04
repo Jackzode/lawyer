@@ -5,6 +5,7 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/redis/go-redis/v9"
 	"strings"
 	"time"
@@ -217,7 +218,8 @@ func (ur *UserRepo) GetUserInfoByEmailFromDB(ctx context.Context, email string) 
 	exist, err = ur.DB.Context(ctx).Where("e_mail = ?", email).
 		Where("status != ?", entity.UserStatusDeleted).Get(userInfo)
 	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		glog.Slog.Error(err.Error())
+		//err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 	}
 	return
 }

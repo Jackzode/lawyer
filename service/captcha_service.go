@@ -91,10 +91,12 @@ func (cs *CaptchaService) UserRegisterVerifyCaptcha(ctx context.Context, id, Ver
 // Verify that you need to enter a CAPTCHA, and that the CAPTCHA is correct
 func (cs *CaptchaService) ActionRecordVerifyCaptcha(ctx context.Context, actionType, IP, CaptchaId, CaptchaCode string) bool {
 	NeedVerification := cs.ValidationStrategy(ctx, IP, actionType)
-	fmt.Println(NeedVerification)
+	fmt.Println("NeedVerification； ", NeedVerification)
+	//需要验证码
 	if NeedVerification {
 		return cs.UserRegisterVerifyCaptcha(ctx, CaptchaId, CaptchaCode)
 	}
+	//直接通过
 	return true
 }
 
@@ -166,7 +168,7 @@ func (cs *CaptchaService) VerifyCaptcha(ctx context.Context, key, captcha string
 	return strings.TrimSpace(captcha) == realCaptcha, nil
 }
 
-// 判断一下当前操作是否需要验证码
+// 判断一下当前操作是否需要验证码，true需要验证，false直接跳过
 func (cs *CaptchaService) ValidationStrategy(ctx context.Context, IP, actionType string) bool {
 	//在缓存中查询最近操作
 	info, err := repo.CaptchaRepo.GetActionType(ctx, IP, actionType)
@@ -222,7 +224,7 @@ func (cs *CaptchaService) CaptchaActionPassword(ctx context.Context, unit string
 	setNum := 3
 	setTime := int64(60 * 30) //seconds
 	now := time.Now().Unix()
-	if now-actioninfo.LastTime <= setTime && actioninfo.Num >= setNum {
+	if now-actioninfo.LastTime <= setTime && actioninfo.Num <= setNum {
 		return false
 	}
 	if now-actioninfo.LastTime != 0 && now-actioninfo.LastTime > setTime {

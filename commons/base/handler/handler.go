@@ -13,13 +13,14 @@ import (
 // HandleResponse Handle response body
 func HandleResponse(ctx *gin.Context, err error, data interface{}) {
 	lang := utils.GetLang(ctx)
+	trace, _ := ctx.Get(constant.TraceID)
 	// no error
 	if err == nil {
-		ctx.JSON(http.StatusOK, NewRespBodyData(http.StatusOK, reason.Success, data).TrMsg(lang))
+		ctx.JSON(http.StatusOK, NewRespBodyData(http.StatusOK, reason.Success, trace.(string), data).TrMsg(lang))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, NewRespBodyData(200, err.Error(), nil))
+	ctx.JSON(http.StatusOK, NewRespBodyData(200, err.Error(), trace.(string), nil))
 }
 
 // BindAndCheck bind request and check
