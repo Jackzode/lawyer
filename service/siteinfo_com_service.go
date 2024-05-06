@@ -98,16 +98,16 @@ func (s *siteInfoCommonService) FormatListAvatar(ctx context.Context, userList [
 
 func (s *siteInfoCommonService) getAvatarDefaultConfig(ctx context.Context) (string, string) {
 	gravatarBaseURL, defaultAvatar := constant.DefaultGravatarBaseURL, constant.DefaultAvatar
-	usersConfig, err := s.GetSiteUsers(ctx)
-	if err != nil {
-		glog.Slog.Error(err)
-	}
-	if len(usersConfig.GravatarBaseURL) > 0 {
-		gravatarBaseURL = usersConfig.GravatarBaseURL
-	}
-	if len(usersConfig.DefaultAvatar) > 0 {
-		defaultAvatar = usersConfig.DefaultAvatar
-	}
+	//usersConfig, err := s.GetSiteUsers(ctx)
+	//if err != nil {
+	//	glog.Slog.Error(err)
+	//}
+	//if len(usersConfig.GravatarBaseURL) > 0 {
+	//	gravatarBaseURL = usersConfig.GravatarBaseURL
+	//}
+	//if len(usersConfig.DefaultAvatar) > 0 {
+	//	defaultAvatar = usersConfig.DefaultAvatar
+	//}
 	return gravatarBaseURL, defaultAvatar
 }
 

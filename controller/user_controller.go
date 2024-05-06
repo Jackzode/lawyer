@@ -9,7 +9,6 @@ import (
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
-	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/middleware"
@@ -55,35 +54,37 @@ func (uc *UserController) UserEmailLogin(ctx *gin.Context) {
  */
 // GetUserInfoByUserID get user info, if user no login response http code is 200, but user info is null
 func (uc *UserController) GetUserInfoByUserID(ctx *gin.Context) {
-	token := utils.ExtractToken(ctx)
-	if len(token) == 0 {
-		handler.HandleResponse(ctx, nil, nil)
-		return
-	}
+	//token := utils.ExtractToken(ctx)
+	//if len(token) == 0 {
+	//	handler.HandleResponse(ctx, nil, nil)
+	//	return
+	//}
 	//从cache中获取userinfo， key是token
-	userCacheInfo, _ := service.AuthServicer.GetUserCacheInfo(ctx, token)
-	if userCacheInfo == nil {
-		handler.HandleResponse(ctx, nil, nil)
-		return
-	}
+	//userCacheInfo, _ := service.AuthServicer.GetUserCacheInfo(ctx, token)
+	//if userCacheInfo == nil {
+	//	handler.HandleResponse(ctx, nil, nil)
+	//	return
+	//}
 	//get user info from db
-	userInfo, err := service.UserServicer.GetUserInfoByUserID(ctx, token, userCacheInfo.UserID)
+	uid := utils.GetUidFromTokenByCtx(ctx)
+	userInfo, err := service.UserServicer.GetUserInfoByUserID(ctx, uid)
 	resp := &schema.GetCurrentLoginUserInfoResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.RoleID = userCacheInfo.RoleID
+	resp.RoleID = 1
 	//resp.RoleID, err = service.UserRoleRelServicer.GetUserRole(ctx, userInfo.ID)
-	if err != nil {
-		glog.Slog.Error(err)
-	}
+	//if err != nil {
+	//	glog.Slog.Error(err)
+	//}
 	//拼接头像, todo
 	resp.Avatar = service.SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status)
-	resp.AccessToken = token
+	//resp.AccessToken = token
 	resp.HavePassword = len(userInfo.Pass) > 0
 	//set cookie
 	//uc.setVisitCookies(ctx, userCacheInfo.VisitToken, false)
 	handler.HandleResponse(ctx, err, resp)
 }
 
+// 根据用户名获取用户信息，不需要登录
 func (uc *UserController) GetOtherUserInfoByUsername(ctx *gin.Context) {
 	req := &schema.GetOtherUserInfoByUsernameReq{}
 	if handler.BindAndCheck(ctx, req) {
@@ -192,19 +193,14 @@ func (uc *UserController) UserVerifyEmailSend(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	userInfo := middleware.GetUserInfoFromContext(ctx)
-	if userInfo == nil {
-		handler.HandleResponse(ctx, errors.New(reason.UnauthorizedError), nil)
-		return
-	}
-
+	uid := utils.GetUidFromTokenByCtx(ctx)
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEmail, ctx.ClientIP(), req.CaptchaID, req.CaptchaCode)
 	if !captchaPass {
 		handler.HandleResponse(ctx, errors.New(reason.CaptchaVerificationFailed), nil)
 		return
 	}
 
-	err := service.UserServicer.UserVerifyEmailSend(ctx, userInfo.UserID)
+	err := service.UserServicer.UserVerifyEmailSend(ctx, uid)
 	handler.HandleResponse(ctx, err, nil)
 }
 
@@ -215,14 +211,8 @@ func (uc *UserController) UserModifyPassWord(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	v, ok := ctx.Get(constant.TokenClaim)
-	if !ok {
-		fmt.Println("!ok ", ok)
-		handler.HandleResponse(ctx, errors.New(reason.UserTokenInvalid), nil)
-		return
-	}
-	claim := v.(*utils.CustomClaim)
-	req.UserID = claim.Uid
+	uid := utils.GetUidFromTokenByCtx(ctx)
+	req.UserID = uid
 	//校对验证码
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionPassword, req.UserID,
 		req.CaptchaID, req.CaptchaCode)
@@ -260,7 +250,7 @@ func (uc *UserController) UserUpdateInfo(ctx *gin.Context) {
 		return
 	}
 	//从token里获取用户信息
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
 	err := service.UserServicer.UpdateInfo(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
@@ -271,11 +261,13 @@ func (uc *UserController) UserUpdateInterfaceLang(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	req.UserId = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserId = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserId = utils.GetUidFromTokenByCtx(ctx)
 	if !translator.CheckLanguageIsValid(req.Language) {
 		handler.HandleResponse(ctx, errors.New(reason.LangNotFound), nil)
 		return
 	}
+	//根据uid更新用户user表的language字段
 	err := service.UserServicer.UserUpdateInterface(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
@@ -287,19 +279,22 @@ func (uc *UserController) ActionRecord(ctx *gin.Context) {
 		return
 	}
 	//这里是从ctx里获取的user info
-	userinfo := middleware.GetUserInfoFromContext(ctx)
-	if userinfo != nil {
-		req.UserID = userinfo.UserID
-	}
+	//userinfo := middleware.GetUserInfoFromContext(ctx)
+	//if userinfo != nil {
+	//	req.UserID = userinfo.UserID
+	//}
+	uid := utils.GetUidFromTokenByCtx(ctx)
+	req.UserID = uid
 	req.IP = ctx.ClientIP()
 	resp := &schema.ActionRecordResp{}
 	//role id 是2和3，就是管理员， 管理员不需要验证
-	var err error
+	//service.CaptchaServicer.ActionRecordAdd(ctx, req.Action, req.IP)
 	unit := service.CaptchaServicer.GetActionRecordUnit(ctx, req)
 	//对于当前action是否需要验证码
 	verificationResult := service.CaptchaServicer.ValidationStrategy(ctx, unit, req.Action)
 	//需要验证码
-	if !verificationResult {
+	var err error
+	if verificationResult {
 		resp.CaptchaID, resp.CaptchaImg, err = service.CaptchaServicer.GenerateCaptcha(ctx)
 		resp.Verify = true
 	}
@@ -342,23 +337,14 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
 	// If the user is not logged in, the api cannot be used.
 	// If the user email is not verified, that also can use this api to modify the email.
 	if len(req.UserID) == 0 {
 		handler.HandleResponse(ctx, errors.New(reason.UnauthorizedError), nil)
 		return
 	}
-	// check whether email allow register or not
-	//siteInfo, err := service.SiteInfoCommonServicer.GetSiteLogin(ctx)
-	//if err != nil {
-	//	handler.HandleResponse(ctx, err, nil)
-	//	return
-	//}
-	//if !checker.EmailInAllowEmailDomain(req.Email, siteInfo.AllowEmailDomains) {
-	//	handler.HandleResponse(ctx, errors.New(reason.EmailIllegalDomainError), nil)
-	//	return
-	//}
+
 	//校对验证码
 	captchaPass := service.CaptchaServicer.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEditUserinfo, req.UserID, req.CaptchaID, req.CaptchaCode)
 	//记录本次修改用户信息的操作
@@ -368,9 +354,9 @@ func (uc *UserController) UserChangeEmailSendCode(ctx *gin.Context) {
 		return
 	}
 	//核心逻辑
-	resp, err := service.UserServicer.UserChangeEmailSendCode(ctx, req)
+	err := service.UserServicer.UserChangeEmailSendCode(ctx, req)
 	if err != nil {
-		handler.HandleResponse(ctx, err, resp)
+		handler.HandleResponse(ctx, err, nil)
 		return
 	}
 	//删除这个操作记录
@@ -386,11 +372,10 @@ func (uc *UserController) UserChangeEmailVerify(ctx *gin.Context) {
 	}
 	req.Content = service.EmailServicer.VerifyEmailByCode(ctx, req.Code)
 	if len(req.Content) == 0 {
-		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired),
-			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
+		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired), nil)
 		return
 	}
-	//
+	//核心逻辑
 	resp, err := service.UserServicer.UserChangeEmailVerify(ctx, req.Content)
 	service.CaptchaServicer.ActionRecordDel(ctx, entity.CaptchaActionEmail, ctx.ClientIP())
 	handler.HandleResponse(ctx, err, resp)
@@ -443,8 +428,9 @@ func (uc *UserController) SearchUserListByName(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	//根据token获取uid
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//根据token获取uid，我觉得不需要登录
+	//req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserID = utils.GetUidFromTokenByCtx(ctx)
 	resp, err := service.UserServicer.SearchUserListByName(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }

@@ -147,3 +147,12 @@ func CreateToken(UserName, Uid string, Role int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(secret)
 }
+
+func GetUidFromTokenByCtx(ctx *gin.Context) string {
+	v, ok := ctx.Get(constant.TokenClaim)
+	if !ok {
+		return ""
+	}
+	claim := v.(*CustomClaim)
+	return claim.Uid
+}

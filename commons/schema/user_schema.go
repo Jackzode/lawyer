@@ -210,21 +210,21 @@ func (u *UserModifyPasswordReq) Check() (errFields []*validator.FormErrorField, 
 }
 
 type UpdateInfoRequest struct {
-	DisplayName string     `validate:"omitempty,gt=0,lte=30" json:"display_name"`
-	Username    string     `validate:"omitempty,gt=3,lte=30" json:"username"`
-	Avatar      AvatarInfo `json:"avatar"`
-	Bio         string     `validate:"omitempty,gt=0,lte=4096" json:"bio"`
-	BioHTML     string     `json:"-"`
-	Website     string     `validate:"omitempty,gt=0,lte=500" json:"website"`
-	Location    string     `validate:"omitempty,gt=0,lte=100" json:"location"`
-	UserID      string     `json:"-"`
-	IsAdmin     bool       `json:"-"`
+	DisplayName string     `validate:"omitempty,gt=0,lte=30" form:"display_name"`
+	Username    string     `validate:"omitempty,gt=3,lte=30" form:"username"`
+	Avatar      AvatarInfo `form:"avatar"`
+	Bio         string     `validate:"omitempty,gt=0,lte=4096" form:"bio"`
+	BioHTML     string     `form:"-"`
+	Website     string     `validate:"omitempty,gt=0,lte=500" form:"website"`
+	Location    string     `validate:"omitempty,gt=0,lte=100" form:"location"`
+	UserID      string     `form:"-"`
+	//IsAdmin     bool       `json:"-"`
 }
 
 type AvatarInfo struct {
-	Type     string `validate:"omitempty,gt=0,lte=100"  json:"type"`
-	Gravatar string `validate:"omitempty,gt=0,lte=200"  json:"gravatar"`
-	Custom   string `validate:"omitempty,gt=0,lte=200"  json:"custom"`
+	Type     string `validate:"omitempty,gt=0,lte=100"  form:"type"`
+	Gravatar string `validate:"omitempty,gt=0,lte=200"  form:"gravatar"`
+	Custom   string `validate:"omitempty,gt=0,lte=200"  form:"custom"`
 }
 
 func (a *AvatarInfo) ToJsonString() string {

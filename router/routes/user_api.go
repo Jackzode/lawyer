@@ -12,20 +12,13 @@ func RegisterUserApi(r *gin.RouterGroup) {
 	c := controller.NewUserController()
 	rg := r.Group("/user")
 	/*获取验证码的接口，返回给端上id， 验证码图片，把id和答案保存在redis里*/
-	rg.POST("/register/email", c.UserRegisterByEmail)
-	rg.GET("/register/captcha", c.UserRegisterCaptcha)
-	rg.POST("/email/verification", c.UserVerifyEmail)
-	rg.POST("/login/email", c.UserEmailLogin)
-	rg.GET("/logout", c.UserLogout) //本地把token删除就行了，其实服务端不需要干啥
-
-	rg.PUT("/update/info", c.UserUpdateInfo)                                   //need login
-	rg.GET("/getUserInfo", c.GetUserInfoByUserID)                              //need login
-	rg.GET("/action/record", c.ActionRecord)                                   //need login
-	rg.PUT("/change/password", middleware.AccessToken(), c.UserModifyPassWord) //need login
-	rg.POST("/email/verification/send", c.UserVerifyEmailSend)                 //need login
-	rg.POST("/email/change/code", c.UserChangeEmailSendCode)                   //need login
-	rg.GET("/info/search", c.SearchUserListByName)                             //need login
-	rg.PUT("/change/email", c.UserChangeEmailVerify)
+	rg.POST("/register/email", c.UserRegisterByEmail)      //done
+	rg.GET("/register/captcha", c.UserRegisterCaptcha)     //done
+	rg.POST("/email/verification", c.UserVerifyEmail)      //done
+	rg.POST("/login/email", c.UserEmailLogin)              //done
+	rg.GET("/logout", c.UserLogout)                        //本地把token删除就行了，其实服务端不需要干啥 done
+	rg.GET("/personal/info", c.GetOtherUserInfoByUsername) //done
+	rg.GET("/info/search", c.SearchUserListByName)         //done
 	/*
 		忘记密码的逻辑：用户先填写邮箱，点击忘记密码进入/password/reset接口，
 		然后邮箱会收到一个链接，链接带一个code，点开链接是一个页面，上下两个
@@ -34,11 +27,21 @@ func RegisterUserApi(r *gin.RouterGroup) {
 		目前看来缺少一个接口（页面），就是邮件里的链接，点击链接展现两个输入框，一个按钮。这个
 		前端就可以完成了，不需要后端接口，前端加一个页面就可以
 	*/
-	rg.POST("/password/reset", c.RetrievePassWord)
-	rg.POST("/password/replacement", c.UserReplacePassWord)
+	rg.POST("/password/reset", c.RetrievePassWord)          //done
+	rg.POST("/password/replacement", c.UserReplacePassWord) //done
 
-	rg.GET("/personal/info", c.GetOtherUserInfoByUsername)
-	rg.PUT("/interface/lang", c.UserUpdateInterfaceLang)
+	loginRoute := rg.Group("", middleware.AccessToken())
+	loginRoute.PUT("/update/info", c.UserUpdateInfo)         //need login done
+	loginRoute.GET("/getUserInfo", c.GetUserInfoByUserID)    //need login done
+	loginRoute.PUT("/change/password", c.UserModifyPassWord) //need login done
+	//这两个是一对儿，登录时修改邮箱
+	loginRoute.POST("/email/change/code", c.UserChangeEmailSendCode) //need login done
+	rg.PUT("/change/email", c.UserChangeEmailVerify)
+	//登录状态下，重新验证邮箱，可能是注册时没验证，现在重新验证
+	loginRoute.POST("/email/verification/send", c.UserVerifyEmailSend) //need login done
+	loginRoute.PUT("/interface/lang", c.UserUpdateInterfaceLang)       //need login done
+
+	loginRoute.GET("/action/record", c.ActionRecord) //need login    done
 
 	//todo
 	// user

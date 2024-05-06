@@ -17,7 +17,7 @@ func AccessToken() gin.HandlerFunc {
 		//不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
 		token := ctx.Request.Header.Get("lawyer-token")
 		if token == "" {
-			fmt.Println(token, "...token")
+			fmt.Println(token, "...token empty")
 			//response.FailWithDetailed(gin.H{"reload": true}, "未登录或非法访问", c)
 			ctx.Abort()
 			return

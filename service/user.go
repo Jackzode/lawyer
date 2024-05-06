@@ -37,6 +37,7 @@ type UserRepo interface {
 	GetUserInfoByEmailFromDB(ctx context.Context, email string) (userInfo *entity.User, exist bool, err error)
 	GetUserCount(ctx context.Context) (count int64, err error)
 	SearchUserListByName(ctx context.Context, name string, limit int) (userList []*entity.User, err error)
+	UpdateEmailAndEmailStatus(ctx context.Context, userID, email string, mailStatus int) (err error)
 }
 
 // UserCommonServicer user service
