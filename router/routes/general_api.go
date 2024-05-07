@@ -19,35 +19,35 @@ func RegisterLanguageApi(r *gin.RouterGroup) {
 
 // siteinfo
 func RegisterSiteInfoApi(r *gin.RouterGroup) {
-	c := &controller.SiteInfoController{}
-	r.GET("/siteinfo", c.GetSiteInfo)
-	r.GET("/siteinfo/legal", c.GetSiteLegalInfo)
-
-	ac := &controller_admin.SiteInfoController{}
-	r.GET("/siteinfo/general", ac.GetGeneral)
-	r.PUT("/siteinfo/general", ac.UpdateGeneral)
-	r.GET("/siteinfo/interface", ac.GetInterface)
-	r.PUT("/siteinfo/interface", ac.UpdateInterface)
-	r.GET("/siteinfo/branding", ac.GetSiteBranding)
-	r.PUT("/siteinfo/branding", ac.UpdateBranding)
-	r.GET("/siteinfo/write", ac.GetSiteWrite)
-	r.PUT("/siteinfo/write", ac.UpdateSiteWrite)
-	r.GET("/siteinfo/legal", ac.GetSiteLegal)
-	r.PUT("/siteinfo/legal", ac.UpdateSiteLegal)
-	r.GET("/siteinfo/seo", ac.GetSeo)
-	r.PUT("/siteinfo/seo", ac.UpdateSeo)
-	r.GET("/siteinfo/login", ac.GetSiteLogin)
-	r.PUT("/siteinfo/login", ac.UpdateSiteLogin)
-	r.GET("/siteinfo/custom-css-html", ac.GetSiteCustomCssHTML)
-	r.PUT("/siteinfo/custom-css-html", ac.UpdateSiteCustomCssHTML)
-	r.GET("/siteinfo/theme", ac.GetSiteTheme)
-	r.PUT("/siteinfo/theme", ac.SaveSiteTheme)
-	r.GET("/siteinfo/users", ac.GetSiteUsers)
-	r.PUT("/siteinfo/users", ac.UpdateSiteUsers)
-	r.GET("/setting/smtp", ac.GetSMTPConfig)
-	r.PUT("/setting/smtp", ac.UpdateSMTPConfig)
-	r.GET("/setting/privileges", ac.GetPrivilegesConfig)
-	r.PUT("/setting/privileges", ac.UpdatePrivilegesConfig)
+	//c := &controller.SiteInfoController{}
+	//r.GET("/siteinfo", c.GetSiteInfo)
+	//r.GET("/siteinfo/legal", c.GetSiteLegalInfo)
+	//
+	//ac := &controller_admin.SiteInfoController{}
+	//r.GET("/siteinfo/general", ac.GetGeneral)
+	//r.PUT("/siteinfo/general", ac.UpdateGeneral)
+	//r.GET("/siteinfo/interface", ac.GetInterface)
+	//r.PUT("/siteinfo/interface", ac.UpdateInterface)
+	//r.GET("/siteinfo/branding", ac.GetSiteBranding)
+	//r.PUT("/siteinfo/branding", ac.UpdateBranding)
+	//r.GET("/siteinfo/write", ac.GetSiteWrite)
+	//r.PUT("/siteinfo/write", ac.UpdateSiteWrite)
+	//r.GET("/siteinfo/legal", ac.GetSiteLegal)
+	//r.PUT("/siteinfo/legal", ac.UpdateSiteLegal)
+	//r.GET("/siteinfo/seo", ac.GetSeo)
+	//r.PUT("/siteinfo/seo", ac.UpdateSeo)
+	//r.GET("/siteinfo/login", ac.GetSiteLogin)
+	//r.PUT("/siteinfo/login", ac.UpdateSiteLogin)
+	//r.GET("/siteinfo/custom-css-html", ac.GetSiteCustomCssHTML)
+	//r.PUT("/siteinfo/custom-css-html", ac.UpdateSiteCustomCssHTML)
+	//r.GET("/siteinfo/theme", ac.GetSiteTheme)
+	//r.PUT("/siteinfo/theme", ac.SaveSiteTheme)
+	//r.GET("/siteinfo/users", ac.GetSiteUsers)
+	//r.PUT("/siteinfo/users", ac.UpdateSiteUsers)
+	//r.GET("/setting/smtp", ac.GetSMTPConfig)
+	//r.PUT("/setting/smtp", ac.UpdateSMTPConfig)
+	//r.GET("/setting/privileges", ac.GetPrivilegesConfig)
+	//r.PUT("/setting/privileges", ac.UpdatePrivilegesConfig)
 
 }
 

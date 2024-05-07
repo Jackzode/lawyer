@@ -12,6 +12,7 @@ import (
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
 	"github.com/lawyer/repo"
+	"github.com/lawyer/site"
 	"time"
 
 	"github.com/google/uuid"
@@ -88,10 +89,7 @@ func (us *UserExternalLoginService) ExternalLogin(
 	}
 
 	// check whether site allow register or not
-	siteInfo, err := SiteInfoCommonServicer.GetSiteLogin(ctx)
-	if err != nil {
-		return nil, err
-	}
+	siteInfo := site.Config.GetSiteLogin()
 	if !checker.EmailInAllowEmailDomain(externalUserInfo.Email, siteInfo.AllowEmailDomains) {
 		glog.Slog.Debugf("email domain not allowed: %s", externalUserInfo.Email)
 		return &schema.UserExternalLoginResp{
@@ -228,10 +226,7 @@ func (us *UserExternalLoginService) activeUser(ctx context.Context, oldUserInfo 
 func (us *UserExternalLoginService) ExternalLoginBindingUserSendEmail(
 	ctx context.Context, req *schema.ExternalLoginBindingUserSendEmailReq) (
 	resp *schema.ExternalLoginBindingUserSendEmailResp, err error) {
-	siteGeneral, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		return nil, err
-	}
+	siteGeneral := site.Config.GetSiteGeneral()
 	resp = &schema.ExternalLoginBindingUserSendEmailResp{}
 	externalLoginInfo, err := repo.UserExternalLoginRepo.GetCacheUserExternalLoginInfo(ctx, req.BindingKey)
 	if err != nil || externalLoginInfo == nil {

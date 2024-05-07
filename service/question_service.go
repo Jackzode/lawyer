@@ -13,6 +13,7 @@ import (
 	"github.com/lawyer/pkg/token"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
+	"github.com/lawyer/site"
 	"strings"
 	"time"
 
@@ -1359,11 +1360,7 @@ func (qs *QuestionService) changeQuestionToRevision(ctx context.Context, questio
 }
 
 func (qs *QuestionService) SitemapCron(ctx context.Context) {
-	siteSeo, err := SiteInfoCommonServicer.GetSiteSeo(ctx)
-	if err != nil {
-		log.Error(err)
-		return
-	}
+	siteSeo := site.Config.GetSiteSeo()
 	ctx = context.WithValue(ctx, constant.ShortIDFlag, siteSeo.IsShortLink())
 	QuestionCommonServicer.SitemapCron(ctx)
 }

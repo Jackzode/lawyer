@@ -2,12 +2,13 @@ package schema
 
 import (
 	"encoding/json"
+	"github.com/jinzhu/copier"
 	"github.com/lawyer/commons/base/validator"
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/utils/checker"
+	"github.com/lawyer/pkg/gravatar"
 
-	"github.com/jinzhu/copier"
 	"github.com/lawyer/pkg/converter"
 )
 
@@ -360,4 +361,40 @@ type UserRankingSimpleInfo struct {
 type UserUnsubscribeNotificationReq struct {
 	Code    string `validate:"required,gt=0,lte=500" json:"code"`
 	Content string `json:"-"`
+}
+
+// FormatAvatar format avatar
+func FormatAvatar(originalAvatarData, email string, userStatus int) *AvatarInfo {
+	gravatarBaseURL, defaultAvatar := constant.DefaultGravatarBaseURL, constant.DefaultAvatar
+	return SelectedAvatar(originalAvatarData, defaultAvatar, gravatarBaseURL, email, userStatus)
+}
+
+// FormatListAvatar format avatar
+func FormatListAvatar(userList []*entity.User) (
+	avatarMapping map[string]*AvatarInfo) {
+	gravatarBaseURL, defaultAvatar := constant.DefaultGravatarBaseURL, constant.DefaultAvatar
+	avatarMapping = make(map[string]*AvatarInfo)
+	for _, user := range userList {
+		avatarMapping[user.ID] = SelectedAvatar(user.Avatar, defaultAvatar, gravatarBaseURL, user.EMail, user.Status)
+	}
+	return avatarMapping
+}
+
+func SelectedAvatar(originalAvatarData, defaultAvatar, gravatarBaseURL, email string, userStatus int) *AvatarInfo {
+
+	avatarInfo := &AvatarInfo{}
+	_ = json.Unmarshal([]byte(originalAvatarData), avatarInfo)
+
+	if userStatus == entity.UserStatusDeleted {
+		return &AvatarInfo{
+			Type: constant.DefaultAvatar,
+		}
+	}
+	if len(avatarInfo.Type) == 0 && defaultAvatar == constant.AvatarTypeGravatar {
+		avatarInfo.Type = constant.AvatarTypeGravatar
+		avatarInfo.Gravatar = gravatar.GetAvatarURL(gravatarBaseURL, email)
+	} else if avatarInfo.Type == constant.AvatarTypeGravatar {
+		avatarInfo.Gravatar = gravatar.GetAvatarURL(gravatarBaseURL, email)
+	}
+	return avatarInfo
 }

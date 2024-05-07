@@ -12,7 +12,7 @@ import (
 
 type LangController struct {
 	//translator      i18n.Translator
-	//siteInfoService service.SiteInfoCommonService
+	//siteInfoService service.SiteInfoConfig
 }
 
 // NewLangController new language controller.

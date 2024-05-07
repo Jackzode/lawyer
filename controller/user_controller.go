@@ -75,7 +75,7 @@ func (uc *UserController) GetUserInfoByUserID(ctx *gin.Context) {
 	//	glog.Slog.Error(err)
 	//}
 	//拼接头像, todo
-	resp.Avatar = service.SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status)
+	//resp.Avatar = service.SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status)
 	//resp.AccessToken = token
 	resp.HavePassword = len(userInfo.Pass) > 0
 	//set cookie

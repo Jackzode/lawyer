@@ -53,9 +53,9 @@ func (am *AuthUserMiddleware) Auth() gin.HandlerFunc {
 func (am *AuthUserMiddleware) EjectUserBySiteInfo() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//mustLogin := false
-		//siteInfo, _ := am.siteInfoCommonService.GetSiteLogin(ctx)
-		//if siteInfo != nil {
-		//	mustLogin = siteInfo.LoginRequired
+		//site, _ := am.siteInfoCommonService.GetSiteLogin(ctx)
+		//if site != nil {
+		//	mustLogin = site.LoginRequired
 		//}
 		//if !mustLogin {
 		//	ctx.Next()

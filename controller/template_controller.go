@@ -108,15 +108,15 @@ func (tc *TemplateController) Index(ctx *gin.Context) {
 		return
 	}
 
-	siteInfo := tc.SiteInfo(ctx)
-	siteInfo.Canonical = siteInfo.General.SiteUrl
+	site := tc.SiteInfo(ctx)
+	site.Canonical = site.General.SiteUrl
 
 	UrlUseTitle := false
-	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
+	if site.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
 		UrlUseTitle = true
 	}
-	siteInfo.Title = ""
-	tc.html(ctx, http.StatusOK, "question.html", siteInfo, gin.H{
+	site.Title = ""
+	tc.html(ctx, http.StatusOK, "question.html", site, gin.H{
 		"data":     data,
 		"useTitle": UrlUseTitle,
 		"page":     templaterender.Paginator(page, req.PageSize, count),
@@ -138,25 +138,25 @@ func (tc *TemplateController) QuestionList(ctx *gin.Context) {
 		tc.Page404(ctx)
 		return
 	}
-	siteInfo := tc.SiteInfo(ctx)
-	siteInfo.Canonical = fmt.Sprintf("%s/questions", siteInfo.General.SiteUrl)
+	site := tc.SiteInfo(ctx)
+	site.Canonical = fmt.Sprintf("%s/questions", site.General.SiteUrl)
 	if page > 1 {
-		siteInfo.Canonical = fmt.Sprintf("%s/questions?page=%d", siteInfo.General.SiteUrl, page)
+		site.Canonical = fmt.Sprintf("%s/questions?page=%d", site.General.SiteUrl, page)
 	}
 
 	UrlUseTitle := false
-	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
+	if site.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
 		UrlUseTitle = true
 	}
-	siteInfo.Title = fmt.Sprintf("Questions - %s", siteInfo.General.Name)
-	tc.html(ctx, http.StatusOK, "question.html", siteInfo, gin.H{
+	site.Title = fmt.Sprintf("Questions - %s", site.General.Name)
+	tc.html(ctx, http.StatusOK, "question.html", site, gin.H{
 		"data":     data,
 		"useTitle": UrlUseTitle,
 		"page":     templaterender.Paginator(page, req.PageSize, count),
 	})
 }
 
-func (tc *TemplateController) QuestionInfoeRdirect(ctx *gin.Context, siteInfo *schema.TemplateSiteInfoResp, correctTitle bool) (jump bool, url string) {
+func (tc *TemplateController) QuestionInfoeRdirect(ctx *gin.Context, site *schema.TemplateSiteInfoResp, correctTitle bool) (jump bool, url string) {
 	questionID := ctx.Param("id")
 	title := ctx.Param("title")
 	answerID := uid.DeShortID(title)
@@ -191,8 +191,8 @@ func (tc *TemplateController) QuestionInfoeRdirect(ctx *gin.Context, siteInfo *s
 		}
 	}
 
-	url = fmt.Sprintf("%s/questions/%s", siteInfo.General.SiteUrl, questionID)
-	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionID || siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDByShortID {
+	url = fmt.Sprintf("%s/questions/%s", site.General.SiteUrl, questionID)
+	if site.SiteSeo.Permalink == constant.PermalinkQuestionID || site.SiteSeo.Permalink == constant.PermalinkQuestionIDByShortID {
 		if len(ctx.Request.URL.Query()) > 0 {
 			url = fmt.Sprintf("%s?%s", url, ctx.Request.URL.RawQuery)
 		}
@@ -261,8 +261,8 @@ func (tc *TemplateController) QuestionInfo(ctx *gin.Context) {
 		correctTitle = true
 	}
 
-	siteInfo := tc.SiteInfo(ctx)
-	jump, jumpurl := tc.QuestionInfoeRdirect(ctx, siteInfo, correctTitle)
+	site := tc.SiteInfo(ctx)
+	jump, jumpurl := tc.QuestionInfoeRdirect(ctx, site, correctTitle)
 	if jump {
 		ctx.Redirect(http.StatusFound, jumpurl)
 		return
@@ -294,9 +294,9 @@ func (tc *TemplateController) QuestionInfo(ctx *gin.Context) {
 		tc.Page404(ctx)
 		return
 	}
-	siteInfo.Canonical = fmt.Sprintf("%s/questions/%s/%s", siteInfo.General.SiteUrl, id, encodeTitle)
-	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionID || siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDByShortID {
-		siteInfo.Canonical = fmt.Sprintf("%s/questions/%s", siteInfo.General.SiteUrl, id)
+	site.Canonical = fmt.Sprintf("%s/questions/%s/%s", site.General.SiteUrl, id, encodeTitle)
+	if site.SiteSeo.Permalink == constant.PermalinkQuestionID || site.SiteSeo.Permalink == constant.PermalinkQuestionIDByShortID {
+		site.Canonical = fmt.Sprintf("%s/questions/%s", site.General.SiteUrl, id)
 	}
 	jsonLD := &schema.QAPageJsonLD{}
 	jsonLD.Context = "https://schema.org"
@@ -317,7 +317,7 @@ func (tc *TemplateController) QuestionInfo(ctx *gin.Context) {
 			acceptedAnswerItem.Text = answer.HTML
 			acceptedAnswerItem.DateCreated = time.Unix(answer.CreateTime, 0)
 			acceptedAnswerItem.UpvoteCount = answer.VoteCount
-			acceptedAnswerItem.URL = fmt.Sprintf("%s/%s", siteInfo.Canonical, answer.ID)
+			acceptedAnswerItem.URL = fmt.Sprintf("%s/%s", site.Canonical, answer.ID)
 			acceptedAnswerItem.Author.Type = "Person"
 			acceptedAnswerItem.Author.Name = answer.UserInfo.DisplayName
 			jsonLD.MainEntity.AcceptedAnswer = acceptedAnswerItem
@@ -327,7 +327,7 @@ func (tc *TemplateController) QuestionInfo(ctx *gin.Context) {
 			item.Text = answer.HTML
 			item.DateCreated = time.Unix(answer.CreateTime, 0)
 			item.UpvoteCount = answer.VoteCount
-			item.URL = fmt.Sprintf("%s/%s", siteInfo.Canonical, answer.ID)
+			item.URL = fmt.Sprintf("%s/%s", site.Canonical, answer.ID)
 			item.Author.Type = "Person"
 			item.Author.Name = answer.UserInfo.DisplayName
 			answerList = append(answerList, item)
@@ -337,17 +337,17 @@ func (tc *TemplateController) QuestionInfo(ctx *gin.Context) {
 	jsonLD.MainEntity.SuggestedAnswer = answerList
 	jsonLDStr, err := json.Marshal(jsonLD)
 	if err == nil {
-		siteInfo.JsonLD = `<script data-react-helmet="true" type="application/ld+json">` + string(jsonLDStr) + ` </script>`
+		site.JsonLD = `<script data-react-helmet="true" type="application/ld+json">` + string(jsonLDStr) + ` </script>`
 	}
 
-	siteInfo.Description = htmltext.FetchExcerpt(detail.HTML, "...", 240)
+	site.Description = htmltext.FetchExcerpt(detail.HTML, "...", 240)
 	tags := make([]string, 0)
 	for _, tag := range detail.Tags {
 		tags = append(tags, tag.DisplayName)
 	}
-	siteInfo.Keywords = strings.Replace(strings.Trim(fmt.Sprint(tags), "[]"), " ", ",", -1)
-	siteInfo.Title = fmt.Sprintf("%s - %s", detail.Title, siteInfo.General.Name)
-	tc.html(ctx, http.StatusOK, "question-detail.html", siteInfo, gin.H{
+	site.Keywords = strings.Replace(strings.Trim(fmt.Sprint(tags), "[]"), " ", ",", -1)
+	site.Title = fmt.Sprintf("%s - %s", detail.Title, site.General.Name)
+	tc.html(ctx, http.StatusOK, "question-detail.html", site, gin.H{
 		"id":       id,
 		"answerid": answerid,
 		"detail":   detail,
@@ -369,13 +369,13 @@ func (tc *TemplateController) TagList(ctx *gin.Context) {
 	}
 	page := templaterender.Paginator(req.Page, req.PageSize, data.Count)
 
-	siteInfo := tc.SiteInfo(ctx)
-	siteInfo.Canonical = fmt.Sprintf("%s/tags", siteInfo.General.SiteUrl)
+	site := tc.SiteInfo(ctx)
+	site.Canonical = fmt.Sprintf("%s/tags", site.General.SiteUrl)
 	if req.Page > 1 {
-		siteInfo.Canonical = fmt.Sprintf("%s/tags?page=%d", siteInfo.General.SiteUrl, req.Page)
+		site.Canonical = fmt.Sprintf("%s/tags?page=%d", site.General.SiteUrl, req.Page)
 	}
-	siteInfo.Title = fmt.Sprintf("%s - %s", "Tags", siteInfo.General.Name)
-	tc.html(ctx, http.StatusOK, "tags.html", siteInfo, gin.H{
+	site.Title = fmt.Sprintf("%s - %s", "Tags", site.General.Name)
+	tc.html(ctx, http.StatusOK, "tags.html", site, gin.H{
 		"page": page,
 		"data": data,
 	})
@@ -398,23 +398,23 @@ func (tc *TemplateController) TagInfo(ctx *gin.Context) {
 	}
 	page := templaterender.Paginator(nowPage, req.PageSize, questionCount)
 
-	siteInfo := tc.SiteInfo(ctx)
-	siteInfo.Canonical = fmt.Sprintf("%s/tags/%s", siteInfo.General.SiteUrl, tag)
+	site := tc.SiteInfo(ctx)
+	site.Canonical = fmt.Sprintf("%s/tags/%s", site.General.SiteUrl, tag)
 	if req.Page > 1 {
-		siteInfo.Canonical = fmt.Sprintf("%s/tags/%s?page=%d", siteInfo.General.SiteUrl, tag, req.Page)
+		site.Canonical = fmt.Sprintf("%s/tags/%s?page=%d", site.General.SiteUrl, tag, req.Page)
 	}
-	siteInfo.Description = htmltext.FetchExcerpt(taginifo.ParsedText, "...", 240)
+	site.Description = htmltext.FetchExcerpt(taginifo.ParsedText, "...", 240)
 	if len(taginifo.ParsedText) == 0 {
-		siteInfo.Description = "The tag has no description."
+		site.Description = "The tag has no description."
 	}
-	siteInfo.Keywords = taginifo.DisplayName
+	site.Keywords = taginifo.DisplayName
 
 	UrlUseTitle := false
-	if siteInfo.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
+	if site.SiteSeo.Permalink == constant.PermalinkQuestionIDAndTitle {
 		UrlUseTitle = true
 	}
-	siteInfo.Title = fmt.Sprintf("'%s' Questions - %s", taginifo.DisplayName, siteInfo.General.Name)
-	tc.html(ctx, http.StatusOK, "tag-detail.html", siteInfo, gin.H{
+	site.Title = fmt.Sprintf("'%s' Questions - %s", taginifo.DisplayName, site.General.Name)
+	tc.html(ctx, http.StatusOK, "tag-detail.html", site, gin.H{
 		"tag":           taginifo,
 		"questionList":  questionList,
 		"questionCount": questionCount,
@@ -451,10 +451,10 @@ func (tc *TemplateController) UserInfo(ctx *gin.Context) {
 		return
 	}
 
-	siteInfo := tc.SiteInfo(ctx)
-	siteInfo.Canonical = fmt.Sprintf("%s/users/%s", siteInfo.General.SiteUrl, username)
-	siteInfo.Title = fmt.Sprintf("%s - %s", username, siteInfo.General.Name)
-	tc.html(ctx, http.StatusOK, "homepage.html", siteInfo, gin.H{
+	site := tc.SiteInfo(ctx)
+	site.Canonical = fmt.Sprintf("%s/users/%s", site.General.SiteUrl, username)
+	site.Title = fmt.Sprintf("%s - %s", username, site.General.Name)
+	tc.html(ctx, http.StatusOK, "homepage.html", site, gin.H{
 		"userinfo": userinfo,
 		"bio":      template.HTML(userinfo.BioHTML),
 	})
@@ -465,26 +465,26 @@ func (tc *TemplateController) Page404(ctx *gin.Context) {
 	tc.html(ctx, http.StatusNotFound, "404.html", tc.SiteInfo(ctx), gin.H{})
 }
 
-func (tc *TemplateController) html(ctx *gin.Context, code int, tpl string, siteInfo *schema.TemplateSiteInfoResp, data gin.H) {
-	data["siteinfo"] = siteInfo
+func (tc *TemplateController) html(ctx *gin.Context, code int, tpl string, site *schema.TemplateSiteInfoResp, data gin.H) {
+	data["siteinfo"] = site
 	data["scriptPath"] = tc.scriptPath
 	data["cssPath"] = tc.cssPath
-	data["keywords"] = siteInfo.Keywords
-	if siteInfo.Description == "" {
-		siteInfo.Description = siteInfo.General.Description
+	data["keywords"] = site.Keywords
+	if site.Description == "" {
+		site.Description = site.General.Description
 	}
-	data["title"] = siteInfo.Title
-	if siteInfo.Title == "" {
-		data["title"] = siteInfo.General.Name
+	data["title"] = site.Title
+	if site.Title == "" {
+		data["title"] = site.General.Name
 	}
-	data["description"] = siteInfo.Description
+	data["description"] = site.Description
 	data["language"] = utils.GetLang(ctx)
-	data["timezone"] = siteInfo.Interface.TimeZone
-	language := strings.Replace(siteInfo.Interface.Language, "_", "-", -1)
+	data["timezone"] = site.Interface.TimeZone
+	language := strings.Replace(site.Interface.Language, "_", "-", -1)
 	data["lang"] = language
-	data["HeadCode"] = siteInfo.CustomCssHtml.CustomHead
-	data["HeaderCode"] = siteInfo.CustomCssHtml.CustomHeader
-	data["FooterCode"] = siteInfo.CustomCssHtml.CustomFooter
+	data["HeadCode"] = site.CustomCssHtml.CustomHead
+	data["HeaderCode"] = site.CustomCssHtml.CustomHeader
+	data["FooterCode"] = site.CustomCssHtml.CustomFooter
 	data["Version"] = constant.Version
 	data["Revision"] = constant.Revision
 	_, ok := data["path"]

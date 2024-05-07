@@ -1,13 +1,10 @@
 package schema
 
 import (
-	"context"
 	"fmt"
-	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/base/validator"
 	"github.com/lawyer/commons/constant"
-	reason2 "github.com/lawyer/commons/constant/reason"
-	"github.com/lawyer/commons/utils"
+	"github.com/lawyer/commons/constant/reason"
 	"net/mail"
 	"net/url"
 
@@ -154,16 +151,16 @@ type SiteThemeResp struct {
 	ThemeConfig  map[string]interface{} `json:"theme_config"`
 }
 
-func (s *SiteThemeResp) TrTheme(ctx context.Context) {
-	la := utils.GetLangByCtx(ctx)
-	for _, option := range s.ThemeOptions {
-		tr := translator.Tr(la, option.Value)
-		// if tr is equal the option value means not found translation, so use the original label
-		if tr != option.Value {
-			option.Label = tr
-		}
-	}
-}
+//func (s *SiteThemeResp) TrTheme(ctx context.Context) {
+//	la := utils.GetLangByCtx(ctx)
+//	for _, option := range s.ThemeOptions {
+//		tr := translator.Tr(la, option.Value)
+//		// if tr is equal the option value means not found translation, so use the original label
+//		if tr != option.Value {
+//			option.Label = tr
+//		}
+//	}
+//}
 
 // ThemeOption get label option
 type ThemeOption struct {
@@ -226,8 +223,8 @@ func (r *UpdateSMTPConfigReq) Check() (errField []*validator.FormErrorField, err
 	if err == nil {
 		return append(errField, &validator.FormErrorField{
 			ErrorField: "from_name",
-			ErrorMsg:   reason2.SMTPConfigFromNameCannotBeEmail,
-		}), errors.BadRequest(reason2.SMTPConfigFromNameCannotBeEmail)
+			ErrorMsg:   reason.SMTPConfigFromNameCannotBeEmail,
+		}), errors.BadRequest(reason.SMTPConfigFromNameCannotBeEmail)
 	}
 	return nil, nil
 }
@@ -328,13 +325,13 @@ var (
 func init() {
 	DefaultPrivilegeOptions = append(DefaultPrivilegeOptions, &PrivilegeOption{
 		Level:     PrivilegeLevel1,
-		LevelDesc: reason2.PrivilegeLevel1Desc,
+		LevelDesc: reason.PrivilegeLevel1Desc,
 	}, &PrivilegeOption{
 		Level:     PrivilegeLevel2,
-		LevelDesc: reason2.PrivilegeLevel2Desc,
+		LevelDesc: reason.PrivilegeLevel2Desc,
 	}, &PrivilegeOption{
 		Level:     PrivilegeLevel3,
-		LevelDesc: reason2.PrivilegeLevel3Desc,
+		LevelDesc: reason.PrivilegeLevel3Desc,
 	})
 
 	for _, option := range DefaultPrivilegeOptions {

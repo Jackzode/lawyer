@@ -55,7 +55,7 @@ func (us *UserCommon) GetUserBasicInfoByID(ctx context.Context, ID string) (
 		return nil, exist, err
 	}
 	info := us.FormatUserBasicInfo(ctx, userInfo)
-	info.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	info.Avatar = schema.FormatAvatar(userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	return info, exist, nil
 }
 
@@ -65,7 +65,7 @@ func (us *UserCommon) GetUserBasicInfoByUserName(ctx context.Context, username s
 		return nil, exist, err
 	}
 	info := us.FormatUserBasicInfo(ctx, userInfo)
-	info.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	info.Avatar = schema.FormatAvatar(userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	return info, exist, nil
 }
 
@@ -75,7 +75,7 @@ func (us *UserCommon) BatchGetUserBasicInfoByUserNames(ctx context.Context, user
 	if err != nil {
 		return infomap, err
 	}
-	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, list)
+	avatarMapping := schema.FormatListAvatar(list)
 	for _, user := range list {
 		info := us.FormatUserBasicInfo(ctx, user)
 		info.Avatar = avatarMapping[user.ID].GetURL()
@@ -101,7 +101,7 @@ func (us *UserCommon) BatchUserBasicInfoByID(ctx context.Context, userIDs []stri
 	if err != nil {
 		return userMap, err
 	}
-	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, userList)
+	avatarMapping := schema.FormatListAvatar(userList)
 	for _, user := range userList {
 		info := us.FormatUserBasicInfo(ctx, user)
 		info.Avatar = avatarMapping[user.ID].GetURL()

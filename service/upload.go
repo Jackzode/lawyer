@@ -203,10 +203,10 @@ func (us *uploaderService) UploadBrandingFile(ctx *gin.Context) (
 
 func (us *uploaderService) uploadFile(ctx *gin.Context, file *multipart.FileHeader, fileSubPath string) (
 	url string, err error) {
-	siteGeneral, err := SiteInfoServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		return "", err
-	}
+	//siteGeneral, err := SiteInfoServicer.GetSiteGeneral(ctx)
+	//if err != nil {
+	//	return "", err
+	//}
 	filePath := path.Join("us.serviceConfig.UploadPath", fileSubPath)
 	if err := ctx.SaveUploadedFile(file, filePath); err != nil {
 		return "", errors.InternalServer(reason.UnknownError).WithError(err).WithStack()
@@ -226,7 +226,7 @@ func (us *uploaderService) uploadFile(ctx *gin.Context, file *multipart.FileHead
 		glog.Slog.Error(err)
 	}
 
-	url = fmt.Sprintf("%s/uploads/%s", siteGeneral.SiteUrl, fileSubPath)
+	url = fmt.Sprintf("%s/uploads/%s", "siteGeneral.SiteUrl", fileSubPath)
 	return url, nil
 }
 

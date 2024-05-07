@@ -57,9 +57,9 @@ func (ds *dashboardService) Statistical(ctx context.Context) (*schema.DashboardI
 	dashboardInfo.VersionInfo.Version = constant.Version
 	dashboardInfo.VersionInfo.Revision = constant.Revision
 	dashboardInfo.GoVersion = constant.GoVersion
-	if siteLogin, err := SiteInfoServicer.GetSiteLogin(ctx); err == nil {
-		dashboardInfo.LoginRequired = siteLogin.LoginRequired
-	}
+	//if siteLogin, err := SiteInfoServicer.GetSiteLogin(ctx); err == nil {
+	//	dashboardInfo.LoginRequired = siteLogin.LoginRequired
+	//}
 
 	ds.setCache(ctx, dashboardInfo)
 	return dashboardInfo, nil
@@ -192,12 +192,12 @@ func (ds *dashboardService) smtpStatus(ctx context.Context) (smtpStatus string) 
 }
 
 func (ds *dashboardService) httpsStatus(ctx context.Context) (enabled bool) {
-	siteGeneral, err := SiteInfoServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		glog.Slog.Errorf("get site general failed: %s", err)
-		return false
-	}
-	siteUrl, err := url.Parse(siteGeneral.SiteUrl)
+	//siteGeneral, err := SiteInfoServicer.GetSiteGeneral(ctx)
+	//if err != nil {
+	//	glog.Slog.Errorf("get site general failed: %s", err)
+	//	return false
+	//}
+	siteUrl, err := url.Parse("siteGeneral.SiteUrl")
 	if err != nil {
 		glog.Slog.Errorf("parse site url failed: %s", err)
 		return false
@@ -206,11 +206,11 @@ func (ds *dashboardService) httpsStatus(ctx context.Context) (enabled bool) {
 }
 
 func (ds *dashboardService) getTimezone(ctx context.Context) string {
-	siteInfoInterface, err := SiteInfoServicer.GetSiteInterface(ctx)
-	if err != nil {
-		return ""
-	}
-	return siteInfoInterface.TimeZone
+	//siteInfoInterface, err := SiteInfoServicer.GetSiteInterface(ctx)
+	//if err != nil {
+	//	return ""
+	//}
+	return "siteInfoInterface.TimeZone"
 }
 
 func (ds *dashboardService) calculateStorage() string {

@@ -14,6 +14,7 @@ import (
 	"github.com/lawyer/pkg/htmltext"
 	"github.com/lawyer/repo"
 	"github.com/lawyer/service/permission"
+	"github.com/lawyer/site"
 	"sort"
 	"strings"
 
@@ -42,16 +43,6 @@ type TagRepo interface {
 	GetTagSynonymCount(ctx context.Context, tagID string) (count int64, err error)
 	GetTagList(ctx context.Context, tag *entity.Tag) (tagList []*entity.Tag, err error)
 }
-
-//type TagRepo interface {
-//	RemoveTag(ctx context.Context, tagID string) (err error)
-//	UpdateTag(ctx context.Context, tag *entity.Tag) (err error)
-//	RecoverTag(ctx context.Context, tagID string) (err error)
-//	MustGetTagByNameOrID(ctx context.Context, tagID, slugName string) (tag *entity.Tag, exist bool, err error)
-//	UpdateTagSynonym(ctx context.Context, tagSlugNameList []string, mainTagID int64, mainTagSlugName string) (err error)
-//	GetTagSynonymCount(ctx context.Context, tagID string) (count int64, err error)
-//	GetTagList(ctx context.Context, tag *entity.Tag) (tagList []*entity.Tag, err error)
-//}
 
 type TagRelRepo interface {
 	AddTagRelList(ctx context.Context, tagList []*entity.TagRel) (err error)
@@ -594,10 +585,7 @@ func (ts *TagService) GetTagListByNames(ctx context.Context, tagNames []string) 
 }
 
 func (ts *TagService) ExistRecommend(ctx context.Context, tags []*schema.TagItem) (bool, error) {
-	taginfo, err := SiteInfoCommonServicer.GetSiteWrite(ctx)
-	if err != nil {
-		return false, err
-	}
+	taginfo := site.Config.GetSiteWrite()
 	if !taginfo.RequiredTag {
 		return true, nil
 	}
@@ -757,11 +745,7 @@ func (ts *TagService) TagsFormatRecommendAndReserved(ctx context.Context, tagLis
 	if len(tagList) == 0 {
 		return
 	}
-	tagConfig, err := SiteInfoCommonServicer.GetSiteWrite(ctx)
-	if err != nil {
-		glog.Slog.Error(err)
-		return
-	}
+	tagConfig := site.Config.GetSiteWrite()
 	if !tagConfig.RequiredTag {
 		for _, tag := range tagList {
 			tag.Recommend = false
@@ -773,11 +757,7 @@ func (ts *TagService) tagFormatRecommendAndReserved(ctx context.Context, tag *en
 	if tag == nil {
 		return
 	}
-	tagConfig, err := SiteInfoCommonServicer.GetSiteWrite(ctx)
-	if err != nil {
-		glog.Slog.Error(err)
-		return
-	}
+	tagConfig := site.Config.GetSiteWrite()
 	if !tagConfig.RequiredTag {
 		tag.Recommend = false
 	}

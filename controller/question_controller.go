@@ -11,7 +11,7 @@ import (
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/pager"
-	middleware2 "github.com/lawyer/middleware"
+	"github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
@@ -23,9 +23,8 @@ type QuestionController struct {
 	questionService     *service.QuestionService
 	answerService       *service.AnswerService
 	rankService         *service.RankService
-	siteInfoService     service.SiteInfoCommonService
 	actionService       *service.CaptchaService
-	rateLimitMiddleware *middleware2.RateLimitMiddleware
+	rateLimitMiddleware *middleware.RateLimitMiddleware
 }
 
 // NewQuestionController new controller
@@ -33,15 +32,13 @@ func NewQuestionController(
 	questionService *service.QuestionService,
 	answerService *service.AnswerService,
 	rankService *service.RankService,
-	siteInfoService service.SiteInfoCommonService,
 	actionService *service.CaptchaService,
-	rateLimitMiddleware *middleware2.RateLimitMiddleware,
+	rateLimitMiddleware *middleware.RateLimitMiddleware,
 ) *QuestionController {
 	return &QuestionController{
 		questionService:     questionService,
 		answerService:       answerService,
 		rankService:         rankService,
-		siteInfoService:     siteInfoService,
 		actionService:       actionService,
 		rateLimitMiddleware: rateLimitMiddleware,
 	}
@@ -63,9 +60,9 @@ func (qc *QuestionController) RemoveQuestion(ctx *gin.Context) {
 		return
 	}
 	req.ID = uid.DeShortID(req.ID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
-	req.IsAdmin = middleware2.GetIsAdminFromContext(ctx)
-	isAdmin := middleware2.GetUserIsAdminModerator(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.IsAdmin = middleware.GetIsAdminFromContext(ctx)
+	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
 		captchaPass := qc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionDelete, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
@@ -110,7 +107,7 @@ func (qc *QuestionController) OperationQuestion(ctx *gin.Context) {
 		return
 	}
 	req.ID = uid.DeShortID(req.ID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	canList, err := qc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.QuestionPin,
 		permission.QuestionUnPin,
@@ -151,7 +148,7 @@ func (qc *QuestionController) CloseQuestion(ctx *gin.Context) {
 		return
 	}
 	req.ID = uid.DeShortID(req.ID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	can, err := qc.rankService.CheckOperationPermission(ctx, req.UserID, permission.QuestionClose, "")
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
@@ -182,7 +179,7 @@ func (qc *QuestionController) ReopenQuestion(ctx *gin.Context) {
 		return
 	}
 	req.QuestionID = uid.DeShortID(req.QuestionID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	can, err := qc.rankService.CheckOperationPermission(ctx, req.UserID, permission.QuestionReopen, "")
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
@@ -210,7 +207,7 @@ func (qc *QuestionController) ReopenQuestion(ctx *gin.Context) {
 func (qc *QuestionController) GetQuestion(ctx *gin.Context) {
 	id := ctx.Query("id")
 	id = uid.DeShortID(id)
-	userID := middleware2.GetLoginUserIDFromContext(ctx)
+	userID := middleware.GetLoginUserIDFromContext(ctx)
 	req := schema.QuestionPermission{}
 	canList, err := qc.rankService.CheckOperationPermissions(ctx, userID, []string{
 		permission.QuestionEdit,
@@ -281,7 +278,7 @@ func (qc *QuestionController) GetQuestionInviteUserInfo(ctx *gin.Context) {
 func (qc *QuestionController) SimilarQuestion(ctx *gin.Context) {
 	questionID := ctx.Query("question_id")
 	questionID = uid.DeShortID(questionID)
-	userID := middleware2.GetLoginUserIDFromContext(ctx)
+	userID := middleware.GetLoginUserIDFromContext(ctx)
 	list, count, err := qc.questionService.SimilarQuestion(ctx, questionID, userID)
 	if err != nil {
 		handler.HandleResponse(ctx, err, nil)
@@ -307,7 +304,7 @@ func (qc *QuestionController) QuestionPage(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	req.LoginUserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 
 	questions, total, err := qc.questionService.GetQuestionPage(ctx, req)
 	if err != nil {
@@ -346,7 +343,7 @@ func (qc *QuestionController) AddQuestion(ctx *gin.Context) {
 	//	}
 	//}()
 
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	canList, requireRanks, err := qc.rankService.CheckOperationPermissionsForRanks(ctx, req.UserID, []string{
 		permission.QuestionAdd,
 		permission.QuestionEdit,
@@ -362,7 +359,7 @@ func (qc *QuestionController) AddQuestion(ctx *gin.Context) {
 		return
 	}
 	linkUrlLimitUser := canList[7]
-	isAdmin := middleware2.GetUserIsAdminModerator(ctx)
+	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin || !linkUrlLimitUser {
 		captchaPass := qc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionQuestion, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
@@ -447,7 +444,7 @@ func (qc *QuestionController) AddQuestionByAnswer(ctx *gin.Context) {
 	if ctx.IsAborted() {
 		return
 	}
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
 	canList, err := qc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.QuestionAdd,
@@ -464,7 +461,7 @@ func (qc *QuestionController) AddQuestionByAnswer(ctx *gin.Context) {
 	}
 
 	linkUrlLimitUser := canList[6]
-	isAdmin := middleware2.GetUserIsAdminModerator(ctx)
+	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin || !linkUrlLimitUser {
 		captchaPass := qc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionQuestion, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
@@ -526,7 +523,7 @@ func (qc *QuestionController) AddQuestionByAnswer(ctx *gin.Context) {
 	if ok {
 		answerReq := &schema.AnswerAddReq{}
 		answerReq.QuestionID = uid.DeShortID(questionInfo.ID)
-		answerReq.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+		answerReq.UserID = middleware.GetLoginUserIDFromContext(ctx)
 		answerReq.Content = req.AnswerContent
 		answerReq.HTML = req.AnswerHTML
 		answerID, err := qc.answerService.Insert(ctx, answerReq)
@@ -570,7 +567,7 @@ func (qc *QuestionController) UpdateQuestion(ctx *gin.Context) {
 		return
 	}
 	req.ID = uid.DeShortID(req.ID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 	canList, requireRanks, err := qc.rankService.CheckOperationPermissionsForRanks(ctx, req.UserID, []string{
 		permission.QuestionEdit,
 		permission.QuestionDelete,
@@ -584,7 +581,7 @@ func (qc *QuestionController) UpdateQuestion(ctx *gin.Context) {
 		return
 	}
 	linkUrlLimitUser := canList[5]
-	isAdmin := middleware2.GetUserIsAdminModerator(ctx)
+	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin || !linkUrlLimitUser {
 		captchaPass := qc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionEdit, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
@@ -663,7 +660,7 @@ func (qc *QuestionController) QuestionRecover(ctx *gin.Context) {
 		return
 	}
 	req.QuestionID = uid.DeShortID(req.QuestionID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
 	canList, err := qc.rankService.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.QuestionUnDelete,
@@ -702,8 +699,8 @@ func (qc *QuestionController) UpdateQuestionInviteUser(ctx *gin.Context) {
 		return
 	}
 	req.ID = uid.DeShortID(req.ID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
-	isAdmin := middleware2.GetUserIsAdminModerator(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 	if !isAdmin {
 		captchaPass := qc.actionService.ActionRecordVerifyCaptcha(ctx, entity.CaptchaActionInvitationAnswer, req.UserID, req.CaptchaID, req.CaptchaCode)
 		if !captchaPass {
@@ -768,7 +765,7 @@ func (qc *QuestionController) GetSimilarQuestions(ctx *gin.Context) {
 // @Router /answer/api/v1/personal/qa/top [get]
 func (qc *QuestionController) UserTop(ctx *gin.Context) {
 	userName := ctx.Query("username")
-	userID := middleware2.GetLoginUserIDFromContext(ctx)
+	userID := middleware.GetLoginUserIDFromContext(ctx)
 	questionList, answerList, err := qc.questionService.SearchUserTopList(ctx, userName, userID)
 	handler.HandleResponse(ctx, err, gin.H{
 		"question": questionList,
@@ -795,7 +792,7 @@ func (qc *QuestionController) PersonalQuestionPage(ctx *gin.Context) {
 		return
 	}
 
-	req.LoginUserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 	resp, err := qc.questionService.PersonalQuestionPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -819,7 +816,7 @@ func (qc *QuestionController) PersonalAnswerPage(ctx *gin.Context) {
 		return
 	}
 
-	req.LoginUserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 	resp, err := qc.questionService.PersonalAnswerPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -841,7 +838,7 @@ func (qc *QuestionController) PersonalCollectionPage(ctx *gin.Context) {
 		return
 	}
 
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
 	resp, err := qc.questionService.PersonalCollectionPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
@@ -866,7 +863,7 @@ func (qc *QuestionController) AdminQuestionPage(ctx *gin.Context) {
 		return
 	}
 
-	req.LoginUserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 	resp, err := qc.questionService.AdminQuestionPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -891,7 +888,7 @@ func (qc *QuestionController) AdminAnswerPage(ctx *gin.Context) {
 		return
 	}
 
-	req.LoginUserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.LoginUserID = middleware.GetLoginUserIDFromContext(ctx)
 	resp, err := qc.questionService.AdminAnswerPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -912,7 +909,7 @@ func (qc *QuestionController) AdminUpdateQuestionStatus(ctx *gin.Context) {
 		return
 	}
 	req.QuestionID = uid.DeShortID(req.QuestionID)
-	req.UserID = middleware2.GetLoginUserIDFromContext(ctx)
+	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
 
 	err := qc.questionService.AdminSetQuestionStatus(ctx, req)
 	handler.HandleResponse(ctx, err, nil)

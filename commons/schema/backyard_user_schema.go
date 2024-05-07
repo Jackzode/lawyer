@@ -2,13 +2,9 @@ package schema
 
 import (
 	"context"
-	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/base/validator"
 	constant "github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	"github.com/lawyer/commons/utils"
-
-	//"github.com/lawyer/commons/utils"
 	"github.com/segmentfault/pacman/errors"
 	"strings"
 )
@@ -120,7 +116,7 @@ type AddUsersErrorData struct {
 func (e *AddUsersErrorData) GetErrField(ctx context.Context) (errFields []*validator.FormErrorField) {
 	return append([]*validator.FormErrorField{}, &validator.FormErrorField{
 		ErrorField: "users",
-		ErrorMsg:   translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersFormatError, e),
+		//ErrorMsg:   translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersFormatError, e),
 	})
 }
 
@@ -128,16 +124,16 @@ func (req *AddUsersReq) ParseUsers(ctx context.Context) (errFields []*validator.
 	req.UsersStr = strings.TrimSpace(req.UsersStr)
 	lines := strings.Split(req.UsersStr, "\n")
 	req.Users = make([]*AddUserReq, 0)
-	for i, line := range lines {
+	for _, line := range lines {
 		arr := strings.Split(line, ",")
 		if len(arr) != 3 {
 			errFields = append([]*validator.FormErrorField{}, &validator.FormErrorField{
 				ErrorField: "users",
-				ErrorMsg: translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersFormatError,
-					&AddUsersErrorData{
-						Line:    i + 1,
-						Content: line,
-					}),
+				//ErrorMsg: translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersFormatError,
+				//	&AddUsersErrorData{
+				//		Line:    i + 1,
+				//		Content: line,
+				//	}),
 			})
 			return errFields, errors.BadRequest(reason.RequestFormatError)
 		}
@@ -152,10 +148,10 @@ func (req *AddUsersReq) ParseUsers(ctx context.Context) (errFields []*validator.
 	if len(req.Users) <= 0 || len(req.Users) > constant.DefaultBulkUser {
 		errFields = append([]*validator.FormErrorField{}, &validator.FormErrorField{
 			ErrorField: "users",
-			ErrorMsg: translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersAmountError,
-				map[string]int{
-					"MaxAmount": constant.DefaultBulkUser,
-				}),
+			//ErrorMsg: translator.TrWithData(utils.GetLangByCtx(ctx), reason.AddBulkUsersAmountError,
+			//	map[string]int{
+			//		"MaxAmount": constant.DefaultBulkUser,
+			//	}),
 		})
 		return errFields, errors.BadRequest(reason.RequestFormatError)
 	}

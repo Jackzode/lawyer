@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	SiteInfoCommonServicer           SiteInfoCommonService
 	AuthServicer                     *AuthService
 	EmailServicer                    *EmailService
 	RoleServicer                     *RoleService
@@ -55,7 +54,6 @@ var (
 	ReportAdminServicer          *ReportAdminService
 	UserAdminServicer            *UserAdminService
 	ReasonService                *reason.ReasonService
-	SiteInfoServicer             *SiteInfoService
 	NotificationCommonServicer   *NotificationCommon
 	NotificationServicer         *NotificationService
 	ActivityCommonServicer       *ActivityCommon
@@ -78,7 +76,6 @@ func InitTranslator(i18nConf *config.I18n) (err error) {
 
 func InitServices() {
 
-	SiteInfoCommonServicer = NewSiteInfoCommonService()
 	AuthServicer = NewAuthService()
 	EmailServicer = NewEmailService()
 	RoleServicer = NewRoleService()
@@ -121,7 +118,7 @@ func InitServices() {
 	ReportAdminServicer = NewReportAdminService()
 	UserAdminServicer = NewUserAdminService()
 	ReasonService = reason.NewReasonService()
-	SiteInfoServicer = NewSiteInfoService()
+	//SiteInfoServicer = NewSiteInfoService()
 	NotificationCommonServicer = NewNotificationCommon()
 	NotificationServicer = NewNotificationService()
 	ActivityCommonServicer = NewActivityCommon()

@@ -14,16 +14,16 @@ import (
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
+	"github.com/lawyer/site"
 	"github.com/segmentfault/pacman/errors"
 )
 
 // AnswerController answer controller
 type AnswerController struct {
-	answerService         *service.AnswerService
-	rankService           *service.RankService
-	actionService         *service.CaptchaService
-	siteInfoCommonService service.SiteInfoCommonService
-	rateLimitMiddleware   *middleware.RateLimitMiddleware
+	answerService       *service.AnswerService
+	rankService         *service.RankService
+	actionService       *service.CaptchaService
+	rateLimitMiddleware *middleware.RateLimitMiddleware
 }
 
 // NewAnswerController new controller
@@ -31,15 +31,13 @@ func NewAnswerController(
 	answerService *service.AnswerService,
 	rankService *service.RankService,
 	actionService *service.CaptchaService,
-	siteInfoCommonService service.SiteInfoCommonService,
 	rateLimitMiddleware *middleware.RateLimitMiddleware,
 ) *AnswerController {
 	return &AnswerController{
-		answerService:         answerService,
-		rankService:           rankService,
-		actionService:         actionService,
-		siteInfoCommonService: siteInfoCommonService,
-		rateLimitMiddleware:   rateLimitMiddleware,
+		answerService:       answerService,
+		rankService:         rankService,
+		actionService:       actionService,
+		rateLimitMiddleware: rateLimitMiddleware,
 	}
 }
 
@@ -211,11 +209,7 @@ func (ac *AnswerController) Add(ctx *gin.Context) {
 		return
 	}
 
-	write, err := service.SiteInfoCommonServicer.GetSiteWrite(ctx)
-	if err != nil {
-		handler.HandleResponse(ctx, err, nil)
-		return
-	}
+	write := site.Config.GetSiteWrite()
 	if write.RestrictAnswer {
 		// check if there's already an answer by this user
 		ids, err := service.AnswerServicer.GetCountByUserIDQuestionID(ctx, req.UserID, req.QuestionID)

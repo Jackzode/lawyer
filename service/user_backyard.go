@@ -12,6 +12,7 @@ import (
 	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/repo"
+	"github.com/lawyer/site"
 	"net/mail"
 	"strings"
 	"time"
@@ -344,7 +345,7 @@ func (us *UserAdminService) GetUserPage(ctx context.Context, req *schema.GetUser
 	if err != nil {
 		return
 	}
-	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, users)
+	avatarMapping := schema.FormatListAvatar(users)
 
 	resp := make([]*schema.GetUserPageResp, 0)
 	for _, u := range users {
@@ -406,10 +407,7 @@ func (us *UserAdminService) GetUserActivation(ctx context.Context, req *schema.G
 		return nil, errors.BadRequest(reason.UserNotFound)
 	}
 
-	general, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		return nil, err
-	}
+	general := site.Config.GetSiteGeneral()
 
 	data := &schema.EmailCodeContent{
 		Email:  user.EMail,
@@ -433,11 +431,7 @@ func (us *UserAdminService) SendUserActivation(ctx context.Context, req *schema.
 		return errors.BadRequest(reason.UserNotFound)
 	}
 
-	general, err := SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		return err
-	}
-
+	general := site.Config.GetSiteGeneral()
 	data := &schema.EmailCodeContent{
 		Email:  user.EMail,
 		UserID: user.ID,

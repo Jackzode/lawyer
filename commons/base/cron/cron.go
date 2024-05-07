@@ -11,17 +11,17 @@ import (
 
 // ScheduledTaskManager scheduled task manager
 type ScheduledTaskManager struct {
-	siteInfoService service.SiteInfoCommonServicer
-	questionService *service.QuestionServicer
+	//siteInfoService service.SiteInfoCommonServicer
+	questionService *service.QuestionService
 }
 
 // NewScheduledTaskManager new scheduled task manager
 func NewScheduledTaskManager(
-	siteInfoService service.SiteInfoCommonServicer,
-	questionService *service.QuestionServicer,
+	//siteInfoService service.SiteInfoCommonServicer,
+	questionService *service.QuestionService,
 ) *ScheduledTaskManager {
 	manager := &ScheduledTaskManager{
-		siteInfoService: siteInfoService,
+		//siteInfoService: siteInfoService,
 		questionService: questionService,
 	}
 	return manager

@@ -5,6 +5,7 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/service"
+	"github.com/lawyer/site"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,19 +22,19 @@ const (
 
 // ConnectorController comment controller
 type ConnectorController struct {
-	siteInfoService     service.SiteInfoCommonService
+	//siteInfoService     config.siteInfoConfig
 	userExternalService *service.UserExternalLoginService
 	emailService        *service.EmailService
 }
 
 // NewConnectorController new controller
 func NewConnectorController(
-	siteInfoService service.SiteInfoCommonService,
+	//siteInfoService config.siteInfoConfig,
 	emailService *service.EmailService,
 	userExternalService *service.UserExternalLoginService,
 ) *ConnectorController {
 	return &ConnectorController{
-		siteInfoService:     siteInfoService,
+		//siteInfoService:     siteInfoService,
 		userExternalService: userExternalService,
 		emailService:        emailService,
 	}
@@ -78,12 +79,7 @@ func (cc *ConnectorController) ConnectorRedirectDispatcher(ctx *gin.Context) {
 
 func (cc *ConnectorController) ConnectorLogin(connector plugin.Connector) (fn func(ctx *gin.Context)) {
 	return func(ctx *gin.Context) {
-		general, err := cc.siteInfoService.GetSiteGeneral(ctx)
-		if err != nil {
-			log.Error(err)
-			ctx.Redirect(http.StatusFound, "/50x")
-			return
-		}
+		general := site.Config.GetSiteGeneral()
 
 		receiverURL := fmt.Sprintf("%s%s%s%s", general.SiteUrl,
 			commonRouterPrefix, ConnectorRedirectRouterPrefix, connector.ConnectorSlugName())
@@ -96,12 +92,7 @@ func (cc *ConnectorController) ConnectorLogin(connector plugin.Connector) (fn fu
 
 func (cc *ConnectorController) ConnectorRedirect(connector plugin.Connector) (fn func(ctx *gin.Context)) {
 	return func(ctx *gin.Context) {
-		siteGeneral, err := cc.siteInfoService.GetSiteGeneral(ctx)
-		if err != nil {
-			log.Errorf("get site info failed: %v", err)
-			ctx.Redirect(http.StatusFound, "/50x")
-			return
-		}
+		siteGeneral := site.Config.GetSiteGeneral()
 		receiverURL := fmt.Sprintf("%s%s%s%s", siteGeneral.SiteUrl,
 			commonRouterPrefix, ConnectorRedirectRouterPrefix, connector.ConnectorSlugName())
 		userInfo, err := connector.ConnectorReceiver(ctx, receiverURL)
@@ -149,12 +140,7 @@ func (cc *ConnectorController) ConnectorRedirect(connector plugin.Connector) (fn
 // @Success 200 {object} handler.RespBody{data=[]schema.ConnectorInfoResp}
 // @Router /answer/api/v1/connector/info [get]
 func (cc *ConnectorController) ConnectorsInfo(ctx *gin.Context) {
-	general, err := cc.siteInfoService.GetSiteGeneral(ctx)
-	if err != nil {
-		handler.HandleResponse(ctx, err, nil)
-		return
-	}
-
+	general := site.Config.GetSiteGeneral()
 	resp := make([]*schema.ConnectorInfoResp, 0)
 	_ = plugin.CallConnector(func(fn plugin.Connector) error {
 		connectorName := fn.ConnectorName()
@@ -197,12 +183,7 @@ func (cc *ConnectorController) ExternalLoginBindingUserSendEmail(ctx *gin.Contex
 // @Success 200 {object} handler.RespBody{data=[]schema.ConnectorUserInfoResp}
 // @Router /answer/api/v1/connector/user/info [get]
 func (cc *ConnectorController) ConnectorsUserInfo(ctx *gin.Context) {
-	general, err := cc.siteInfoService.GetSiteGeneral(ctx)
-	if err != nil {
-		handler.HandleResponse(ctx, err, nil)
-		return
-	}
-
+	general := site.Config.GetSiteGeneral()
 	userID := middleware.GetLoginUserIDFromContext(ctx)
 
 	userInfoList, err := cc.userExternalService.GetExternalLoginUserInfoList(ctx, userID)

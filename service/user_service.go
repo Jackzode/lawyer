@@ -59,7 +59,7 @@ func (us *UserService) GetOtherUserInfoByUsername(ctx context.Context, username 
 	}
 	resp = &schema.GetOtherUserInfoByUsernameResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	resp.Avatar = schema.FormatAvatar(userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	return resp, nil
 }
 
@@ -95,7 +95,7 @@ func (us *UserService) EmailLogin(ctx context.Context, req *schema.UserEmailLogi
 	resp.ConvertFromUserEntity(userInfo)
 	resp.RoleID = roleID
 	//生成用户头像
-	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	//resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	//userCacheInfo := &entity.UserCacheInfo{
 	//	UserID:      userInfo.ID,
 	//	EmailStatus: userInfo.MailStatus,
@@ -437,7 +437,7 @@ func (us *UserService) UserVerifyEmail(ctx context.Context, req *schema.UserVeri
 
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	//resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	return resp, nil
 }
 
@@ -539,7 +539,7 @@ func (us *UserService) UserChangeEmailVerify(ctx context.Context, content string
 	roleID := 1
 	resp = &schema.UserLoginResp{}
 	resp.ConvertFromUserEntity(userInfo)
-	resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
+	//resp.Avatar = SiteInfoCommonServicer.FormatAvatar(ctx, userInfo.Avatar, userInfo.EMail, userInfo.Status).GetURL()
 	//userCacheInfo := &entity.UserCacheInfo{
 	//	UserID:      userInfo.ID,
 	//	EmailStatus: entity.EmailStatusAvailable,
@@ -711,7 +711,7 @@ func (us *UserService) getUserInfoMapping(ctx context.Context, userIDs []string)
 	if err != nil {
 		return nil, err
 	}
-	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, userInfoList)
+	avatarMapping := schema.FormatListAvatar(userInfoList)
 	for _, user := range userInfoList {
 		user.Avatar = avatarMapping[user.ID].GetURL()
 		userInfoMapping[user.ID] = user
@@ -731,7 +731,7 @@ func (us *UserService) SearchUserListByName(ctx context.Context, req *schema.Get
 		return resp, err
 	}
 	//对检索出来的user拼接一个头像
-	avatarMapping := SiteInfoCommonServicer.FormatListAvatar(ctx, userList)
+	avatarMapping := schema.FormatListAvatar(userList)
 	for _, u := range userList {
 		if req.UserID == u.ID {
 			//搜到了自己，就跳过

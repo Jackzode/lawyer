@@ -18,7 +18,6 @@ import (
 	"github.com/lawyer/repo/revision"
 	"github.com/lawyer/repo/role"
 	"github.com/lawyer/repo/search_common"
-	"github.com/lawyer/repo/site_info"
 	"github.com/lawyer/repo/tag"
 	"github.com/lawyer/repo/user"
 	"github.com/lawyer/repo/user_external_login"
@@ -26,9 +25,8 @@ import (
 )
 
 var (
-	SiteInfoRepo *site_info.SitInfoRepo
-	AuthRepo     *auth.AuthRepo
-	UserRepo     *user.UserRepo
+	AuthRepo *auth.AuthRepo
+	UserRepo *user.UserRepo
 	//ActivityRepo               ac.ActivityRepo
 	//UserRankRepo               sr.UserRankRepo
 	UserActiveActivityRepo     *activity.UserActiveActivityRepo
@@ -65,7 +63,6 @@ var (
 
 func InitRepo() {
 
-	SiteInfoRepo = site_info.NewSiteInfo()
 	AuthRepo = auth.NewAuthRepo()
 	UserRepo = user.NewUserRepo()
 	//ActivityRepo = repoCommon.NewActivityRepo()

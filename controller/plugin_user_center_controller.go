@@ -5,6 +5,7 @@ import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/middleware"
 	services "github.com/lawyer/service"
+	"github.com/lawyer/site"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -39,13 +40,7 @@ func (uc *UserCenterController) UserCenterAgent(ctx *gin.Context) {
 		handler.HandleResponse(ctx, nil, resp)
 		return
 	}
-	siteGeneral, err := services.SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		log.Errorf("get site info failed: %v", err)
-		ctx.Redirect(http.StatusFound, "/50x")
-		return
-	}
-
+	siteGeneral := site.Config.GetSiteGeneral()
 	resp.AgentInfo = &schema.AgentInfo{}
 	resp.AgentInfo.LoginRedirectURL = fmt.Sprintf("%s%s%s", siteGeneral.SiteUrl,
 		commonRouterPrefix, UserCenterLoginRouter)
@@ -106,13 +101,7 @@ func (uc *UserCenterController) UserCenterSignUpRedirect(ctx *gin.Context) {
 }
 
 func (uc *UserCenterController) UserCenterLoginCallback(ctx *gin.Context) {
-	siteGeneral, err := services.SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		log.Errorf("get site info failed: %v", err)
-		ctx.Redirect(http.StatusFound, "/50x")
-		return
-	}
-
+	siteGeneral := site.Config.GetSiteGeneral()
 	userCenter, ok := plugin.GetUserCenter()
 	if !ok {
 		ctx.Redirect(http.StatusFound, "/404")
@@ -143,13 +132,7 @@ func (uc *UserCenterController) UserCenterLoginCallback(ctx *gin.Context) {
 }
 
 func (uc *UserCenterController) UserCenterSignUpCallback(ctx *gin.Context) {
-	siteGeneral, err := services.SiteInfoCommonServicer.GetSiteGeneral(ctx)
-	if err != nil {
-		log.Errorf("get site info failed: %v", err)
-		ctx.Redirect(http.StatusFound, "/50x")
-		return
-	}
-
+	siteGeneral := site.Config.GetSiteGeneral()
 	userCenter, ok := plugin.GetUserCenter()
 	if !ok {
 		ctx.Redirect(http.StatusFound, "/404")

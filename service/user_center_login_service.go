@@ -10,6 +10,7 @@ import (
 	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/checker"
+	"github.com/lawyer/site"
 	"time"
 
 	"github.com/lawyer/commons/schema"
@@ -24,7 +25,6 @@ type UserCenterLoginService struct {
 	userExternalLoginRepo UserExternalLoginRepo
 	userCommonService     *UserCommon
 	userActivity          UserActiveActivityRepo
-	siteInfoCommonService SiteInfoCommonService
 }
 
 // NewUserCenterLoginService new user external login service
@@ -33,14 +33,12 @@ func NewUserCenterLoginService(
 	userCommonService *UserCommon,
 	userExternalLoginRepo UserExternalLoginRepo,
 	userActivity UserActiveActivityRepo,
-	siteInfoCommonService SiteInfoCommonService,
 ) *UserCenterLoginService {
 	return &UserCenterLoginService{
 		userRepo:              userRepo,
 		userCommonService:     userCommonService,
 		userExternalLoginRepo: userExternalLoginRepo,
 		userActivity:          userActivity,
-		siteInfoCommonService: siteInfoCommonService,
 	}
 }
 
@@ -56,11 +54,8 @@ func (us *UserCenterLoginService) ExternalLogin(
 
 	if len(basicUserInfo.Email) > 0 {
 		// check whether site allow register or not
-		siteInfo, err := us.siteInfoCommonService.GetSiteLogin(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if !checker.EmailInAllowEmailDomain(basicUserInfo.Email, siteInfo.AllowEmailDomains) {
+		site := site.Config.GetSiteLogin()
+		if !checker.EmailInAllowEmailDomain(basicUserInfo.Email, site.AllowEmailDomains) {
 			glog.Slog.Debugf("email domain not allowed: %s", basicUserInfo.Email)
 			return &schema.UserExternalLoginResp{
 				ErrTitle: translator.Tr(utils.GetLangByCtx(ctx), reason.UserAccessDenied),
