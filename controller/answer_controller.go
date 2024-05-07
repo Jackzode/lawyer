@@ -9,12 +9,12 @@ import (
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
+	"github.com/lawyer/commons/site"
 	"github.com/lawyer/commons/utils"
 	middleware "github.com/lawyer/middleware"
 	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/service"
 	"github.com/lawyer/service/permission"
-	"github.com/lawyer/site"
 	"github.com/segmentfault/pacman/errors"
 )
 

@@ -3,9 +3,9 @@ package controller
 import (
 	"fmt"
 	"github.com/lawyer/commons/base/handler"
+	"github.com/lawyer/commons/site"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/service"
-	"github.com/lawyer/site"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
