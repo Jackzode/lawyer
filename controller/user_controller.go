@@ -11,7 +11,6 @@ import (
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
-	"github.com/lawyer/middleware"
 	"github.com/lawyer/service"
 )
 
@@ -314,7 +313,8 @@ func (uc *UserController) UserRegisterCaptcha(ctx *gin.Context) {
 
 // todo @Router /answer/api/v1/user/notification/config [post]
 func (uc *UserController) GetUserNotificationConfig(ctx *gin.Context) {
-	userID := middleware.GetLoginUserIDFromContext(ctx)
+	//userID := middleware.GetLoginUserIDFromContext(ctx)
+	userID := utils.GetUidFromTokenByCtx(ctx)
 	resp, err := service.UserNotificationConfigService.GetUserNotificationConfig(ctx, userID)
 	handler.HandleResponse(ctx, err, resp)
 }
@@ -326,7 +326,8 @@ func (uc *UserController) UpdateUserNotificationConfig(ctx *gin.Context) {
 		return
 	}
 
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
 	err := service.UserNotificationConfigService.UpdateUserNotificationConfig(ctx, req)
 	handler.HandleResponse(ctx, err, nil)
 }
@@ -387,14 +388,6 @@ func (uc *UserController) UserRanking(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, resp)
 }
 
-// UserUnsubscribeNotification unsubscribe notification
-// @Summary unsubscribe notification
-// @Description unsubscribe notification
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param data body schema.UserUnsubscribeNotificationReq true "UserUnsubscribeNotificationReq"
-// @Success 200 {object} handler.RespBody{}
 // @Router /answer/api/v1/user/notification/unsubscribe [put]
 func (uc *UserController) UserUnsubscribeNotification(ctx *gin.Context) {
 	req := &schema.UserUnsubscribeNotificationReq{}
@@ -404,8 +397,7 @@ func (uc *UserController) UserUnsubscribeNotification(ctx *gin.Context) {
 
 	req.Content = service.EmailServicer.VerifyEmailByCode(ctx, req.Code)
 	if len(req.Content) == 0 {
-		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired),
-			&schema.ForbiddenResp{Type: schema.ForbiddenReasonTypeURLExpired})
+		handler.HandleResponse(ctx, errors.New(reason.EmailVerifyURLExpired), nil)
 		return
 	}
 

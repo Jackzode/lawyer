@@ -7,15 +7,15 @@ import (
 	"github.com/lawyer/commons/base/validator"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
-	entity "github.com/lawyer/commons/entity"
+	"github.com/lawyer/commons/entity"
 	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/repo"
 	"sort"
 	"strings"
 
+	"errors"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/pkg/converter"
-	"github.com/segmentfault/pacman/errors"
 )
 
 type TagCommonRepo interface {
@@ -277,7 +277,7 @@ func (ts *TagCommonService) AddTag(ctx context.Context, req *schema.AddTagReq) (
 		return nil, err
 	}
 	if exist {
-		return nil, errors.BadRequest(reason.TagAlreadyExist)
+		return nil, errors.New(reason.TagAlreadyExist)
 	}
 	SlugName := strings.ReplaceAll(req.SlugName, " ", "-")
 	SlugName = strings.ToLower(SlugName)
@@ -470,7 +470,7 @@ func (ts *TagCommonService) CheckTag(ctx context.Context, tags []string, userID 
 		tagInDbMapping[tag.SlugName] = tag
 	}
 	if len(checktags) > 0 {
-		err = errors.BadRequest(reason.TagNotContainSynonym).WithMsg(fmt.Sprintf("Should not contain synonym tags %s", strings.Join(checktags, ",")))
+		err = errors.New(reason.TagNotContainSynonym)
 		return err
 	}
 
@@ -493,8 +493,7 @@ func (ts *TagCommonService) CheckTag(ctx context.Context, tags []string, userID 
 	}
 
 	if len(addTagList) > 0 {
-		err = errors.BadRequest(reason.TagNotFound).WithMsg(fmt.Sprintf("tag [%s] does not exist",
-			strings.Join(addTagMsgList, ",")))
+		err = errors.New(reason.TagNotFound)
 		return err
 
 	}
@@ -764,7 +763,7 @@ func (ts *TagCommonService) UpdateTag(ctx context.Context, req *schema.UpdateTag
 		return err
 	}
 	if existUnreviewed {
-		err = errors.BadRequest(reason.AnswerCannotUpdate)
+		err = errors.New(reason.AnswerCannotUpdate)
 		return err
 	}
 
@@ -773,7 +772,7 @@ func (ts *TagCommonService) UpdateTag(ctx context.Context, req *schema.UpdateTag
 		return err
 	}
 	if !exist {
-		return errors.BadRequest(reason.TagNotFound)
+		return errors.New(reason.TagNotFound)
 	}
 	//If the content is the same, ignore it
 	if tagInfo.OriginalText == req.OriginalText &&

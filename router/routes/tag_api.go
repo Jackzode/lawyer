@@ -6,7 +6,7 @@ import (
 )
 
 func RegisterTagApi(r *gin.RouterGroup) {
-	c := controller.NewTagController(nil, nil, nil)
+	c := controller.NewTagController()
 	// tag
 	r.GET("/tags/page", c.GetTagWithPage)
 	r.GET("/tags/following", c.GetFollowingTags)

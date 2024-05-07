@@ -50,7 +50,7 @@ func RegisterUserApi(r *gin.RouterGroup) {
 	//rg.PUT("/user/password", middleware.BanAPIForUserCenter, c.UserModifyPassWord)
 	//r.GET("/user/action/record", authUserMiddleware.Auth(), c.ActionRecord)
 
-	//还没有看的
+	//还没有看的，随后需要理清楚
 	rg.GET("/ranking", c.UserRanking)
 	rg.PUT("/notification/unsubscribe", c.UserUnsubscribeNotification)
 	rg.GET("/notification/config", c.GetUserNotificationConfig)    //need login

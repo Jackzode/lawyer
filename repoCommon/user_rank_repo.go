@@ -2,7 +2,6 @@ package repoCommon
 
 import (
 	"context"
-	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
@@ -11,7 +10,6 @@ import (
 	"github.com/jinzhu/now"
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/plugin"
-	"github.com/segmentfault/pacman/errors"
 	"github.com/segmentfault/pacman/log"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -101,19 +99,19 @@ func (ur *UserRankRepo) TriggerUserRank(ctx context.Context,
 		var isReachMin bool
 		isReachMin, err = ur.checkUserMinRank(ctx, session, userID, deltaRank)
 		if err != nil {
-			return false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+			return false, err
 		}
 		if isReachMin {
 			_, err = session.Where(builder.Eq{"id": userID}).Update(&entity.User{Rank: 1})
 			if err != nil {
-				return false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+				return false, err
 			}
 			return true, nil
 		}
 	} else {
 		isReachStandard, err = ur.checkUserTodayRank(ctx, session, userID, activityType)
 		if err != nil {
-			return false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+			return false, err
 		}
 		if isReachStandard {
 			return isReachStandard, nil
@@ -121,7 +119,7 @@ func (ur *UserRankRepo) TriggerUserRank(ctx context.Context,
 	}
 	_, err = session.Where(builder.Eq{"id": userID}).Incr("`rank`", deltaRank).Update(&entity.User{})
 	if err != nil {
-		return false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return false, err
 	}
 	return false, nil
 }
@@ -132,7 +130,7 @@ func (ur *UserRankRepo) checkUserMinRank(ctx context.Context, session *xorm.Sess
 	bean := &entity.User{ID: userID}
 	_, err = session.Select("`rank`").Get(bean)
 	if err != nil {
-		return false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return false, err
 	}
 	if bean.Rank+deltaRank < 1 {
 		log.Infof("user %s is rank %d out of range before rank operation", userID, deltaRank)
@@ -193,8 +191,5 @@ func (ur *UserRankRepo) UserRankPage(ctx context.Context, userID string, page, p
 
 	cond := &entity.Activity{UserID: userID}
 	total, err = pager.Help(page, pageSize, &rankPage, cond, session)
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return
 }

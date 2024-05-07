@@ -653,6 +653,7 @@ func (us *UserService) getActivityUserRankStat(ctx context.Context, startTime, e
 		if stat.Rank <= 0 {
 			continue
 		}
+		//去重
 		if userIDExist[stat.UserID] {
 			continue
 		}

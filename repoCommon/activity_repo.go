@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lawyer/commons/constant"
-	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
 	"github.com/lawyer/commons/utils"
@@ -14,8 +13,6 @@ import (
 	"github.com/lawyer/pkg/obj"
 	"xorm.io/builder"
 	"xorm.io/xorm"
-
-	"github.com/segmentfault/pacman/errors"
 )
 
 // ActivityComRepo activity repository
@@ -57,7 +54,7 @@ func (ar *ActivityComRepo) GetActivityTypeByObjectType(ctx context.Context, obje
 	configKey := fmt.Sprintf("%s.%s", objectType, action)
 	cfg, err := utils.GetConfigByKey(ctx, configKey)
 	if err != nil {
-		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return 0, err
 	}
 	return cfg.ID, nil
 }
@@ -65,7 +62,7 @@ func (ar *ActivityComRepo) GetActivityTypeByObjectType(ctx context.Context, obje
 func (ar *ActivityComRepo) GetActivityTypeByConfigKey(ctx context.Context, configKey string) (activityType int, err error) {
 	cfg, err := utils.GetConfigByKey(ctx, configKey)
 	if err != nil {
-		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return 0, err
 	}
 	return cfg.ID, nil
 }
@@ -91,7 +88,6 @@ func (ar *ActivityComRepo) GetUserIDObjectIDActivitySum(ctx context.Context, use
 		And("cancelled =0").
 		Get(sum)
 	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 		return 0, err
 	}
 	return sum.Rank, nil
@@ -100,9 +96,6 @@ func (ar *ActivityComRepo) GetUserIDObjectIDActivitySum(ctx context.Context, use
 // AddActivity add activity
 func (ar *ActivityComRepo) AddActivity(ctx context.Context, activity *entity.Activity) (err error) {
 	_, err = ar.DB.Context(ctx).Insert(activity)
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return
 }
 
@@ -117,10 +110,6 @@ func (ar *ActivityComRepo) GetUsersWhoHasGainedTheMostReputation(
 	session.GroupBy("user_id")
 	session.Desc("rank_amount")
 	session.Limit(limit)
-	err = session.Find(&rankStat)
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return
 }
 
@@ -146,8 +135,5 @@ func (ar *ActivityComRepo) GetUsersWhoHasVoteMost(
 	session.Desc("vote_count")
 	session.Limit(limit)
 	err = session.Find(&voteStat)
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return
 }
