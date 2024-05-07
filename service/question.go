@@ -193,7 +193,7 @@ func (qs *QuestionCommon) Info(ctx context.Context, questionID string, loginUser
 		}
 	}
 
-	tagmap, err := TagCommonServicer.GetObjectTag(ctx, questionID)
+	tagmap, err := TagServicer.GetObjectTag(ctx, questionID)
 	if err != nil {
 		return showinfo, err
 	}
@@ -328,7 +328,7 @@ func (qs *QuestionCommon) FormatQuestionsPage(
 		formattedQuestions = append(formattedQuestions, t)
 	}
 
-	tagsMap, err := TagCommonServicer.BatchGetObjectTag(ctx, questionIDs)
+	tagsMap, err := TagServicer.BatchGetObjectTag(ctx, questionIDs)
 	if err != nil {
 		return formattedQuestions, err
 	}
@@ -369,7 +369,7 @@ func (qs *QuestionCommon) FormatQuestions(ctx context.Context, questionList []*e
 		objectIds = append(objectIds, item.ID)
 		userIds = append(userIds, item.UserID, item.LastEditUserID, item.LastAnsweredUserID)
 	}
-	tagsMap, err := TagCommonServicer.BatchGetObjectTag(ctx, objectIds)
+	tagsMap, err := TagServicer.BatchGetObjectTag(ctx, objectIds)
 	if err != nil {
 		return list, err
 	}

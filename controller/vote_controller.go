@@ -24,15 +24,6 @@ func NewVoteController() *VoteController {
 	return &VoteController{}
 }
 
-// VoteUp godoc
-// @Summary vote up
-// @Description add vote
-// @Tags Activity
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param data body schema.VoteReq true "vote"
-// @Success 200 {object} handler.RespBody{data=schema.VoteResp}
 // @Router /answer/api/v1/vote/up [post]
 func (vc *VoteController) VoteUp(ctx *gin.Context) {
 	req := &schema.VoteReq{}
@@ -40,7 +31,8 @@ func (vc *VoteController) VoteUp(ctx *gin.Context) {
 		return
 	}
 	req.ObjectID = uid.DeShortID(req.ObjectID)
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
 
 	can, needRank, err := service.RankServicer.CheckVotePermission(ctx, req.UserID, req.ObjectID, true)
 	if err != nil {
@@ -94,7 +86,8 @@ func (vc *VoteController) VoteDown(ctx *gin.Context) {
 		return
 	}
 	req.ObjectID = uid.DeShortID(req.ObjectID)
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
 	isAdmin := middleware.GetUserIsAdminModerator(ctx)
 
 	can, needRank, err := service.RankServicer.CheckVotePermission(ctx, req.UserID, req.ObjectID, false)
@@ -148,7 +141,8 @@ func (vc *VoteController) UserVotes(ctx *gin.Context) {
 		return
 	}
 
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
 
 	resp, err := service.VoteServicer.ListUserVotes(ctx, req)
 	handler.HandleResponse(ctx, err, resp)

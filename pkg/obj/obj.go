@@ -1,10 +1,10 @@
 package obj
 
 import (
+	"errors"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/pkg/converter"
-	"github.com/segmentfault/pacman/errors"
 )
 
 // GetObjectTypeStrByObjectID get object key by object id
@@ -17,7 +17,7 @@ func GetObjectTypeStrByObjectID(objectID string) (objectTypeStr string, err erro
 	if ok {
 		return objectTypeStr, nil
 	}
-	return "", errors.BadRequest(reason.ObjectNotFound)
+	return "", errors.New(reason.ObjectNotFound)
 }
 
 // GetObjectTypeNumberByObjectID get object type by object id
@@ -30,7 +30,7 @@ func GetObjectTypeNumberByObjectID(objectID string) (objectTypeNumber int, err e
 
 func checkObjectID(objectID string) (err error) {
 	if len(objectID) < 5 {
-		return errors.BadRequest(reason.ObjectNotFound)
+		return errors.New(reason.ObjectNotFound)
 	}
 	return nil
 }

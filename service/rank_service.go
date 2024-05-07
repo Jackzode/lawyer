@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/lawyer/commons/base/translator"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/schema"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/commons/utils/pager"
@@ -14,8 +16,6 @@ import (
 	"github.com/lawyer/plugin"
 	"github.com/lawyer/repoCommon"
 	"github.com/lawyer/service/permission"
-	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
 	"xorm.io/xorm"
 )
 
@@ -95,7 +95,7 @@ func (rs *RankService) CheckOperationPermissionsForRanks(ctx context.Context, us
 	if !exist {
 		return can, requireRanks, nil
 	}
-
+	//获取角色权限
 	powerMapping := rs.getUserPowerMapping(ctx, userID)
 	for idx, action := range actions {
 		if powerMapping[action] {
@@ -121,7 +121,7 @@ func (rs *RankService) CheckOperationObjectOwner(ctx context.Context, userID, ob
 	objectID = uid.DeShortID(objectID)
 	objectInfo, err := ObjServicer.GetInfo(ctx, objectID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return false
 	}
 	// if the user is this object creator, the user can operate this object.
@@ -183,14 +183,16 @@ func (rs *RankService) CheckVotePermission(ctx context.Context, userID, objectID
 // getUserPowerMapping get user power mapping
 func (rs *RankService) getUserPowerMapping(ctx context.Context, userID string) (powerMapping map[string]bool) {
 	powerMapping = make(map[string]bool, 0)
+	//获取用户角色
 	userRole, err := UserRoleRelServicer.GetUserRole(ctx, userID)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return powerMapping
 	}
+	//获取角色权限
 	powers, err := RolePowerRelServicer.GetRolePowerList(ctx, userRole)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return powerMapping
 	}
 
@@ -206,11 +208,11 @@ func (rs *RankService) checkUserRank(ctx context.Context, userID string, userRan
 	// get the amount of rank required for the current operation
 	requireRank, err := utils.GetIntValue(ctx, action)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return false, requireRank
 	}
 	if userRank < requireRank || requireRank < 0 {
-		log.Debugf("user %s want to do action %s, but rank %d < %d",
+		glog.Slog.Debugf("user %s want to do action %s, but rank %d < %d",
 			userID, action, userRank, requireRank)
 		return false, requireRank
 	}
@@ -229,12 +231,12 @@ func (rs *RankService) GetRankPersonalPage(ctx context.Context, req *schema.GetR
 			return nil, err
 		}
 		if !exist {
-			return nil, errors.BadRequest(reason.UserNotFound)
+			return nil, errors.New(reason.UserNotFound)
 		}
 		req.UserID = userInfo.ID
 	}
 	if len(req.UserID) == 0 {
-		return nil, errors.BadRequest(reason.UserNotFound)
+		return nil, errors.New(reason.UserNotFound)
 	}
 
 	userRankPage, total, err := repoCommon.NewUserRankRepo().UserRankPage(ctx, req.UserID, req.Page, req.PageSize)
@@ -257,7 +259,7 @@ func (rs *RankService) decorateRankPersonalPageResp(
 		}
 		objInfo, err := ObjServicer.GetInfo(ctx, userRankInfo.ObjectID)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			continue
 		}
 
@@ -268,7 +270,7 @@ func (rs *RankService) decorateRankPersonalPageResp(
 		}
 		cfg, err := utils.GetConfigByID(ctx, userRankInfo.ActivityType)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			continue
 		}
 		commentResp.RankType = translator.Tr(lang, constant.ActivityTypeFlagMapping[cfg.Key])

@@ -18,14 +18,22 @@ import (
 	"github.com/segmentfault/pacman/errors"
 )
 
-// VoteComRepo activity repository
-type VoteComRepo interface {
+// VoteRepo activity repository
+type VoteRepo interface {
 	Vote(ctx context.Context, op *schema.VoteOperationInfo) (err error)
 	CancelVote(ctx context.Context, op *schema.VoteOperationInfo) (err error)
 	GetAndSaveVoteResult(ctx context.Context, objectID, objectType string) (up, down int64, err error)
 	ListUserVotes(ctx context.Context, userID string, page int, pageSize int, activityTypes []int) (
 		voteList []*entity.Activity, total int64, err error)
+	GetVoteStatus(ctx context.Context, objectId, userId string) (status string)
+	GetVoteCount(ctx context.Context, activityTypes []int) (count int64, err error)
 }
+
+// VoteRepo activity repository
+//type VoteRepo interface {
+//GetVoteStatus(ctx context.Context, objectId, userId string) (status string)
+//GetVoteCount(ctx context.Context, activityTypes []int) (count int64, err error)
+//}
 
 // VoteServicer user service
 type VoteService struct {
@@ -53,22 +61,22 @@ func (vs *VoteService) VoteUp(ctx context.Context, req *schema.VoteReq) (resp *s
 
 	// vote operation
 	if req.IsCancel {
-		err = repo.ServiceVoteRepo.CancelVote(ctx, voteUpOperationInfo)
+		err = repo.VoteRepo.CancelVote(ctx, voteUpOperationInfo)
 	} else {
 		// cancel vote down if exist
 		voteOperationInfo := vs.createVoteOperationInfo(ctx, req.UserID, false, objectInfo)
-		err = repo.ServiceVoteRepo.CancelVote(ctx, voteOperationInfo)
+		err = repo.VoteRepo.CancelVote(ctx, voteOperationInfo)
 		if err != nil {
 			return nil, err
 		}
-		err = repo.ServiceVoteRepo.Vote(ctx, voteUpOperationInfo)
+		err = repo.VoteRepo.Vote(ctx, voteUpOperationInfo)
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	resp = &schema.VoteResp{}
-	resp.UpVotes, resp.DownVotes, err = repo.ServiceVoteRepo.GetAndSaveVoteResult(ctx, req.ObjectID, objectInfo.ObjectType)
+	resp.UpVotes, resp.DownVotes, err = repo.VoteRepo.GetAndSaveVoteResult(ctx, req.ObjectID, objectInfo.ObjectType)
 	if err != nil {
 		glog.Slog.Error(err)
 	}
@@ -96,24 +104,24 @@ func (vs *VoteService) VoteDown(ctx context.Context, req *schema.VoteReq) (resp 
 	// vote operation
 	voteDownOperationInfo := vs.createVoteOperationInfo(ctx, req.UserID, false, objectInfo)
 	if req.IsCancel {
-		err = repo.ServiceVoteRepo.CancelVote(ctx, voteDownOperationInfo)
+		err = repo.VoteRepo.CancelVote(ctx, voteDownOperationInfo)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// cancel vote up if exist
-		err = repo.ServiceVoteRepo.CancelVote(ctx, vs.createVoteOperationInfo(ctx, req.UserID, true, objectInfo))
+		err = repo.VoteRepo.CancelVote(ctx, vs.createVoteOperationInfo(ctx, req.UserID, true, objectInfo))
 		if err != nil {
 			return nil, err
 		}
-		err = repo.ServiceVoteRepo.Vote(ctx, voteDownOperationInfo)
+		err = repo.VoteRepo.Vote(ctx, voteDownOperationInfo)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	resp = &schema.VoteResp{}
-	resp.UpVotes, resp.DownVotes, err = repo.ServiceVoteRepo.GetAndSaveVoteResult(ctx, req.ObjectID, objectInfo.ObjectType)
+	resp.UpVotes, resp.DownVotes, err = repo.VoteRepo.GetAndSaveVoteResult(ctx, req.ObjectID, objectInfo.ObjectType)
 	if err != nil {
 		glog.Slog.Error(err)
 	}
@@ -144,7 +152,7 @@ func (vs *VoteService) ListUserVotes(ctx context.Context, req schema.GetVoteWith
 		activityTypeMapping[cfg.ID] = typeKey
 	}
 
-	voteList, total, err := repo.ServiceVoteRepo.ListUserVotes(ctx, req.UserID, req.Page, req.PageSize, activityTypes)
+	voteList, total, err := repo.VoteRepo.ListUserVotes(ctx, req.UserID, req.Page, req.PageSize, activityTypes)
 	if err != nil {
 		return nil, err
 	}

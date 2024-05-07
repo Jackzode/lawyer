@@ -95,7 +95,7 @@ func (sp *SearchParser) parseTags(ctx context.Context, query *string) (tags []st
 
 	tags = []string{}
 	for _, item := range res {
-		tag, exists, err := TagCommonServicer.GetTagBySlugName(ctx, item[1])
+		tag, exists, err := TagServicer.GetTagBySlugName(ctx, item[1])
 		if err != nil || !exists {
 			continue
 		}

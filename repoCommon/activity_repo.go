@@ -30,7 +30,7 @@ func NewActivityRepo() *ActivityComRepo {
 }
 
 func (ar *ActivityComRepo) GetActivityTypeByObjID(ctx context.Context, objectID string, action string) (
-	activityType, rank, hasRank int, err error) {
+	activityType, value int, err error) {
 
 	objectType, err := obj.GetObjectTypeStrByObjectID(objectID)
 	if err != nil {
@@ -42,11 +42,7 @@ func (ar *ActivityComRepo) GetActivityTypeByObjID(ctx context.Context, objectID 
 	if err != nil {
 		return
 	}
-	activityType, rank = cfg.ID, cfg.GetIntValue()
-	hasRank = 0
-	if rank != 0 {
-		hasRank = 1
-	}
+	activityType, value = cfg.ID, cfg.GetIntValue()
 	return
 }
 

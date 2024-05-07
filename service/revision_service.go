@@ -114,7 +114,7 @@ func (rs *RevisionService) revisionAuditQuestion(ctx context.Context, revisionit
 		objectTagData := schema.TagChange{}
 		objectTagData.ObjectID = question.ID
 		objectTagData.Tags = objectTagTags
-		saveerr = TagCommonServicer.ObjectChangeTag(ctx, &objectTagData)
+		saveerr = TagServicer.ObjectChangeTag(ctx, &objectTagData)
 		if saveerr != nil {
 			return saveerr
 		}
@@ -198,7 +198,7 @@ func (rs *RevisionService) revisionAuditTag(ctx context.Context, revisionitem *s
 			return saveerr
 		}
 
-		tagInfo, exist, err := TagCommonServicer.GetTagByID(ctx, taginfo.TagID)
+		tagInfo, exist, err := TagServicer.GetTagByID(ctx, taginfo.TagID)
 		if err != nil {
 			return err
 		}

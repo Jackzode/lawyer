@@ -72,11 +72,11 @@ func (s *SiteInfoService) GetSiteWrite(ctx context.Context) (resp *schema.SiteWr
 		_ = json.Unmarshal([]byte(siteInfo.Content), resp)
 	}
 
-	resp.RecommendTags, err = TagCommonServicer.GetSiteWriteRecommendTag(ctx)
+	resp.RecommendTags, err = TagServicer.GetSiteWriteRecommendTag(ctx)
 	if err != nil {
 		glog.Slog.Error(err)
 	}
-	resp.ReservedTags, err = TagCommonServicer.GetSiteWriteReservedTag(ctx)
+	resp.ReservedTags, err = TagServicer.GetSiteWriteReservedTag(ctx)
 	if err != nil {
 		glog.Slog.Error(err)
 	}
@@ -142,7 +142,7 @@ func (s *SiteInfoService) SaveSiteBranding(ctx context.Context, req *schema.Site
 
 // SaveSiteWrite save site configuration about write
 func (s *SiteInfoService) SaveSiteWrite(ctx context.Context, req *schema.SiteWriteReq) (resp interface{}, err error) {
-	errData, err := TagCommonServicer.SetSiteWriteTag(ctx, req.RecommendTags, req.ReservedTags, req.UserID)
+	errData, err := TagServicer.SetSiteWriteTag(ctx, req.RecommendTags, req.ReservedTags, req.UserID)
 	if err != nil {
 		return errData, err
 	}

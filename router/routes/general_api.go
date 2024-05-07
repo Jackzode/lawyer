@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/controller"
 	"github.com/lawyer/controller_admin"
+	"github.com/lawyer/middleware"
 )
 
 // i18n
@@ -53,15 +54,17 @@ func RegisterSiteInfoApi(r *gin.RouterGroup) {
 func RegisterVoteApi(r *gin.RouterGroup) {
 	// vote
 	c := controller.NewVoteController()
-	r.GET("/personal/vote/page", c.UserVotes)
-	r.POST("/vote/up", c.VoteUp)
-	r.POST("/vote/down", c.VoteDown)
+	rg := r.Group("/vote", middleware.AccessToken())
+	rg.POST("/up", c.VoteUp)
+	rg.POST("/down", c.VoteDown)
+	rg.GET("/personal/page", c.UserVotes)
 }
 
 func RegisterReportApi(r *gin.RouterGroup) {
 	// report
-	c := controller.NewReportController(nil, nil, nil)
+	c := controller.NewReportController()
 	r.POST("/report", c.AddReport)
+	//管理员用接口
 	ac := controller_admin.NewReportController()
 	r.GET("/reports/page", ac.ListReportPage)
 	r.PUT("/report", ac.Handle)

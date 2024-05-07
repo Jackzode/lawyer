@@ -19,7 +19,7 @@ const (
 	SiteInfoCacheTime                          = 1 * time.Hour
 	ConfigID2KEYCacheKeyPrefix                 = "lawyer:config:id:"
 	ConfigKEY2ContentCacheKeyPrefix            = "lawyer:config:key:"
-	ConfigCacheTime                            = 1 * time.Hour
+	ConfigCacheTime                            = 24 * time.Hour
 	ConnectorUserExternalInfoCacheKey          = "lawyer:connector:"
 	ConnectorUserExternalInfoCacheTime         = 10 * time.Minute
 	SiteMapQuestionCacheKeyPrefix              = "lawyer:sitemap:question:%d"

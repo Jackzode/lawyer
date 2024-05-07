@@ -3,15 +3,13 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/lawyer/commons/constant"
 	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
-	"github.com/mojocn/base64Captcha"
-	"github.com/segmentfault/pacman/errors"
-	"github.com/segmentfault/pacman/log"
-	"image/color"
+	glog "github.com/lawyer/commons/logger"
 )
 
 func GetConfigByID(ctx context.Context, id int) (c *entity.Config, err error) {
@@ -28,7 +26,7 @@ func GetConfigByID(ctx context.Context, id int) (c *entity.Config, err error) {
 	c = &entity.Config{}
 	exist, err := handler.Engine.Context(ctx).ID(id).Get(c)
 	if err != nil {
-		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return nil, err
 	}
 	if !exist {
 		return nil, fmt.Errorf("config not found by id: %d", id)
@@ -36,14 +34,14 @@ func GetConfigByID(ctx context.Context, id int) (c *entity.Config, err error) {
 
 	// update cache
 	if err := handler.RedisClient.Set(ctx, cacheKey, c.JsonString(), constant.ConfigCacheTime).Err(); err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return c, nil
 }
 
 func GetConfigByKey(ctx context.Context, key string) (c *entity.Config, err error) {
 	cacheKey := constant.ConfigKEY2ContentCacheKeyPrefix + key
-	cachehandler := handler.RedisClient.Get(ctx, cacheKey).String()
+	cachehandler := handler.RedisClient.Get(ctx, cacheKey).Val()
 	if len(cachehandler) > 0 {
 		c = &entity.Config{}
 		c.BuildByJSON([]byte(cachehandler))
@@ -55,15 +53,16 @@ func GetConfigByKey(ctx context.Context, key string) (c *entity.Config, err erro
 	c = &entity.Config{Key: key}
 	exist, err := handler.Engine.Context(ctx).Get(c)
 	if err != nil {
-		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return nil, err
 	}
 	if !exist {
 		return nil, fmt.Errorf("config not found by key: %s", key)
 	}
 
 	// update cache
-	if err := handler.RedisClient.Set(ctx, cacheKey, c.JsonString(), constant.ConfigCacheTime).Err(); err != nil {
-		log.Error(err)
+	err = handler.RedisClient.Set(ctx, cacheKey, c.JsonString(), constant.ConfigCacheTime).Err()
+	if err != nil {
+		glog.Slog.Error(err)
 	}
 	return c, nil
 }
@@ -73,30 +72,40 @@ func UpdateConfig(ctx context.Context, key string, value string) (err error) {
 	oldConfig := &entity.Config{Key: key}
 	exist, err := handler.Engine.Context(ctx).Get(oldConfig)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	if !exist {
-		return errors.BadRequest(reason.ObjectNotFound)
+		return errors.New(reason.ObjectNotFound)
 	}
 
 	// update handlerbase
 	_, err = handler.Engine.Context(ctx).ID(oldConfig.ID).Update(&entity.Config{Value: value})
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 
-	oldConfig.Value = value
-	cacheVal := oldConfig.JsonString()
-	// update cache
-	if err := handler.RedisClient.Set(ctx,
-		constant.ConfigKEY2ContentCacheKeyPrefix+key, cacheVal, constant.ConfigCacheTime).Err(); err != nil {
-		log.Error(err)
+	//delete cache
+	err = handler.RedisClient.Del(ctx, constant.ConfigKEY2ContentCacheKeyPrefix+key).Err()
+	if err != nil {
+		glog.Slog.Error(err)
 	}
-	if err := handler.RedisClient.Set(ctx,
-		fmt.Sprintf("%s%d", constant.ConfigID2KEYCacheKeyPrefix, oldConfig.ID), cacheVal, constant.ConfigCacheTime).Err(); err != nil {
-		log.Error(err)
+	err = handler.RedisClient.Del(ctx, fmt.Sprintf("%s%d", constant.ConfigID2KEYCacheKeyPrefix, oldConfig.ID)).Err()
+	if err != nil {
+		glog.Slog.Error(err)
 	}
 	return
+	// update cache 改为删除缓存
+	//oldConfig.Value = value
+	//cacheVal := oldConfig.JsonString()
+	//if err = handler.RedisClient.Set(ctx,
+	//	constant.ConfigKEY2ContentCacheKeyPrefix+key, cacheVal, constant.ConfigCacheTime).Err(); err != nil {
+	//	glog.Slog.Error(err)
+	//}
+	//if err = handler.RedisClient.Set(ctx,
+	//	fmt.Sprintf("%s%d", constant.ConfigID2KEYCacheKeyPrefix, oldConfig.ID), cacheVal, constant.ConfigCacheTime).Err(); err != nil {
+	//	glog.Slog.Error(err)
+	//}
+
 }
 
 // GetIntValue get config int value
@@ -147,33 +156,6 @@ func GetIDByKey(ctx context.Context, key string) (id int, err error) {
 	return cf.ID, nil
 }
 
-func GenerateCaptcha(ctx context.Context) (key, answer, captchaBase64 string, err error) {
-	driverString := base64Captcha.DriverString{
-		Height:          60,
-		Width:           200,
-		NoiseCount:      0,
-		ShowLineOptions: 2 | 4,
-		Length:          4,
-		Source:          "1234567890qwertyuioplkjhgfdsazxcvbnm",
-		BgColor:         &color.RGBA{R: 211, G: 211, B: 211, A: 0},
-		Fonts:           []string{"wqy-microhei.ttc"},
-	}
-	driver := driverString.ConvertFonts()
-
-	id, content, answer := driver.GenerateIdQuestionAnswer()
-	item, err := driver.DrawCaptcha(content)
-	if err != nil {
-		return "", "", "", err
-	}
-	//err = repo.CaptchaRepo.SetCaptcha(ctx, id, answer)
-	//if err != nil {
-	//	return "", "", err
-	//}
-
-	captchaBase64 = item.EncodeB64string()
-	return id, answer, captchaBase64, nil
-}
-
 // GenUniqueIDStr generate unique id string
 // 1 + 00x(objectType) + 000000000000x(id)
 func GenUniqueIDStr(ctx context.Context, key string) (uniqueID string, err error) {
@@ -181,7 +163,7 @@ func GenUniqueIDStr(ctx context.Context, key string) (uniqueID string, err error
 	bean := &entity.Uniqid{UniqidType: objectType}
 	_, err = handler.Engine.Context(ctx).Insert(bean)
 	if err != nil {
-		return "", errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return "", err
 	}
 	return fmt.Sprintf("1%03d%013d", objectType, bean.ID), nil
 }

@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/lawyer/commons/base/handler"
 	"github.com/lawyer/commons/constant/reason"
+	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/middleware"
 	"github.com/lawyer/service"
 	"strings"
@@ -35,7 +36,7 @@ func (tc *TagController) SearchTagLike(ctx *gin.Context) {
 	if handler.BindAndCheck(ctx, req) {
 		return
 	}
-	resp, err := service.TagCommonServicer.SearchTagLike(ctx, req)
+	resp, err := service.TagServicer.SearchTagLike(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -102,7 +103,9 @@ func (tc *TagController) AddTag(ctx *gin.Context) {
 		return
 	}
 
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
+	//校验权限
 	canList, err := service.RankServicer.CheckOperationPermissions(ctx, req.UserID, []string{
 		permission.TagAdd,
 	})
@@ -114,8 +117,8 @@ func (tc *TagController) AddTag(ctx *gin.Context) {
 		handler.HandleResponse(ctx, errors.Forbidden(reason.RankFailToMeetTheCondition), nil)
 		return
 	}
-
-	resp, err := service.TagCommonServicer.AddTag(ctx, req)
+	//添加逻辑
+	resp, err := service.TagServicer.AddTag(ctx, req)
 	handler.HandleResponse(ctx, err, resp)
 }
 
@@ -223,16 +226,6 @@ func (tc *TagController) GetTagInfo(ctx *gin.Context) {
 	handler.HandleResponse(ctx, err, resp)
 }
 
-// GetTagWithPage get tag page
-// @Summary get tag page
-// @Description get tag page
-// @Tags Tag
-// @Produce json
-// @Param page query int false "page size"
-// @Param page_size query int false "page size"
-// @Param slug_name query string false "slug_name"
-// @Param query_cond query string false "query condition" Enums(popular, name, newest)
-// @Success 200 {object} handler.RespBody{data=pager.PageModel{list=[]schema.GetTagPageResp}}
 // @Router /answer/api/v1/tags/page [get]
 func (tc *TagController) GetTagWithPage(ctx *gin.Context) {
 	req := &schema.GetTagWithPageReq{}
@@ -240,7 +233,8 @@ func (tc *TagController) GetTagWithPage(ctx *gin.Context) {
 		return
 	}
 
-	req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	//req.UserID = middleware.GetLoginUserIDFromContext(ctx)
+	req.UserID = utils.GetUidFromTokenByCtx(ctx)
 
 	resp, err := service.TagServicer.GetTagWithPage(ctx, req)
 	handler.HandleResponse(ctx, err, resp)

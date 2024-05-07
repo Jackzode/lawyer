@@ -45,7 +45,7 @@ func (fs *FollowService) UpdateFollowTags(ctx context.Context, req *schema.Updat
 	if err != nil {
 		return
 	}
-	oldFollowTagList, err := repo.TagCommonRepo.GetTagListByIDs(ctx, objIDs)
+	oldFollowTagList, err := repo.TagRepo.GetTagListByIDs(ctx, objIDs)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (fs *FollowService) UpdateFollowTags(ctx context.Context, req *schema.Updat
 	// new follow
 	for _, tagSlugName := range req.SlugNameList {
 		if !oldTagMapping[tagSlugName] {
-			tagInfo, exist, err := repo.TagCommonRepo.GetTagBySlugName(ctx, tagSlugName)
+			tagInfo, exist, err := repo.TagRepo.GetTagBySlugName(ctx, tagSlugName)
 			if err != nil {
 				return err
 			}

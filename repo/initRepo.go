@@ -20,7 +20,6 @@ import (
 	"github.com/lawyer/repo/search_common"
 	"github.com/lawyer/repo/site_info"
 	"github.com/lawyer/repo/tag"
-	"github.com/lawyer/repo/tag_common"
 	"github.com/lawyer/repo/user"
 	"github.com/lawyer/repo/user_external_login"
 	"github.com/lawyer/repo/user_notification_config"
@@ -43,11 +42,9 @@ var (
 	AnswerRepo                 *answer.AnswerRepo
 	CommentCommonRepo          *comment.CommentRepo
 	QuestionRepo               *question.QuestionRepo
-	TagCommonRepo              *tag_common.TagCommonRepo
-	TagRelRepo                 *tag.TagRelRepo
 	TagRepo                    *tag.TagRepo
+	TagRelRepo                 *tag.TagRelRepo
 	RevisionRepo               *revision.RevisionRepo
-	VoteRepo                   *activity_common.VoteRepo
 	RolePowerRelRepo           *role.RolePowerRelRepo
 	//LimitRepo                  *limit.LimitRepo
 	ReportRepo           *report.ReportRepo
@@ -57,7 +54,7 @@ var (
 	CollectionGroupRepo  *collection.CollectionGroupRepo
 	MetaRepo             *meta.MetaRepo
 	AnswerActivityRepo   *activity.AnswerActivityRepo
-	ServiceVoteRepo      *activity.VoteRepo
+	VoteRepo             *activity.VoteRepo
 	SearchRepo           *search_common.SearchRepo
 	UserAdminRepo        *user.UserAdminRepo
 	ReasonRepo           *reason.ReasonRepo
@@ -86,11 +83,9 @@ func InitRepo() {
 	CommentCommonRepo = comment.NewCommentCommonRepo()
 	AnswerRepo = answer.NewAnswerRepo()
 	QuestionRepo = question.NewQuestionRepo()
-	TagCommonRepo = tag_common.NewTagCommonRepo()
-	TagRelRepo = tag.NewTagRelRepo()
 	TagRepo = tag.NewTagRepo()
+	TagRelRepo = tag.NewTagRelRepo()
 	RevisionRepo = revision.NewRevisionRepo()
-	VoteRepo = activity_common.NewVoteRepo()
 	RolePowerRelRepo = role.NewRolePowerRelRepo()
 	//LimitRepo = limit.NewRateLimitRepo()
 	ReportRepo = report.NewReportRepo()
@@ -100,7 +95,7 @@ func InitRepo() {
 	CollectionGroupRepo = collection.NewCollectionGroupRepo()
 	MetaRepo = meta.NewMetaRepo()
 	AnswerActivityRepo = activity.NewAnswerActivityRepo()
-	ServiceVoteRepo = activity.NewVoteRepo()
+	VoteRepo = activity.NewVoteRepo()
 	SearchRepo = search_common.NewSearchRepo()
 	UserAdminRepo = user.NewUserAdminRepo()
 	ReasonRepo = reason.NewReasonRepo()

@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/lawyer/commons/constant"
-	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
+	glog "github.com/lawyer/commons/logger"
+
+	"github.com/lawyer/pkg/uid"
 	"github.com/lawyer/repoCommon"
 	"github.com/redis/go-redis/v9"
-	"github.com/segmentfault/pacman/log"
 	"time"
 
 	"github.com/lawyer/commons/utils/pager"
@@ -18,7 +19,6 @@ import (
 	"xorm.io/builder"
 
 	"github.com/lawyer/commons/schema"
-	"github.com/segmentfault/pacman/errors"
 	"xorm.io/xorm"
 )
 
@@ -36,13 +36,38 @@ func NewVoteRepo() *VoteRepo {
 	}
 }
 
+func (vr *VoteRepo) GetVoteStatus(ctx context.Context, objectID, userID string) (status string) {
+
+	objectID = uid.DeShortID(objectID)
+	for _, action := range []string{"vote_up", "vote_down"} {
+		activityType, _, err := repoCommon.NewActivityRepo().GetActivityTypeByObjID(ctx, objectID, action)
+		if err != nil {
+			return ""
+		}
+		at := &entity.Activity{}
+		has, err := vr.DB.Context(ctx).Where("object_id = ? AND cancelled = 0 AND activity_type = ? AND user_id = ?",
+			objectID, activityType, userID).Get(at)
+		if err != nil {
+			glog.Slog.Error(err)
+			return ""
+		}
+		if has {
+			return action
+		}
+	}
+	return ""
+}
+
+func (vr *VoteRepo) GetVoteCount(ctx context.Context, activityTypes []int) (count int64, err error) {
+	//list := make([]*entity.Activity, 0)
+	count, err = vr.DB.Context(ctx).Where("cancelled =0").In("activity_type", activityTypes).Count(1)
+	return
+}
+
 func (vr *VoteRepo) Vote(ctx context.Context, op *schema.VoteOperationInfo) (err error) {
 	noNeedToVote, err := vr.votePreCheck(ctx, op)
-	if err != nil {
+	if err != nil || noNeedToVote {
 		return err
-	}
-	if noNeedToVote {
-		return nil
 	}
 
 	sendInboxNotification := false
@@ -168,12 +193,10 @@ func (vr *VoteRepo) ListUserVotes(ctx context.Context, userID string,
 	session.Where(cond).Desc("updated_at")
 
 	total, err = pager.Help(page, pageSize, &voteList, &entity.Activity{}, session)
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return
 }
 
+// 获取每一个相关activity，然后检查是否cancelled，全部没cancel才返回true
 func (vr *VoteRepo) votePreCheck(ctx context.Context, op *schema.VoteOperationInfo) (noNeedToVote bool, err error) {
 	activities, err := vr.getExistActivity(ctx, op)
 	if err != nil {
@@ -192,7 +215,7 @@ func (vr *VoteRepo) acquireUserInfo(session *xorm.Session, userIDs []string) (ma
 	us := make([]*entity.User, 0)
 	err := session.In("id", userIDs).ForUpdate().Find(&us)
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 		return nil, err
 	}
 
@@ -211,7 +234,7 @@ func (vr *VoteRepo) setActivityRankToZeroIfUserReachLimit(ctx context.Context, s
 			// check if reach max daily rank
 			reach, err := repoCommon.NewUserRankRepo().CheckReachLimit(ctx, session, activity.ActivityUserID, maxDailyRank)
 			if err != nil {
-				log.Error(err)
+				glog.Slog.Error(err)
 				return err
 			}
 			if reach {
@@ -242,7 +265,7 @@ func (vr *VoteRepo) changeUserRank(ctx context.Context, session *xorm.Session,
 		}
 		if err = repoCommon.NewUserRankRepo().ChangeUserRank(ctx, session,
 			activity.ActivityUserID, user.Rank, activity.Rank); err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			return err
 		}
 	}
@@ -262,7 +285,7 @@ func (vr *VoteRepo) rollbackUserRank(ctx context.Context, session *xorm.Session,
 		}
 		if err = repoCommon.NewUserRankRepo().ChangeUserRank(ctx, session,
 			activity.UserID, user.Rank, -activity.Rank); err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			return err
 		}
 	}
@@ -329,11 +352,11 @@ func (vr *VoteRepo) cancelActivities(session *xorm.Session, activities []*entity
 		t := &entity.Activity{}
 		exist, err := session.ID(activity.ID).Get(t)
 		if err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			return err
 		}
 		if !exist {
-			log.Error(fmt.Errorf("%s activity not exist", activity.ID))
+			glog.Slog.Error(fmt.Errorf("%s activity not exist", activity.ID))
 			return fmt.Errorf("%s activity not exist", activity.ID)
 		}
 		//  If this activity is already cancelled, set activity rank to 0
@@ -345,13 +368,14 @@ func (vr *VoteRepo) cancelActivities(session *xorm.Session, activities []*entity
 				Cancelled:   entity.ActivityCancelled,
 				CancelledAt: time.Now(),
 			}); err != nil {
-			log.Error(err)
+			glog.Slog.Error(err)
 			return err
 		}
 	}
 	return nil
 }
 
+// 根据VoteOperationInfo中的信息，查询activity表，获取相关事件
 func (vr *VoteRepo) getExistActivity(ctx context.Context, op *schema.VoteOperationInfo) ([]*entity.Activity, error) {
 	var activities []*entity.Activity
 	for _, action := range op.Activities {
@@ -363,7 +387,7 @@ func (vr *VoteRepo) getExistActivity(ctx context.Context, op *schema.VoteOperati
 			And(builder.Eq{"object_id": op.ObjectID}).
 			Get(t)
 		if err != nil {
-			return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+			return nil, err
 		}
 		if exist {
 			activities = append(activities, t)
@@ -375,7 +399,7 @@ func (vr *VoteRepo) getExistActivity(ctx context.Context, op *schema.VoteOperati
 func (vr *VoteRepo) countVoteUp(ctx context.Context, objectID, objectType string) (count int64) {
 	count, err := vr.countVote(ctx, objectID, objectType, constant.ActVoteUp)
 	if err != nil {
-		log.Errorf("get vote up count error: %v", err)
+		glog.Slog.Errorf("get vote up count error: %v", err)
 	}
 	return count
 }
@@ -383,7 +407,7 @@ func (vr *VoteRepo) countVoteUp(ctx context.Context, objectID, objectType string
 func (vr *VoteRepo) countVoteDown(ctx context.Context, objectID, objectType string) (count int64) {
 	count, err := vr.countVote(ctx, objectID, objectType, constant.ActVoteDown)
 	if err != nil {
-		log.Errorf("get vote down count error: %v", err)
+		glog.Slog.Errorf("get vote down count error: %v", err)
 	}
 	return count
 }
@@ -395,9 +419,6 @@ func (vr *VoteRepo) countVote(ctx context.Context, objectID, objectType, action 
 		And(builder.Eq{"activity_type": activityType}).
 		And(builder.Eq{"cancelled": 0}).
 		Count(activity)
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return count, err
 }
 
@@ -412,7 +433,7 @@ func (vr *VoteRepo) updateVotes(ctx context.Context, objectID, objectType string
 		_, err = session.ID(objectID).Cols("vote_count").Update(&entity.Comment{VoteCount: voteCount})
 	}
 	if err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return
 }

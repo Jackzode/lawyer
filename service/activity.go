@@ -111,7 +111,7 @@ func (as *ActivityService) getTimelineMainObjInfo(ctx context.Context, objectID 
 	}
 	resp.Title = objInfo.Title
 	if objInfo.ObjectType == constant.TagObjectType {
-		tag, exist, _ := TagCommonServicer.GetTagByID(ctx, objInfo.TagID)
+		tag, exist, _ := TagServicer.GetTagByID(ctx, objInfo.TagID)
 		if exist {
 			resp.Title = tag.SlugName
 			resp.MainTagSlugName = tag.MainTagSlugName

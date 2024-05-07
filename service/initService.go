@@ -28,7 +28,6 @@ var (
 	CaptchaServicer                  *CaptchaService
 	RevisionComServicer              *revision_common.RevisionService
 	ActivityQueueServicer            ActivityQueueService
-	TagCommonServicer                *TagCommonService
 	ObjServicer                      *ObjService
 	NotificationQueueService         notice_queue.NotificationQueueService
 	ExternalNotificationQueueService notice_queue.ExternalNotificationQueueService
@@ -91,7 +90,7 @@ func InitServices() {
 	CaptchaServicer = NewCaptchaService()
 	RevisionComServicer = revision_common.NewRevisionService()
 	ActivityQueueServicer = NewActivityQueueService()
-	TagCommonServicer = NewTagCommonService()
+	//TagCommonServicer = NewTagService()
 	ObjServicer = NewObjService()
 
 	NotificationQueueService = notice_queue.NewNotificationQueueService()

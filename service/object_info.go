@@ -37,11 +37,11 @@ func (os *ObjService) GetUnreviewedRevisionInfo(ctx context.Context, objectID st
 		if !exist {
 			break
 		}
-		taglist, err := TagCommonServicer.GetObjectEntityTag(ctx, objectID)
+		taglist, err := TagServicer.GetObjectEntityTag(ctx, objectID)
 		if err != nil {
 			return nil, err
 		}
-		TagCommonServicer.TagsFormatRecommendAndReserved(ctx, taglist)
+		TagServicer.TagsFormatRecommendAndReserved(ctx, taglist)
 		tags, err := schema.TagFormat(taglist)
 		if err != nil {
 			return nil, err
@@ -80,7 +80,7 @@ func (os *ObjService) GetUnreviewedRevisionInfo(ctx context.Context, objectID st
 		}
 
 	case constant.TagObjectType:
-		tagInfo, exist, err := repo.TagCommonRepo.GetTagByID(ctx, objectID, true)
+		tagInfo, exist, err := repo.TagRepo.GetTagByID(ctx, objectID, true)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +183,7 @@ func (os *ObjService) GetInfo(ctx context.Context, objectID string) (objInfo *sc
 			}
 		}
 	case constant.TagObjectType:
-		tagInfo, exist, err := repo.TagCommonRepo.GetTagByID(ctx, objectID, true)
+		tagInfo, exist, err := repo.TagRepo.GetTagByID(ctx, objectID, true)
 		if err != nil {
 			return nil, err
 		}

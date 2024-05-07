@@ -117,7 +117,7 @@ func (qs *QuestionService) CheckAddQuestion(ctx context.Context, req *schema.Que
 		err = errors.BadRequest(reason.RecommendTagEnter)
 		return errorlist, err
 	}
-	recommendExist, err := TagCommonServicer.ExistRecommend(ctx, req.Tags)
+	recommendExist, err := TagServicer.ExistRecommend(ctx, req.Tags)
 	if err != nil {
 		return
 	}
@@ -135,7 +135,7 @@ func (qs *QuestionService) CheckAddQuestion(ctx context.Context, req *schema.Que
 	for _, tag := range req.Tags {
 		tagNameList = append(tagNameList, tag.SlugName)
 	}
-	Tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
+	Tags, tagerr := TagServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		return errorlist, tagerr
 	}
@@ -158,7 +158,7 @@ func (qs *QuestionService) CheckAddQuestion(ctx context.Context, req *schema.Que
 
 // HasNewTag
 func (qs *QuestionService) HasNewTag(ctx context.Context, tags []*schema.TagItem) (bool, error) {
-	return TagCommonServicer.HasNewTag(ctx, tags)
+	return TagServicer.HasNewTag(ctx, tags)
 }
 
 // AddQuestion add question
@@ -172,7 +172,7 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		err = errors.BadRequest(reason.RecommendTagEnter)
 		return errorlist, err
 	}
-	recommendExist, err := TagCommonServicer.ExistRecommend(ctx, req.Tags)
+	recommendExist, err := TagServicer.ExistRecommend(ctx, req.Tags)
 	if err != nil {
 		return
 	}
@@ -191,7 +191,7 @@ func (qs *QuestionService) AddQuestion(ctx context.Context, req *schema.Question
 		tag.SlugName = strings.ReplaceAll(tag.SlugName, " ", "-")
 		tagNameList = append(tagNameList, tag.SlugName)
 	}
-	tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
+	tags, tagerr := TagServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		return questionInfo, tagerr
 	}
@@ -304,21 +304,21 @@ func (qs *QuestionService) OperationQuestion(ctx context.Context, req *schema.Op
 	switch req.Operation {
 	case schema.QuestionOperationHide:
 		questionInfo.Show = entity.QuestionHide
-		err = TagCommonServicer.HideTagRelListByObjectID(ctx, req.ID)
+		err = TagServicer.HideTagRelListByObjectID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
-		err = TagCommonServicer.RefreshTagCountByQuestionID(ctx, req.ID)
+		err = TagServicer.RefreshTagCountByQuestionID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
 	case schema.QuestionOperationShow:
 		questionInfo.Show = entity.QuestionShow
-		err = TagCommonServicer.ShowTagRelListByObjectID(ctx, req.ID)
+		err = TagServicer.ShowTagRelListByObjectID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
-		err = TagCommonServicer.RefreshTagCountByQuestionID(ctx, req.ID)
+		err = TagServicer.RefreshTagCountByQuestionID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
@@ -410,7 +410,7 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 
 	//tag count
 	tagIDs := make([]string, 0)
-	Tags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, req.ID)
+	Tags, tagerr := TagServicer.GetObjectEntityTag(ctx, req.ID)
 	if tagerr != nil {
 		glog.Slog.Error("GetObjectEntityTag error", tagerr)
 		return nil
@@ -418,11 +418,11 @@ func (qs *QuestionService) RemoveQuestion(ctx context.Context, req *schema.Remov
 	for _, v := range Tags {
 		tagIDs = append(tagIDs, v.ID)
 	}
-	err = TagCommonServicer.RemoveTagRelListByObjectID(ctx, req.ID)
+	err = TagServicer.RemoveTagRelListByObjectID(ctx, req.ID)
 	if err != nil {
 		glog.Slog.Error("RemoveTagRelListByObjectID error", err.Error())
 	}
-	err = TagCommonServicer.RefreshTagQuestionCount(ctx, tagIDs)
+	err = TagServicer.RefreshTagQuestionCount(ctx, tagIDs)
 	if err != nil {
 		glog.Slog.Error("efreshTagQuestionCount error", err.Error())
 	}
@@ -451,7 +451,7 @@ func (qs *QuestionService) UpdateQuestionCheckTags(ctx context.Context, req *sch
 		return
 	}
 
-	oldTags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, req.ID)
+	oldTags, tagerr := TagServicer.GetObjectEntityTag(ctx, req.ID)
 	if tagerr != nil {
 		glog.Slog.Error("GetObjectEntityTag error", tagerr)
 		return nil, nil
@@ -466,14 +466,14 @@ func (qs *QuestionService) UpdateQuestionCheckTags(ctx context.Context, req *sch
 		oldtagNameList = append(oldtagNameList, tag.SlugName)
 	}
 
-	isChange := TagCommonServicer.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
+	isChange := TagServicer.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
 
 	//If the content is the same, ignore it
 	if dbinfo.Title == req.Title && dbinfo.OriginalText == req.Content && !isChange {
 		return
 	}
 
-	Tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
+	Tags, tagerr := TagServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		glog.Slog.Error("GetTagListByNames error", tagerr)
 		return nil, nil
@@ -537,12 +537,12 @@ func (qs *QuestionService) RecoverQuestion(ctx context.Context, req *schema.Ques
 	}
 
 	// update tag's question count
-	if err = TagCommonServicer.RemoveTagRelListByObjectID(ctx, questionInfo.ID); err != nil {
+	if err = TagServicer.RemoveTagRelListByObjectID(ctx, questionInfo.ID); err != nil {
 		glog.Slog.Errorf("remove tag rel list by object id error %v", err)
 	}
 
 	tagIDs := make([]string, 0)
-	tags, err := TagCommonServicer.GetObjectEntityTag(ctx, questionInfo.ID)
+	tags, err := TagServicer.GetObjectEntityTag(ctx, questionInfo.ID)
 	if err != nil {
 		return err
 	}
@@ -550,7 +550,7 @@ func (qs *QuestionService) RecoverQuestion(ctx context.Context, req *schema.Ques
 		tagIDs = append(tagIDs, v.ID)
 	}
 	if len(tagIDs) > 0 {
-		if err = TagCommonServicer.RefreshTagQuestionCount(ctx, tagIDs); err != nil {
+		if err = TagServicer.RefreshTagQuestionCount(ctx, tagIDs); err != nil {
 			glog.Slog.Errorf("update tag's question count failed, %v", err)
 		}
 	}
@@ -709,7 +709,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 	question.UserID = dbinfo.UserID
 	question.LastEditUserID = req.UserID
 
-	oldTags, tagerr := TagCommonServicer.GetObjectEntityTag(ctx, question.ID)
+	oldTags, tagerr := TagServicer.GetObjectEntityTag(ctx, question.ID)
 	if tagerr != nil {
 		return questionInfo, tagerr
 	}
@@ -724,14 +724,14 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 		oldtagNameList = append(oldtagNameList, tag.SlugName)
 	}
 
-	isChange := TagCommonServicer.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
+	isChange := TagServicer.CheckTagsIsChange(ctx, tagNameList, oldtagNameList)
 
 	//If the content is the same, ignore it
 	if dbinfo.Title == req.Title && dbinfo.OriginalText == req.Content && !isChange {
 		return
 	}
 
-	Tags, tagerr := TagCommonServicer.GetTagListByNames(ctx, tagNameList)
+	Tags, tagerr := TagServicer.GetTagListByNames(ctx, tagNameList)
 	if tagerr != nil {
 		return questionInfo, tagerr
 	}
@@ -763,7 +763,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 		}
 	}
 	// Check whether mandatory labels are selected
-	recommendExist, err := TagCommonServicer.ExistRecommend(ctx, req.Tags)
+	recommendExist, err := TagServicer.ExistRecommend(ctx, req.Tags)
 	if err != nil {
 		return
 	}
@@ -901,11 +901,11 @@ func (qs *QuestionService) InviteUserInfo(ctx context.Context, questionID string
 }
 
 func (qs *QuestionService) ChangeTag(ctx context.Context, objectTagData *schema.TagChange) error {
-	return TagCommonServicer.ObjectChangeTag(ctx, objectTagData)
+	return TagServicer.ObjectChangeTag(ctx, objectTagData)
 }
 
 func (qs *QuestionService) CheckChangeReservedTag(ctx context.Context, oldobjectTagData, objectTagData []*entity.Tag) (bool, bool, []string, []string) {
-	return TagCommonServicer.CheckChangeReservedTag(ctx, oldobjectTagData, objectTagData)
+	return TagServicer.CheckChangeReservedTag(ctx, oldobjectTagData, objectTagData)
 }
 
 // PersonalQuestionPage get question list by user
@@ -1167,7 +1167,7 @@ func (qs *QuestionService) GetQuestionPage(ctx context.Context, req *schema.Ques
 
 	// query by tag condition
 	if len(req.Tag) > 0 {
-		tagInfo, exist, err := TagCommonServicer.GetTagBySlugName(ctx, strings.ToLower(req.Tag))
+		tagInfo, exist, err := TagServicer.GetTagBySlugName(ctx, strings.ToLower(req.Tag))
 		if err != nil {
 			return nil, 0, err
 		}
