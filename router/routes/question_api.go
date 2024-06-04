@@ -34,5 +34,5 @@ func RegisterQuestionApi(rg *gin.RouterGroup) {
 	//admin
 	r.GET("/answer/page", c.AdminAnswerPage)
 	r.PUT("/question/status", c.AdminUpdateQuestionStatus)
-	r.GET("/page", c.AdminQuestionPage)
+	//r.GET("/page", c.AdminQuestionPage)
 }
