@@ -100,7 +100,13 @@ func (os *ObjService) GetUnreviewedRevisionInfo(ctx context.Context, objectID st
 	return objInfo, err
 }
 
-// GetInfo get object simple information
+/*
+根据obj id来确定当前请求的是什么，可以是question，answer，comment，tag
+如果是question，我们查db获取完成的question信息；
+如果是answer，我们需要获取answer信息，question信息
+如果是comment，我们要获取comment信息，answer信息，question信息
+如果是tag信息，我们获取tag信息即可
+*/
 func (os *ObjService) GetInfo(ctx context.Context, objectID string) (objInfo *schema.SimpleObjectInfo, err error) {
 	objectType, err := obj.GetObjectTypeStrByObjectID(objectID)
 	if err != nil {

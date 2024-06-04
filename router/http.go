@@ -32,7 +32,7 @@ func InitRoutes(r *gin.Engine) {
 	router := r.Group("/lawyer")
 
 	routes.RegisterUserApi(router)
-
+	routes.RegisterQuestionApi(router)
 	//routes.RegisterQuestionApi(router)
 	//
 	//routes.RegisterOtherApi(router)

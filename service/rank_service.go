@@ -95,7 +95,7 @@ func (rs *RankService) CheckOperationPermissionsForRanks(ctx context.Context, us
 	if !exist {
 		return can, requireRanks, nil
 	}
-	//获取角色权限
+	//获取角色对应的权限
 	powerMapping := rs.getUserPowerMapping(ctx, userID)
 	for idx, action := range actions {
 		if powerMapping[action] {
@@ -125,8 +125,7 @@ func (rs *RankService) CheckOperationObjectOwner(ctx context.Context, userID, ob
 		return false
 	}
 	// if the user is this object creator, the user can operate this object.
-	if objectInfo != nil &&
-		objectInfo.ObjectCreatorUserID == userID {
+	if objectInfo != nil && objectInfo.ObjectCreatorUserID == userID {
 		return true
 	}
 	return false
@@ -184,13 +183,13 @@ func (rs *RankService) CheckVotePermission(ctx context.Context, userID, objectID
 func (rs *RankService) getUserPowerMapping(ctx context.Context, userID string) (powerMapping map[string]bool) {
 	powerMapping = make(map[string]bool, 0)
 	//获取用户角色
-	userRole, err := UserRoleRelServicer.GetUserRole(ctx, userID)
+	userRoleID, err := UserRoleRelServicer.GetUserRole(ctx, userID)
 	if err != nil {
 		glog.Slog.Error(err)
 		return powerMapping
 	}
 	//获取角色权限
-	powers, err := RolePowerRelServicer.GetRolePowerList(ctx, userRole)
+	powers, err := RolePowerRelServicer.GetRolePowerList(ctx, userRoleID)
 	if err != nil {
 		glog.Slog.Error(err)
 		return powerMapping

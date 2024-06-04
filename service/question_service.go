@@ -841,6 +841,7 @@ func (qs *QuestionService) UpdateQuestion(ctx context.Context, req *schema.Quest
 func (qs *QuestionService) GetQuestion(ctx context.Context, questionID, userID string,
 	per schema.QuestionPermission) (resp *schema.QuestionInfo, err error) {
 
+	//
 	question, err := QuestionCommonServicer.Info(ctx, questionID, userID)
 	if err != nil {
 		return
@@ -849,12 +850,17 @@ func (qs *QuestionService) GetQuestion(ctx context.Context, questionID, userID s
 	if question.Status == entity.QuestionStatusDeleted && !per.CanReopen && question.UserID != userID {
 		return nil, errors.NotFound(reason.QuestionNotFound)
 	}
+	//问题没关闭
 	if question.Status != entity.QuestionStatusClosed {
+		//不需要重新开启
 		per.CanReopen = false
 	}
+	//问题关闭
 	if question.Status == entity.QuestionStatusClosed {
+		//不需要关闭
 		per.CanClose = false
 	}
+	//todo pin啥意思
 	if question.Pin == entity.QuestionPin {
 		per.CanPin = false
 		per.CanHide = false
@@ -888,8 +894,8 @@ func (qs *QuestionService) GetQuestion(ctx context.Context, questionID, userID s
 
 // GetQuestionAndAddPV get question one
 func (qs *QuestionService) GetQuestionAndAddPV(ctx context.Context, questionID, loginUserID string,
-	per schema.QuestionPermission) (
-	resp *schema.QuestionInfo, err error) {
+	per schema.QuestionPermission) (resp *schema.QuestionInfo, err error) {
+
 	err = QuestionCommonServicer.UpdatePv(ctx, questionID)
 	if err != nil {
 		log.Error(err)

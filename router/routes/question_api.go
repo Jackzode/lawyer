@@ -3,33 +3,36 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lawyer/controller"
+	"github.com/lawyer/middleware"
 )
 
-func RegisterQuestionApi(r *gin.RouterGroup) {
+func RegisterQuestionApi(rg *gin.RouterGroup) {
 
-	c := controller.QuestionController{}
+	c := controller.NewQuestionController()
+	r := rg.Group("/question", middleware.AccessToken())
 	// question
-	r.GET("/question/info", c.GetQuestion)
-	r.GET("/question/invite", c.GetQuestionInviteUserInfo)
-	r.GET("/question/page", c.QuestionPage)
-	r.GET("/question/similar/tag", c.SimilarQuestion)
-	r.GET("/personal/qa/top", c.UserTop)
-	r.GET("/personal/question/page", c.PersonalQuestionPage)
-	r.GET("/answer/page", c.AdminAnswerPage)
-	// question
+	r.GET("/info", c.GetQuestion)
+	r.GET("/invite", c.GetQuestionInviteUserInfo)
+	r.GET("/page", c.QuestionPage)
+	r.POST("/add", c.AddQuestion)
+	r.PUT("/update", c.UpdateQuestion)
+	r.PUT("/invite", c.UpdateQuestionInviteUser)
+	r.DELETE("/delete", c.RemoveQuestion)
+	r.PUT("/status", c.CloseQuestion)
+	r.PUT("/operation", c.OperationQuestion)
+	r.PUT("/reopen", c.ReopenQuestion)
+	r.GET("/similar", c.GetSimilarQuestions)
+	r.POST("/recover", c.QuestionRecover)
+	r.GET("/similar/tag", c.SimilarQuestion)
+
 	r.GET("/personal/collection/page", c.PersonalCollectionPage)
-	r.POST("/question", c.AddQuestion)
-	r.POST("/question/answer", c.AddQuestionByAnswer)
-	r.PUT("/question", c.UpdateQuestion)
-	r.PUT("/question/invite", c.UpdateQuestionInviteUser)
-	r.DELETE("/question", c.RemoveQuestion)
-	r.PUT("/question/status", c.CloseQuestion)
-	r.PUT("/question/operation", c.OperationQuestion)
-	r.PUT("/question/reopen", c.ReopenQuestion)
-	r.GET("/question/similar", c.GetSimilarQuestions)
-	r.POST("/question/recover", c.QuestionRecover)
-	r.GET("/question/page", c.AdminQuestionPage)
-	r.PUT("/question/status", c.AdminUpdateQuestionStatus)
+	r.GET("/personal/question/page", c.PersonalQuestionPage)
+	r.GET("/personal/qa/top", c.UserTop)
 	r.GET("/personal/answer/page", c.PersonalAnswerPage)
+	r.POST("/answer", c.AddQuestionByAnswer)
 
+	//admin
+	r.GET("/answer/page", c.AdminAnswerPage)
+	r.PUT("/question/status", c.AdminUpdateQuestionStatus)
+	r.GET("/page", c.AdminQuestionPage)
 }

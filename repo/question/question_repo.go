@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lawyer/commons/constant"
-	"github.com/lawyer/commons/constant/reason"
 	"github.com/lawyer/commons/entity"
 	"github.com/lawyer/commons/handler"
+	glog "github.com/lawyer/commons/logger"
 	"github.com/lawyer/commons/utils"
 	"github.com/lawyer/plugin"
 	"github.com/redis/go-redis/v9"
-	"github.com/segmentfault/pacman/log"
+
 	"strings"
 	"time"
 	"unicode"
@@ -23,7 +23,6 @@ import (
 	"github.com/lawyer/commons/utils/pager"
 	"github.com/lawyer/pkg/htmltext"
 	"github.com/lawyer/pkg/uid"
-	"github.com/segmentfault/pacman/errors"
 )
 
 // QuestionRepo question repository
@@ -44,11 +43,11 @@ func NewQuestionRepo() *QuestionRepo {
 func (qr *QuestionRepo) AddQuestion(ctx context.Context, question *entity.Question) (err error) {
 	question.ID, err = utils.GenUniqueIDStr(ctx, question.TableName())
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_, err = qr.DB.Context(ctx).Insert(question)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	if utils.GetEnableShortID(ctx) {
 		question.ID = uid.EnShortID(question.ID)
@@ -61,9 +60,6 @@ func (qr *QuestionRepo) AddQuestion(ctx context.Context, question *entity.Questi
 func (qr *QuestionRepo) RemoveQuestion(ctx context.Context, id string) (err error) {
 	id = uid.DeShortID(id)
 	_, err = qr.DB.Context(ctx).Where("id =?", id).Delete(&entity.Question{})
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return
 }
 
@@ -72,7 +68,7 @@ func (qr *QuestionRepo) UpdateQuestion(ctx context.Context, question *entity.Que
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols(Cols...).Update(question)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	if utils.GetEnableShortID(ctx) {
 		question.ID = uid.EnShortID(question.ID)
@@ -86,7 +82,7 @@ func (qr *QuestionRepo) UpdatePvCount(ctx context.Context, questionID string) (e
 	question := &entity.Question{}
 	_, err = qr.DB.Context(ctx).Where("id =?", questionID).Incr("view_count", 1).Update(question)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_ = qr.updateSearch(ctx, question.ID)
 	return nil
@@ -98,7 +94,7 @@ func (qr *QuestionRepo) UpdateAnswerCount(ctx context.Context, questionID string
 	question.AnswerCount = num
 	_, err = qr.DB.Context(ctx).Where("id =?", questionID).Cols("answer_count").Update(question)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_ = qr.updateSearch(ctx, question.ID)
 	return nil
@@ -121,7 +117,7 @@ func (qr *QuestionRepo) UpdateCollectionCount(ctx context.Context, questionID st
 		return
 	})
 	if err != nil {
-		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return 0, err
 	}
 	return count, nil
 }
@@ -130,7 +126,7 @@ func (qr *QuestionRepo) UpdateQuestionStatus(ctx context.Context, questionID str
 	questionID = uid.DeShortID(questionID)
 	_, err = qr.DB.Context(ctx).ID(questionID).Cols("status").Update(&entity.Question{Status: status})
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_ = qr.updateSearch(ctx, questionID)
 	return nil
@@ -140,7 +136,7 @@ func (qr *QuestionRepo) UpdateQuestionStatusWithOutUpdateTime(ctx context.Contex
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("status").Update(question)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_ = qr.updateSearch(ctx, question.ID)
 	return nil
@@ -150,7 +146,7 @@ func (qr *QuestionRepo) RecoverQuestion(ctx context.Context, questionID string) 
 	questionID = uid.DeShortID(questionID)
 	_, err = qr.DB.Context(ctx).ID(questionID).Cols("status").Update(&entity.Question{Status: entity.QuestionStatusAvailable})
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_ = qr.updateSearch(ctx, questionID)
 	return nil
@@ -159,17 +155,14 @@ func (qr *QuestionRepo) RecoverQuestion(ctx context.Context, questionID string) 
 func (qr *QuestionRepo) UpdateQuestionOperation(ctx context.Context, question *entity.Question) (err error) {
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("pin", "show").Update(question)
-	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
-	return nil
+	return
 }
 
 func (qr *QuestionRepo) UpdateAccepted(ctx context.Context, question *entity.Question) (err error) {
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("accepted_answer_id").Update(question)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_ = qr.updateSearch(ctx, question.ID)
 	return nil
@@ -179,7 +172,7 @@ func (qr *QuestionRepo) UpdateLastAnswer(ctx context.Context, question *entity.Q
 	question.ID = uid.DeShortID(question.ID)
 	_, err = qr.DB.Context(ctx).Where("id =?", question.ID).Cols("last_answer_id").Update(question)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	_ = qr.updateSearch(ctx, question.ID)
 	return nil
@@ -194,7 +187,7 @@ func (qr *QuestionRepo) GetQuestion(ctx context.Context, id string) (
 	question.ID = id
 	exist, err = qr.DB.Context(ctx).Where("id = ?", id).Get(question)
 	if err != nil {
-		return nil, false, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return nil, false, err
 	}
 	if utils.GetEnableShortID(ctx) {
 		question.ID = uid.EnShortID(question.ID)
@@ -212,7 +205,7 @@ func (qr *QuestionRepo) GetQuestionsByTitle(ctx context.Context, title string, p
 	session.Limit(pageSize)
 	err = session.Find(&questionList)
 	if err != nil {
-		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return nil, err
 	}
 	if utils.GetEnableShortID(ctx) {
 		for _, item := range questionList {
@@ -229,7 +222,7 @@ func (qr *QuestionRepo) FindByID(ctx context.Context, id []string) (questionList
 	questionList = make([]*entity.Question, 0)
 	err = qr.DB.Context(ctx).Table("question").In("id", id).Find(&questionList)
 	if err != nil {
-		return nil, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return nil, err
 	}
 	if utils.GetEnableShortID(ctx) {
 		for _, item := range questionList {
@@ -245,7 +238,7 @@ func (qr *QuestionRepo) GetQuestionList(ctx context.Context, question *entity.Qu
 	questionList = make([]*entity.Question, 0)
 	err = qr.DB.Context(ctx).Find(questionList, question)
 	if err != nil {
-		return questionList, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return questionList, err
 	}
 	for _, item := range questionList {
 		item.ID = uid.DeShortID(item.ID)
@@ -258,7 +251,7 @@ func (qr *QuestionRepo) GetQuestionCount(ctx context.Context) (count int64, err 
 	session.In("status", []int{entity.QuestionStatusAvailable, entity.QuestionStatusClosed})
 	count, err = session.Count(&entity.Question{Show: entity.QuestionShow})
 	if err != nil {
-		return 0, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return 0, err
 	}
 	return count, nil
 }
@@ -267,9 +260,6 @@ func (qr *QuestionRepo) GetUserQuestionCount(ctx context.Context, userID string)
 	session := qr.DB.Context(ctx)
 	session.In("status", []int{entity.QuestionStatusAvailable, entity.QuestionStatusClosed})
 	count, err = session.Count(&entity.Question{UserID: userID})
-	if err != nil {
-		return count, errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	return
 }
 
@@ -317,7 +307,7 @@ func (qr *QuestionRepo) SitemapQuestions(ctx context.Context, page, pageSize int
 	// set sitemap data to cache
 	cacheDataByte, _ := json.Marshal(questionIDList)
 	if err := qr.Cache.Set(ctx, cacheKey, string(cacheDataByte), constant.SiteMapQuestionCacheTime).Err(); err != nil {
-		log.Error(err)
+		glog.Slog.Error(err)
 	}
 	return questionIDList, nil
 }
@@ -358,9 +348,6 @@ func (qr *QuestionRepo) GetQuestionPage(ctx context.Context, page, pageSize int,
 	}
 
 	total, err = pager.Help(page, pageSize, &questionList, &entity.Question{}, session)
-	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
-	}
 	if utils.GetEnableShortID(ctx) {
 		for _, item := range questionList {
 			item.ID = uid.EnShortID(item.ID)
@@ -427,7 +414,6 @@ func (qr *QuestionRepo) AdminQuestionPage(ctx context.Context, search *schema.Ad
 		Limit(search.PageSize, offset)
 	count, err = session.FindAndCount(&rows)
 	if err != nil {
-		err = errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
 		return rows, count, err
 	}
 	if utils.GetEnableShortID(ctx) {
@@ -467,7 +453,7 @@ func (qr *QuestionRepo) updateSearch(ctx context.Context, questionID string) (er
 	session.Where("status = ?", entity.TagRelStatusAvailable)
 	err = session.Find(&tagListList)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return
 	}
 	for _, tag := range tagListList {
 		tags = append(tags, tag.TagID)
@@ -499,13 +485,13 @@ func (qr *QuestionRepo) RemoveAllUserQuestion(ctx context.Context, userID string
 	session.Where("status != ?", entity.QuestionStatusDeleted)
 	err = session.Select("id").Table("question").Find(&questionIDs)
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 	if len(questionIDs) == 0 {
 		return nil
 	}
 
-	log.Infof("find %d questions need to be deleted for user %s", len(questionIDs), userID)
+	glog.Slog.Infof("find %d questions need to be deleted for user %s", len(questionIDs), userID)
 
 	// delete all question
 	session = qr.DB.Context(ctx).Where("user_id = ?", userID)
@@ -515,7 +501,7 @@ func (qr *QuestionRepo) RemoveAllUserQuestion(ctx context.Context, userID string
 		Status:    entity.QuestionStatusDeleted,
 	})
 	if err != nil {
-		return errors.InternalServer(reason.DatabaseError).WithError(err).WithStack()
+		return err
 	}
 
 	// update search content

@@ -23,7 +23,7 @@ allow_update_website = true
 level = 2
 restrict_answer = true
 # 这几个关注一下
-permalink = 1
+permalink = 1    #3或者4时，question会加密成短id
 robots = "User-agent= *"
 Disallow = ["/*?code*", "/answer/api", "/admin", "/search", "/install", "/review", "/users/login", "/users/register", "/users/account-recovery", "/users/oauth/*", "/users/*/*"]
 Sitemap = "http://localhost:8080/sitemap.xml"
